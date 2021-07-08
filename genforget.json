@@ -1,0 +1,96 @@
+{
+  "genforget": [
+    {
+      "N" : null,
+      "Part type" : null,
+      "Oper" : null,
+      "Description" : "03-FRONT LAMPS",
+      "QTY" : null,
+      "Price" : null,
+      "Ext. Price" : null,
+      "L.Type" : null,
+      "Labor" : null,
+      "Tx" : null,
+      "Paint" : null,
+      "Attachments" : null
+    },{
+      "N" : null,
+      "Part type" : "OEM",
+      "Oper" : "Repl",
+      "Description" : "Xenon headlamp ingitor",
+      "QTY" : "1",
+      "Price" : "87",
+      "Ext. Price" : "$87.00",
+      "L.Type" : null,
+      "Labor" : null,
+      "Tx" : null,
+      "Paint" : "0",
+      "Attachments" : null
+    },{
+      "N" : null,
+      "Part type" : null,
+      "Oper" : "Align",
+      "Description" : "Align lamp",
+      "QTY" : null,
+      "Price" : null,
+      "Ext. Price" : null,
+      "L.Type" : null,
+      "Labor" : null,
+      "Tx" : null,
+      "Paint" : null,
+      "Attachments" : null
+    },{
+      "N" : "N",
+      "Part type" : "OEM",
+      "Oper" : "Repl",
+      "Description" : "Xenon headlamp Control Module",
+      "QTY" : "1",
+      "Price" : "10",
+      "Ext. Price" : "$10.00",
+      "L.Type" : null,
+      "Labor" : null,
+      "Tx" : null,
+      "Paint" : "0",
+      "Attachments" : null
+    },{
+      "N" : null,
+      "Part type" : null,
+      "Oper" : null,
+      "Description" : "05-Cooling",
+      "QTY" : null,
+      "Price" : null,
+      "Ext. Price" : null,
+      "L.Type" : null,
+      "Labor" : null,
+      "Tx" : null,
+      "Paint" : null,
+      "Attachments" : null
+    },{
+      "N" : "N",
+      "Part type" : null,
+      "Oper" : "Rpr",
+      "Description" : "Pressure Test Cooling System",
+      "QTY" : null,
+      "Price" : null,
+      "Ext. Price" : "$0.00",
+      "L.Type" : "F",
+      "Labor" : "3",
+      "Tx" : null,
+      "Paint" : "0",
+      "Attachments" : null
+    },{
+      "N" : "N",
+      "Part type" : "Aftermarket",
+      "Oper" : "Repl",
+      "Description" : "Hood assembly",
+      "QTY" : "2",
+      "Price" : "76",
+      "Ext. Price" : "$152.00",
+      "L.Type" : null,
+      "Labor" : null,
+      "Tx" : null,
+      "Paint" : null,
+      "Attachments" : null
+    }
+  ]
+}
