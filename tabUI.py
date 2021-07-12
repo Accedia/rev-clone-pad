@@ -1,6 +1,6 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
-from PyQt6.QtWidgets import QApplication, QMainWindow,QFileDialog, QWidget, QMessageBox
+from PyQt6.QtWidgets import *
 import sys
 import pyautogui
 import json
@@ -18,22 +18,31 @@ class Ui_MainWindow(object): #class for building the GUI
     def setupUi(self, MainWindow): #function that creates the widgets for the GUI and their actions
 
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(532, 208)
+        MainWindow.resize(532, 258)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
         self.startButton = QtWidgets.QPushButton(self.centralwidget) #Creates the start button
-        self.startButton.setGeometry(QtCore.QRect(210, 150, 120, 30))
+        self.startButton.setGeometry(QtCore.QRect(210, 200, 120, 30))
         self.startButton.setObjectName("startButton")
 
         self.browseButton = QtWidgets.QPushButton(self.centralwidget) #Creates the browse for file button
-        self.browseButton.setGeometry(QtCore.QRect(410, 60, 90, 30))
+        self.browseButton.setGeometry(QtCore.QRect(410, 110, 90, 30))
         self.browseButton.setObjectName("browseButton")
 
         self.pathText = QtWidgets.QLineEdit(self.centralwidget) #Creates the field text for files path
-        self.pathText.setGeometry(QtCore.QRect(30, 60, 351, 31))
+        self.pathText.setGeometry(QtCore.QRect(30,110, 351, 31))
         self.pathText.setText("")
         self.pathText.setObjectName("pathText")
+
+        self.textLabel = QtWidgets.QLabel(self.centralwidget)
+        self.textLabel.setGeometry(QtCore.QRect(132,20,268,30))
+        self.textLabel.setFont(QtGui.QFont('',10))
+
+
+        self.textLabel1 = QtWidgets.QLabel(self.centralwidget)
+        self.textLabel1.setGeometry(QtCore.QRect(78,60,376,30))
+        self.textLabel1.setFont(QtGui.QFont('',10))
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -48,10 +57,11 @@ class Ui_MainWindow(object): #class for building the GUI
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Demo"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "FIT-CCC-Autofill"))
         self.startButton.setText(_translate("MainWindow", "Start"))
         self.browseButton.setText(_translate("MainWindow", "Choose File"))
-
+        self.textLabel.setText(_translate("MainWindow","Please Select Valid JSON File"))
+        self.textLabel1.setText(_translate("MainWindow","When Started Select First Cell of the Table"))
     def button_Start(self): #Action for the start button
         path = self.pathText.text() #String that stores the path from the text field (pathText)
         if self.is_validPath(path): #Checks if the path is valid and if it exists by given path from the upper line; calls the is_validPath fucntion
