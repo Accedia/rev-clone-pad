@@ -2,7 +2,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 from PyQt6.QtWidgets import *
 import sys
-import pyautogui
+import keyboard
 import json
 from pynput.mouse import Listener
 import pyperclip as pc
@@ -99,10 +99,9 @@ class Ui_MainWindow(object): #class for building the GUI
         for value in genforget['genforget']:
             for i, value1 in value.items():
                 if value1 != None:
-                    pyautogui.write(value1)
-                pyautogui.press('tab')
-            pyautogui.press('enter')
-
+                    keyboard.write(value1)
+                keyboard.press('tab')
+            keyboard.press('enter')
 
     def get_start(self):#Function that populate the cord dictionary
         def on_click(x, y, button, pressed):
