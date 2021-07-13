@@ -100,6 +100,7 @@ class Ui_MainWindow(object): #class for building the GUI
             for i, value1 in value.items():
                 if value1 != None:
                     keyboard.write(value1)
+                time.sleep(0.1)
                 keyboard.press('tab')
             keyboard.press('enter')
 
