@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Button, Icon, Message, Progress, Statistic } from "semantic-ui-react";
+import {
+  Button,
+  Dimmer,
+  Icon,
+  Loader,
+  Message,
+  Progress,
+  Statistic,
+} from "semantic-ui-react";
 declare global {
   interface Window {
     require: any;
@@ -10,7 +18,7 @@ const { ipcRenderer } = electron;
 
 const Controls: React.FC = () => {
   const [stoppedPrematurely, setStoppedPrematurely] = useState(false);
-  const [timer, setTimer] = useState<number>(4);
+  const [timer, setTimer] = useState<number>(-1);
   const [percentage, setPercentage] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(true);
 
@@ -26,20 +34,18 @@ const Controls: React.FC = () => {
 
   React.useEffect(() => {
     ipcRenderer.on("asynchronous-reply", (event: any, percentage: number) => {
-      console.log("aaa");
-      if (percentage >= 100) {
+      const roundedPercentage = +percentage.toFixed(1);
+      if (roundedPercentage >= 100) {
         setIsRunning(false);
       }
-      setPercentage(percentage);
+      setPercentage(roundedPercentage);
     });
   }, []);
 
   React.useEffect(() => {
-    const counter = setInterval(() => {
-      setTimer((prevTimer) => prevTimer - 1);
-
-      if (timer <= 0) clearInterval(counter);
-    }, 1000);
+    ipcRenderer.on("countdown-timer", (event: any, countdownTimer: number) => {
+      setTimer(countdownTimer);
+    });
   }, []);
 
   const renderTimer = () => (
@@ -97,6 +103,11 @@ const Controls: React.FC = () => {
 
   return (
     <div className="controls-loader">
+      {timer < 0 && (
+        <Dimmer active>
+          <Loader>Loading</Loader>
+        </Dimmer>
+      )}
       {timer > 0 && isRunning ? renderTimer() : renderProgress()}
 
       <div>{isRunning ? stopButton : closeButton}</div>

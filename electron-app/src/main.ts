@@ -9,9 +9,10 @@ let popupWindow: BrowserWindow | null = null;
 function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    height: 150,
-    width: 400,
+    height: 450,
+    width: 390,
     autoHideMenuBar: true,
+    resizable: false,
     title: "FIT CCC Automation",
     icon: path.resolve(__dirname, "../icon.png"),
 
@@ -56,38 +57,66 @@ app.on("window-all-closed", () => {
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
 
+const getWaitTimeInSeconds = (waitTime: string) => {
+  switch (waitTime) {
+    case "extra-slow":
+      return 20;
+    case "slow":
+      return 15;
+    case "normal":
+      return 10;
+    case "fast":
+      return 5;
+    default:
+      return 10;
+  }
+};
+
+const createPopupWindow = () => {
+  const display = screen.getPrimaryDisplay();
+  popupWindow = new BrowserWindow({
+    width: 400,
+    height: 185,
+    x: display.bounds.width - 450,
+    y: 50,
+    title: "FIT CCC Automation",
+    icon: path.resolve(__dirname, "../icon.png"),
+    alwaysOnTop: true,
+    autoHideMenuBar: true,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
+  mainWindow.minimize();
+  popupWindow.loadURL(`http://localhost:3000/controls`);
+};
+
 const snooze = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 let isRunning = false;
 
 // In main process.
-ipcMain.on("start-table-population", async (event, filePath) => {
+ipcMain.on("start-table-population", async (event, data) => {
+  const { path, waitTime } = data;
   isRunning = true;
 
+  const waitTimeSeconds = getWaitTimeInSeconds(waitTime);
+
   try {
-    const fileContent = await fs.promises.readFile(filePath, "utf-8");
-
-    const display = screen.getPrimaryDisplay();
-    popupWindow = new BrowserWindow({
-      width: 400,
-      height: 200,
-      x: display.bounds.width - 550,
-      y: 50,
-      title: "FIT CCC Automation",
-      icon: path.resolve(__dirname, "../icon.png"),
-      alwaysOnTop: true,
-      autoHideMenuBar: true,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
-      },
-    });
-    mainWindow.minimize();
-    popupWindow.loadURL(`http://localhost:3000/controls`);
-
+    const fileContent = await fs.promises.readFile(path, "utf-8");
+    createPopupWindow();
     const json = JSON.parse(fileContent);
-    await snooze(5000);
+    for (let i = 0; i < waitTimeSeconds; i++) {
+      const remainingTime = waitTimeSeconds - i;
+      popupWindow.webContents.send("countdown-timer", remainingTime);
+      if (remainingTime > 0) {
+        await snooze(1000);
+      }
+    }
+    popupWindow.webContents.send("countdown-timer", 0);
     await populateTableData(json.data, event);
   } catch (e) {
     console.log(e);
