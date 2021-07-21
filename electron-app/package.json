@@ -12,11 +12,12 @@
     "build:electron": "tsc",
     "package": "npx electron-packager . \"FIT CCC Automation\" --overwrite",
     "build": "npm run build:react && npm run build:electron && npm run package",
-    "watch": "tsc -w",
+    "dev:watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": " npm run build && cross-env NODE_ENV=development electron ./dist/main.js",
-    "dev:electron": "cross-env NODE_ENV=development electron ./dist/main.js",
-    "dev:react": "cross-env NODE_ENV=development webpack serve --config webpack.react.config.js --mode development"
+    "start": "cross-env NODE_ENV=development electron ./dist/main.js",
+    "electron": "cross-env NODE_ENV=development electron ./dist/main.js",
+    "dev:react": "npm run --prefix ../react-app start",
+    "dev": "concurrently \"npm:dev:*\""
   },
   "repository": "https://github.com/electron/electron-quick-start-typescript",
   "keywords": [
@@ -42,7 +43,8 @@
   },
   "dependencies": {
     "@nut-tree/nut-js": "^1.7.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "concurrently": "^6.2.0"
   },
   "files": [
     "./build/**/*",
