@@ -14,8 +14,7 @@ function createWindow() {
     autoHideMenuBar: true,
     resizable: false,
     title: "FIT CCC Automation",
-    icon: path.resolve(__dirname, "../icon.png"),
-
+    icon: path.resolve(__dirname, "../icon.ico"),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -80,7 +79,7 @@ const createPopupWindow = () => {
     x: display.bounds.width - 450,
     y: 50,
     title: "FIT CCC Automation",
-    icon: path.resolve(__dirname, "../icon.png"),
+    icon: path.resolve(__dirname, "../icon.ico"),
     alwaysOnTop: true,
     autoHideMenuBar: true,
     resizable: false,
