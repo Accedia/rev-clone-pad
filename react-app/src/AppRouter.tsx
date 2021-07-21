@@ -1,11 +1,11 @@
 import React from "react";
-import { Route, Switch, BrowserRouter } from "react-router-dom";
+import { Route, Switch, HashRouter as Router } from "react-router-dom";
 import Controls from "./pages/Controls";
 import Main from "./pages//Main";
 
 const AppRouter: React.FC = () => {
   return (
-    <BrowserRouter>
+    <Router>
       <Switch>
         <Route path="/" exact>
           <Main />
@@ -14,7 +14,7 @@ const AppRouter: React.FC = () => {
           <Controls />
         </Route>
       </Switch>
-    </BrowserRouter>
+    </Router>
   );
 };
 

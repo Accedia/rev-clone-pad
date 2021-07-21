@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen } from "electron";
+import { app, BrowserWindow, ipcMain, screen, remote } from "electron";
 import * as path from "path";
 import { keyboard, Key } from "@nut-tree/nut-js";
 import * as fs from "fs";
@@ -27,8 +27,8 @@ function createWindow() {
   if (process.env.NODE_ENV === "development") {
     mainWindow.loadURL(`http://localhost:3000`);
   } else {
+    mainWindow.loadFile(path.resolve(__dirname, "../build/index.html"));
     // and load the index.html of the app.
-    mainWindow.loadFile(path.join(__dirname, "../index.html"));
   }
 }
 
@@ -89,8 +89,19 @@ const createPopupWindow = () => {
       contextIsolation: false,
     },
   });
+  popupWindow.on("close", () => {
+    isRunning = false;
+    popupWindow = null;
+    mainWindow.restore();
+  });
   mainWindow.minimize();
-  popupWindow.loadURL(`http://localhost:3000/controls`);
+  if (process.env.NODE_ENV === "development") {
+    popupWindow.loadURL(`http://localhost:3000#/controls`);
+  } else {
+    popupWindow.loadFile(path.resolve(__dirname, "../build/index.html"), {
+      hash: "/controls",
+    });
+  }
 };
 
 const snooze = (ms: number) =>

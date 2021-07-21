@@ -1,9 +1,17 @@
 {
   "name": "electron-quick-start-typescript",
-  "version": "1.0.0",
-  "description": "A minimal Electron application written with Typescript",
+  "appname": "FIT CCC Automation",
+  "appVersion": "0.1.0",
+  "homepage": "./",
+  "version": "0.1.0",
+  "main": "./dist/main.js",
+  "description": "Automation for CCC by FIT",
   "scripts": {
-    "build": "tsc",
+    "build:react": "rimraf -rf build && npm run --prefix ../react-app build",
+    "postbuild:react": "copyfiles -u 3 ../react-app/build/**/* build",
+    "build:electron": "tsc",
+    "package": "npx electron-packager . \"FIT CCC Automation\" --overwrite",
+    "build": "npm run build:react && npm run build:electron && npm run package",
     "watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
     "start": " npm run build && cross-env NODE_ENV=development electron ./dist/main.js",
@@ -24,13 +32,21 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
+    "copyfiles": "^2.4.1",
     "cross-env": "^7.0.2",
     "electron": "^13.1.6",
+    "electron-packager": "^15.3.0",
     "electron-rebuild": "^2.3.5",
     "eslint": "^7.30.0",
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "@nut-tree/nut-js": "^1.7.0"
-  }
+    "@nut-tree/nut-js": "^1.7.0",
+    "rimraf": "^3.0.2"
+  },
+  "files": [
+    "./build/**/*",
+    "./dist/**/*",
+    "./node_modules/**/*"
+  ]
 }
