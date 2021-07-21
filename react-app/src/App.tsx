@@ -1,10 +1,18 @@
 import React from "react";
 import AppRouter from "./AppRouter";
+import { ToastProvider } from "react-toast-notifications";
 
 function App() {
   return (
     <div className="App">
-      <AppRouter />
+      <ToastProvider
+        autoDismiss={true}
+        autoDismissTimeout={3500}
+        placement="top-center"
+        transitionDuration={100}
+      >
+        <AppRouter />
+      </ToastProvider>
     </div>
   );
 }

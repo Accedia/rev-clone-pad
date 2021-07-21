@@ -58,7 +58,12 @@ const Controls: React.FC = () => {
   const renderProgress = () => (
     <div className="controls-progress">
       <Progress percent={percentage.toFixed(1)} progress autoSuccess indicating>
-        {percentage < 100 ? "Entering data..." : "Complete"}
+        {percentage < 100 ? "Entering data..." : "Import complete"}
+        {percentage >= 100 && (
+          <div className="complete-bonus-text">
+            You may close this window now
+          </div>
+        )}
       </Progress>
     </div>
   );
@@ -88,19 +93,6 @@ const Controls: React.FC = () => {
     []
   );
 
-  if (stoppedPrematurely) {
-    return (
-      <div className="controls-loader">
-        <Message
-          warning
-          header="Execution stopped"
-          content="You can close this window and start populating again."
-        />
-        {closeButton}
-      </div>
-    );
-  }
-
   return (
     <div className="controls-loader">
       {timer < 0 && (
@@ -108,9 +100,23 @@ const Controls: React.FC = () => {
           <Loader>Loading</Loader>
         </Dimmer>
       )}
-      {timer > 0 && isRunning ? renderTimer() : renderProgress()}
+      <div>
+        {stoppedPrematurely && (
+          <Message
+            className="stopped-modal"
+            warning
+            header="Execution stopped"
+            content="You can close this window."
+          />
+        )}
+        {!stoppedPrematurely
+          ? timer > 0 && isRunning
+            ? renderTimer()
+            : renderProgress()
+          : null}
+      </div>
 
-      <div>{isRunning ? stopButton : closeButton}</div>
+      <div className="button-group">{isRunning ? stopButton : closeButton}</div>
     </div>
   );
 };

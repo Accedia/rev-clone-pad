@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Button, Header, Icon, Input, Popup, Segment } from "semantic-ui-react";
+import { useToasts } from "react-toast-notifications";
 
 import "./app.css";
 declare global {
@@ -14,7 +15,9 @@ type WaitTime = "extra-slow" | "slow" | "normal" | "fast";
 
 const Main: React.FC = () => {
   const uploadButtonRef = useRef<any>(null);
+  const { addToast } = useToasts();
 
+  const [hadError, setHadError] = useState(false);
   const [waitTime, setWaitTime] = useState<WaitTime>(
     (localStorage.getItem("waitTime") as WaitTime) || "normal"
   );
@@ -24,6 +27,13 @@ const Main: React.FC = () => {
     localStorage.setItem("waitTime", waitTime);
   }, [waitTime]);
 
+  React.useEffect(() => {
+    ipcRenderer.on("error-message", (event: any, message: string) => {
+      setHadError(true);
+      addToast(message, { appearance: "error" });
+    });
+  }, []);
+
   const startPopulation = () => {
     if (!selectedFile) return;
 
@@ -31,6 +41,13 @@ const Main: React.FC = () => {
       path: selectedFile.path,
       waitTime,
     });
+  };
+
+  const getUploadButtonIcon = () => {
+    if (hadError) {
+      return "warning sign";
+    }
+    return selectedFile ? "exchange" : "upload";
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +61,7 @@ const Main: React.FC = () => {
     popupText: string
   ) => (
     <Popup
-      inverted
+      // inverted
       content={popupText}
       position="top center"
       trigger={
@@ -63,6 +80,7 @@ const Main: React.FC = () => {
         <h4>
           Data
           <Popup
+            className="data-popup"
             inverted
             position="bottom left"
             content="File should be exported from FIT Portal Scrubber"
@@ -79,18 +97,21 @@ const Main: React.FC = () => {
         <Segment placeholder size="mini" className="upload-segment">
           <Header icon>
             <Icon name="file outline" />
-            {selectedFile ? selectedFile?.path : "No file uploaded"}
-            <div className="extension-text">*.json format</div>
+            {selectedFile ? selectedFile?.name : "No file uploaded"}
           </Header>
           <Button
             icon
             labelPosition="right"
-            color="teal"
-            onClick={() => uploadButtonRef.current?.click()}
+            color={hadError ? "orange" : "teal"}
+            onClick={() => {
+              setHadError(false);
+              uploadButtonRef.current?.click();
+            }}
           >
             {selectedFile ? "Replace File" : "Upload"}
-            <Icon name={selectedFile ? "exchange" : "upload"} />
+            <Icon name={getUploadButtonIcon()} />
           </Button>
+          <div className="extension-text">*.json format</div>
         </Segment>
       </div>
 
@@ -112,18 +133,32 @@ const Main: React.FC = () => {
         </Button.Group>
       </div>
 
-      <Button
-        color="blue"
-        icon
-        labelPosition="right"
-        disabled={!selectedFile?.path}
-        onClick={startPopulation}
-        fluid
-        className="clear-margins"
-      >
-        Start
-        <Icon name="play" />
-      </Button>
+      <Popup
+        disabled={selectedFile?.path && !hadError}
+        inverted
+        position="top center"
+        content={
+          !selectedFile?.path
+            ? "Please upload a file"
+            : "The selected file is invalid, please upload a new one"
+        }
+        trigger={
+          <div style={{ width: "100%" }}>
+            <Button
+              color="blue"
+              icon
+              labelPosition="right"
+              disabled={!selectedFile?.path || hadError}
+              onClick={startPopulation}
+              fluid
+              className="clear-margins"
+            >
+              Start
+              <Icon name="play" />
+            </Button>
+          </div>
+        }
+      />
     </div>
   );
 };

@@ -59,13 +59,13 @@ app.on("window-all-closed", () => {
 const getWaitTimeInSeconds = (waitTime: string) => {
   switch (waitTime) {
     case "extra-slow":
-      return 20;
+      return 21;
     case "slow":
-      return 15;
+      return 16;
     case "normal":
-      return 10;
+      return 11;
     case "fast":
-      return 5;
+      return 6;
     default:
       return 10;
   }
@@ -75,22 +75,27 @@ const createPopupWindow = () => {
   const display = screen.getPrimaryDisplay();
   popupWindow = new BrowserWindow({
     width: 400,
-    height: 185,
+    height: 160,
     x: display.bounds.width - 450,
     y: 50,
     title: "FIT CCC Automation",
     icon: path.resolve(__dirname, "../icon.ico"),
     alwaysOnTop: true,
+    acceptFirstMouse: true,
     autoHideMenuBar: true,
     resizable: false,
+    minimizable: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
     },
   });
-  popupWindow.on("close", () => {
-    isRunning = false;
-    popupWindow = null;
+  popupWindow.on("close", async () => {
+    if (isRunning) {
+      isRunning = false;
+      popupWindow = null;
+      await snooze(1000);
+    }
     mainWindow.restore();
   });
   mainWindow.minimize();
@@ -100,6 +105,27 @@ const createPopupWindow = () => {
     popupWindow.loadFile(path.resolve(__dirname, "../build/index.html"), {
       hash: "/controls",
     });
+  }
+};
+
+const readJson = async (path: string) => {
+  const fileContent = await fs.promises.readFile(path, "utf-8");
+  try {
+    const json = JSON.parse(fileContent);
+    const data = json.data;
+    if (!Array.isArray(data)) {
+      throw new Error();
+    }
+    if (!data.every((row) => row.length === 18)) {
+      throw new Error();
+    }
+    return data;
+  } catch (e) {
+    mainWindow.webContents.send(
+      "error-message",
+      "The uploaded file is in invalid json format."
+    );
+    return false;
   }
 };
 
@@ -113,13 +139,16 @@ ipcMain.on("start-table-population", async (event, data) => {
   const { path, waitTime } = data;
   isRunning = true;
 
+  const jsonData = await readJson(path);
+  if (!jsonData) {
+    return;
+  }
+
   const waitTimeSeconds = getWaitTimeInSeconds(waitTime);
 
   try {
-    const fileContent = await fs.promises.readFile(path, "utf-8");
     createPopupWindow();
-    const json = JSON.parse(fileContent);
-    for (let i = 0; i < waitTimeSeconds; i++) {
+    for (let i = 0; i < waitTimeSeconds && isRunning; i++) {
       const remainingTime = waitTimeSeconds - i;
       popupWindow.webContents.send("countdown-timer", remainingTime);
       if (remainingTime > 0) {
@@ -127,7 +156,7 @@ ipcMain.on("start-table-population", async (event, data) => {
       }
     }
     popupWindow.webContents.send("countdown-timer", 0);
-    await populateTableData(json.data, event);
+    await populateTableData(jsonData, event);
   } catch (e) {
     console.log(e);
   }
@@ -141,6 +170,7 @@ ipcMain.on("close-popup-window", async () => {
   isRunning = false;
   popupWindow.close();
   popupWindow = null;
+  await snooze(500);
   mainWindow.restore();
 });
 
