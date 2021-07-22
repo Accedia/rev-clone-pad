@@ -8,11 +8,7 @@ import {
   Progress,
   Statistic,
 } from "semantic-ui-react";
-declare global {
-  interface Window {
-    require: any;
-  }
-}
+import { MESSAGE } from "@electron-app";
 const electron = window.require("electron");
 const { ipcRenderer } = electron;
 
@@ -25,25 +21,28 @@ const Controls: React.FC = () => {
   const stopTablePopulationExecution = () => {
     setIsRunning(false);
     setStoppedPrematurely(true);
-    ipcRenderer.send("stop-table-population");
+    ipcRenderer.send(MESSAGE.STOP_IMPORTER);
   };
 
   const closePopupWindow = () => {
-    ipcRenderer.send("close-popup-window");
+    ipcRenderer.send(MESSAGE.CLOSE_POPUP);
   };
 
   React.useEffect(() => {
-    ipcRenderer.on("asynchronous-reply", (event: any, percentage: number) => {
-      const roundedPercentage = +percentage.toFixed(1);
-      if (roundedPercentage >= 100) {
-        setIsRunning(false);
+    ipcRenderer.on(
+      MESSAGE.PROGRESS_UPDATE,
+      (event: any, percentage: number) => {
+        const roundedPercentage = +percentage.toFixed(1);
+        if (roundedPercentage >= 100) {
+          setIsRunning(false);
+        }
+        setPercentage(roundedPercentage);
       }
-      setPercentage(roundedPercentage);
-    });
+    );
   }, []);
 
   React.useEffect(() => {
-    ipcRenderer.on("countdown-timer", (event: any, countdownTimer: number) => {
+    ipcRenderer.on(MESSAGE.COUNTDOWN, (event: any, countdownTimer: number) => {
       setTimer(countdownTimer);
     });
   }, []);

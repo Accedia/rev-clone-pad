@@ -98,3 +98,7 @@ html,
 .stopped-modal {
   width: 100%;
 }
+
+.fit-loader-logo {
+  margin-bottom: 20px;
+}

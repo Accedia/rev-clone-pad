@@ -1,13 +1,10 @@
 import React, { useRef, useState } from "react";
 import { Button, Header, Icon, Input, Popup, Segment } from "semantic-ui-react";
 import { useToasts } from "react-toast-notifications";
+import { MESSAGE } from "@electron-app";
 
 import "./app.css";
-declare global {
-  interface Window {
-    require: any;
-  }
-}
+
 const electron = window.require("electron");
 const { ipcRenderer } = electron;
 
@@ -28,7 +25,7 @@ const Main: React.FC = () => {
   }, [waitTime]);
 
   React.useEffect(() => {
-    ipcRenderer.on("error-message", (event: any, message: string) => {
+    ipcRenderer.on(MESSAGE.ERROR_JSON, (event: any, message: string) => {
       setHadError(true);
       addToast(message, { appearance: "error" });
     });
@@ -37,7 +34,7 @@ const Main: React.FC = () => {
   const startPopulation = () => {
     if (!selectedFile) return;
 
-    ipcRenderer.send("start-table-population", {
+    ipcRenderer.send(MESSAGE.START_IMPORTER, {
       path: selectedFile.path,
       waitTime,
     });
@@ -139,8 +136,8 @@ const Main: React.FC = () => {
         position="top center"
         content={
           !selectedFile?.path
-            ? "Please upload a file"
-            : "The selected file is invalid, please upload a new one"
+            ? "No file uploaded"
+            : "The selected file is invalid"
         }
         trigger={
           <div style={{ width: "100%" }}>

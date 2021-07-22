@@ -2,6 +2,12 @@ import React from "react";
 import AppRouter from "./AppRouter";
 import { ToastProvider } from "react-toast-notifications";
 
+declare global {
+  interface Window {
+    require: any;
+  }
+}
+
 function App() {
   return (
     <div className="App">
