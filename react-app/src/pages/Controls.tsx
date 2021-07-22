@@ -1,13 +1,10 @@
 import React, { useState } from "react";
-import {
-  Button,
-  Dimmer,
-  Icon,
-  Loader,
-  Message,
-  Progress,
-  Statistic,
-} from "semantic-ui-react";
+import { Message } from "semantic-ui-react";
+import Timer from "../components/Timer";
+import ProgressBar from "../components/ProgressBar";
+import LoadingOverlay from "../components/LoadingOverlay";
+import { ActionButton } from "../components/ActionButton";
+
 import { MESSAGE } from "@electron-app";
 const electron = window.require("electron");
 const { ipcRenderer } = electron;
@@ -47,75 +44,38 @@ const Controls: React.FC = () => {
     });
   }, []);
 
-  const renderTimer = () => (
-    <Statistic color="red" size="small">
-      <Statistic.Label>Starting in</Statistic.Label>
-      <Statistic.Value>{timer}</Statistic.Value>
-    </Statistic>
+  const renderContentStopped = () => (
+    <Message
+      className="stopped-modal"
+      warning
+      header="Execution stopped"
+      content="You can close this window."
+    />
   );
 
-  const renderProgress = () => (
-    <div className="controls-progress">
-      <Progress percent={percentage.toFixed(1)} progress autoSuccess indicating>
-        {percentage < 100 ? "Entering data..." : "Import complete"}
-        {percentage >= 100 && (
-          <div className="complete-bonus-text">
-            You may close this window now
-          </div>
-        )}
-      </Progress>
-    </div>
-  );
-
-  const stopButton = React.useMemo(
-    () => (
-      <Button
-        icon
-        labelPosition="right"
-        color="red"
-        onClick={() => stopTablePopulationExecution()}
-      >
-        Stop
-        <Icon name="stop" />
-      </Button>
-    ),
-    []
-  );
-
-  const closeButton = React.useMemo(
-    () => (
-      <Button icon labelPosition="right" onClick={() => closePopupWindow()}>
-        Close
-        <Icon name="close" />
-      </Button>
-    ),
-    []
-  );
+  const renderContentWhenRunning = () => {
+    if (timer > 0 && isRunning) {
+      return <Timer value={timer} />;
+    } else {
+      return <ProgressBar percentage={percentage} />;
+    }
+  };
 
   return (
     <div className="controls-loader">
-      {timer < 0 && (
-        <Dimmer active>
-          <Loader>Loading</Loader>
-        </Dimmer>
-      )}
+      {timer < 0 && <LoadingOverlay />}
       <div>
-        {stoppedPrematurely && (
-          <Message
-            className="stopped-modal"
-            warning
-            header="Execution stopped"
-            content="You can close this window."
-          />
-        )}
-        {!stoppedPrematurely
-          ? timer > 0 && isRunning
-            ? renderTimer()
-            : renderProgress()
-          : null}
+        {stoppedPrematurely
+          ? renderContentStopped()
+          : renderContentWhenRunning()}
       </div>
-
-      <div className="button-group">{isRunning ? stopButton : closeButton}</div>
+      <div className="button-group">
+        {isRunning ? (
+          <ActionButton.Stop onClick={stopTablePopulationExecution} />
+        ) : (
+          <ActionButton.Close onClick={closePopupWindow} />
+        )}
+      </div>
     </div>
   );
 };

@@ -21,7 +21,6 @@ class Importer {
   };
 
   public stop = () => {
-    console.trace();
     this._isRunning = false;
   };
 

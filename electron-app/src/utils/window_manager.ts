@@ -41,6 +41,7 @@ const windowConfig: WindowConfig = {
     autoHideMenuBar: true,
     resizable: false,
     minimizable: false,
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -53,6 +54,7 @@ const windowConfig: WindowConfig = {
     height: 300,
     show: false,
     frame: false,
+    backgroundColor: "#ffffff",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -112,6 +114,7 @@ class WindowManager {
     const popupConfig = windowConfig.popup(display.bounds.width);
     this.popupWindow = new BrowserWindow(popupConfig);
     this.popupWindow.on("close", this.listenerPopupOnClose);
+    this.popupWindow.on("ready-to-show", () => this.popupWindow.show());
     this.mainWindow.minimize();
     if (isDev()) {
       this.popupWindow.loadURL(`${this.devUrl}#${this.paths.controls}`);
@@ -125,16 +128,14 @@ class WindowManager {
   closePopupWindow = async (): Promise<void> => {
     importer.stop();
     this.popupWindow.close();
-    this.popupWindow = null;
-    await snooze(500);
-    this.mainWindow.restore();
   };
 
   private listenerPopupOnClose = async () => {
     if (importer.isRunning) {
       importer.stop();
-      await snooze(1000);
+      await snooze(500);
     }
+    await snooze(500);
     this.popupWindow = null;
     this.mainWindow.restore();
   };
