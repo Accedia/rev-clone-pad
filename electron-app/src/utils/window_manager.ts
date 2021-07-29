@@ -27,6 +27,7 @@ const windowConfig: WindowConfig = {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      enableRemoteModule: true,
     },
   },
   popup: (displayWidth: number) => ({

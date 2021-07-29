@@ -45,12 +45,25 @@
   },
   "dependencies": {
     "@nut-tree/nut-js": "^1.7.0",
-    "rimraf": "^3.0.2",
-    "concurrently": "^6.2.0"
+    "axios": "^0.21.1",
+    "concurrently": "^6.2.0",
+    "rimraf": "^3.0.2"
   },
   "files": [
     "./build/**/*",
     "./dist/**/*",
     "./node_modules/**/*"
-  ]
+  ],
+  "build": {
+    "appId": "ccc.id",
+    "mac": {
+      "category": "ccc.category"
+    },
+    "protocols": {
+      "name": "ccc-protocol",
+      "schemes": [
+        "ccc"
+      ]
+    }
+  }
 }
