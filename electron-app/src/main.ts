@@ -1,19 +1,47 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import WindowManager from "./utils/window_manager";
-import { readJson } from "./utils/read_json";
 import importer from "./utils/importer";
 import { MESSAGE } from "./constants/messages";
 import path from 'path';
 import axios from 'axios';
-
-interface StartImporterData {
-  path: string;
-  waitTime: string;
-}
+import { Forgettable } from './interfaces/Forgettable';
+import { snooze } from './utils/snooze';
+import { CLOSE_POPUP_WAIT_TIME } from './constants/config';
+import Store from 'electron-store';
+import { WaitTime } from './interfaces/WaitTime';
+import { InputSpeed } from './interfaces/InputSpeed';
 
 const CUSTOM_PROTOCOL = 'ccc';
+const WAIT_TIME_STORAGE_KEY = "waitTime";
+const INPUT_SPEED_STORAGE_KEY = "inputSpeed";
+
+// TODO remove and make the data arrive in the proper format from FIT
+const REPL = 'Repl';
+const RPR = 'Rpr';
+const REFN = 'Refn';
+const R_I = 'R_I';
+const SECT = 'Sect';
+const ALIGN = 'Align';
+const SUBL = 'Subl';
+const BLND = 'Blnd';
+const PDR = 'PDR';
+const NONE = 'None';
+
+const LINE_OPERATIONS = [
+  { id: NONE, title: 'None', disabled: true },
+  { id: REPL, title: 'Repl' },
+  { id: RPR, title: 'Rpr' },
+  { id: REFN, title: 'Refn' },
+  { id: R_I, title: 'R&I' },
+  { id: SECT, title: 'Sect' },
+  { id: ALIGN, title: 'Align' },
+  { id: SUBL, title: 'Subl' },
+  { id: BLND, title: 'Blnd' },
+  { id: PDR, title: 'PDR' },
+];
 class Main {
   windowManager = new WindowManager();
+  store = new Store();
 
   constructor() {
     app.on("ready", () => {
@@ -50,8 +78,10 @@ class Main {
       // Set the path of electron.exe and your app.
       // These two additional parameters are only available on windows.
       app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);        
-    } else {      
-      app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL);
+    } else {
+      // TODO SWITCH!!!!!!!!
+      app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);        
+      // app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL);
     }
 
     // Force single application instance
@@ -60,18 +90,19 @@ class Main {
     if (!gotTheLock) {
       app.quit();
     } else {
-      app.on('second-instance', (e, argv) => {
+      app.on('second-instance', async (e, argv) => {
+        if (this.windowManager.popupWindow) {
+          this.windowManager.closePopupWindow();
+          await snooze(CLOSE_POPUP_WAIT_TIME);
+        }
+        await this.windowManager.createPopupWindow();
+
         if (process.platform !== 'darwin') {
           // Find the arg that is our custom protocol url and store it
           const customProtocolPrefix = `${CUSTOM_PROTOCOL}://`;
           let url = argv.find((arg) => arg.startsWith(customProtocolPrefix));
           url = url.replace(customProtocolPrefix, '');
           this.fetchData(url);
-        }
-
-        if (this.windowManager.mainWindow) {
-          if (this.windowManager.mainWindow.isMinimized()) this.windowManager.mainWindow.restore();
-          this.windowManager.mainWindow.focus();
         }
       });
     }
@@ -80,44 +111,97 @@ class Main {
   }
 
   private registerMainListeners = () => {
-    ipcMain.on(MESSAGE.START_IMPORTER, this.startImporter);
     ipcMain.on(MESSAGE.STOP_IMPORTER, importer.stop);
     ipcMain.on(MESSAGE.CLOSE_POPUP, this.windowManager.closePopupWindow);
+    ipcMain.on(MESSAGE.SET_WAIT_TIME, this.setWaitTime);
+    ipcMain.on(MESSAGE.SET_INPUT_SPEED, this.setInputSpeed);
   };
 
-  private startImporter = async (event: any, data: StartImporterData) => {
-    const { path, waitTime } = data;
-    importer.start();
+  private setWaitTime = (event: any, waitTime: string) => {
+    this.store.set(WAIT_TIME_STORAGE_KEY, waitTime);
+  }
 
-    const jsonParse = await readJson(path);
-    if (jsonParse.success) {
-      this.windowManager.createPopupWindow();
-      await importer.startPopulation(
-        jsonParse.data,
-        this.windowManager.popupWindow,
-        waitTime
-      );
-    } else {
-      this.windowManager.mainWindow.webContents.send(
-        MESSAGE.ERROR_JSON,
-        jsonParse.data
-      );
+  private setInputSpeed = (event: any, inputSpeed: string) => {
+    this.store.set(INPUT_SPEED_STORAGE_KEY, inputSpeed);
+  }
+
+  getWaitTime = (): WaitTime => {
+    return this.store.get(WAIT_TIME_STORAGE_KEY) as WaitTime;
+  }
+
+  getInputSpeed = (): InputSpeed => {
+    return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
+  }
+
+  private getToStringOrNull = (value: number) => {
+    return value ? value.toString() : null;
+  }
+
+  // TODO refactor
+  private startImporter = async (forgettables: Forgettable[]) => {
+    const data = [];
+
+    for (const forgettable of forgettables) {
+      const oper = LINE_OPERATIONS.find((lo) => lo.id === forgettable.oper);
+      const extPrice = ((forgettable.quantity || 0) * (forgettable.partPrice$ || 0)).toFixed(2);
+
+      data.push([
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        oper ? oper.title : null,
+        null,
+        forgettable.description,
+        null,
+        this.getToStringOrNull(forgettable.quantity),
+        this.getToStringOrNull(forgettable.partPrice$),
+        extPrice,
+        null,
+        null,
+        this.getToStringOrNull(forgettable.laborHours),
+        null,
+        this.getToStringOrNull(forgettable.paintHours),
+      ]);
     }
+
+    console.log('data after', data);
+
+    await importer.startPopulation(
+      data,
+      this.windowManager.popupWindow
+    );
   };
 
   private fetchData = async (url: string) => {
     try {
+      this.windowManager.popupWindow.webContents.send(
+        MESSAGE.LOADING_UPDATE,
+        true
+      );
       url = url.replace('localhost', '[::1]');
-
-      console.log('url', url);
       const result = await axios.get(url);
 
       console.log('result.data', result.data);
+      this.windowManager.popupWindow.webContents.send(
+        MESSAGE.LOADING_UPDATE,
+        false
+      );
+      this.startImporter(result.data);
     } catch (e) {
-      console.log('Error retrieving the forgettables', e);
+      console.log('Error retrieving the forgettables', e.message);
+      this.windowManager.popupWindow.webContents.send(
+        MESSAGE.ERROR,
+        `Error: ${e.message}`
+      );
     }
     
   };
 }
 
 const main = new Main();
+
+export const getWaitTime = main.getWaitTime;
+export const getInputSpeed = main.getInputSpeed;

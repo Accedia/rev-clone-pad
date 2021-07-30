@@ -7,6 +7,7 @@ import {
 import * as path from "path";
 import importer from "./importer";
 import { snooze } from "./snooze";
+import { CLOSE_POPUP_WAIT_TIME } from '../constants/config';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 interface WindowConfig {
@@ -110,20 +111,25 @@ class WindowManager {
     });
   };
 
-  createPopupWindow = (): void => {
-    const display = screen.getPrimaryDisplay();
-    const popupConfig = windowConfig.popup(display.bounds.width);
-    this.popupWindow = new BrowserWindow(popupConfig);
-    this.popupWindow.on("close", this.listenerPopupOnClose);
-    this.popupWindow.on("ready-to-show", () => this.popupWindow.show());
-    this.mainWindow.minimize();
-    if (isDev()) {
-      this.popupWindow.loadURL(`${this.devUrl}#${this.paths.controls}`);
-    } else {
-      this.popupWindow.loadFile(this.prodUrl, {
-        hash: this.paths.controls,
+  createPopupWindow = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const display = screen.getPrimaryDisplay();
+      const popupConfig = windowConfig.popup(display.bounds.width);
+      this.popupWindow = new BrowserWindow(popupConfig);
+      this.popupWindow.on("close", this.listenerPopupOnClose);
+      this.popupWindow.on("ready-to-show", () => {
+        this.popupWindow.show();
+        resolve();
       });
-    }
+      this.mainWindow.minimize();
+      if (isDev()) {
+        this.popupWindow.loadURL(`${this.devUrl}#${this.paths.controls}`);
+      } else {
+        this.popupWindow.loadFile(this.prodUrl, {
+          hash: this.paths.controls,
+        });
+      }
+    });
   };
 
   closePopupWindow = async (): Promise<void> => {
@@ -134,11 +140,10 @@ class WindowManager {
   private listenerPopupOnClose = async () => {
     if (importer.isRunning) {
       importer.stop();
-      await snooze(500);
+      await snooze(CLOSE_POPUP_WAIT_TIME);
     }
-    await snooze(500);
+    await snooze(CLOSE_POPUP_WAIT_TIME);
     this.popupWindow = null;
-    this.mainWindow.restore();
   };
 }
 

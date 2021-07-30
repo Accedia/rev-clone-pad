@@ -1,74 +1,39 @@
+import { INPUT_SPEED_CONFIG, MESSAGE, WAIT_TIME_CONFIG } from '@electron-app';
 import React, { useState } from "react";
-import { Button, Icon, Popup } from "semantic-ui-react";
-import { useToasts } from "react-toast-notifications";
-import { MESSAGE } from "@electron-app";
-import UploadFile from "../components/UploadFile";
+import { Button, Popup } from "semantic-ui-react";
+import { SemanticWIDTHS } from 'semantic-ui-react/dist/commonjs/generic';
 import SectionTitle from "../components/SectionTitle";
-import { UploadedFile } from "../interfaces/UploadedFile";
 
 import "./app.css";
 
 const electron = window.require("electron");
 const { ipcRenderer } = electron;
 
-const WAIT_TIME_STORAGE_KEY = "waitTime";
-type WaitTime = "extra-slow" | "slow" | "normal" | "fast";
+type WaitTime = keyof typeof WAIT_TIME_CONFIG;
+type InputSpeed = keyof typeof INPUT_SPEED_CONFIG;
 
 const Main: React.FC = () => {
-  const { addToast } = useToasts();
-  const localStorageWaitTime = localStorage.getItem(
-    WAIT_TIME_STORAGE_KEY
-  ) as WaitTime;
+  const { getWaitTime, getInputSpeed } = electron.remote.require('./main.js');
+  
+  const storageWaitTime = getWaitTime() as WaitTime;
 
-  const [hadError, setHadError] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<UploadedFile>();
+  const storageInputSpeed = getInputSpeed() as InputSpeed;
+
   const [waitTime, setWaitTime] = useState<WaitTime>(
-    localStorageWaitTime || "normal"
+    storageWaitTime || "normal"
+  );
+
+  const [inputSpeed, setInputSpeed] = useState<InputSpeed>(
+    storageInputSpeed || "normal"
   );
 
   React.useEffect(() => {
-    localStorage.setItem(WAIT_TIME_STORAGE_KEY, waitTime);
+    ipcRenderer.send(MESSAGE.SET_WAIT_TIME, waitTime);
   }, [waitTime]);
 
   React.useEffect(() => {
-    ipcRenderer.on(MESSAGE.ERROR_JSON, (event: any, message: string) => {
-      setHadError(true);
-      addToast(message, { appearance: "error" });
-    });
-  }, []);
-
-  const startPopulation = () => {
-    if (!selectedFile) return;
-
-    ipcRenderer.send(MESSAGE.START_IMPORTER, {
-      path: selectedFile.path,
-      waitTime,
-    });
-  };
-
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e || !e.target || !e.target.files) return;
-    setHadError(false);
-    e.target.files.item(0);
-    setSelectedFile(e.target.files.item(0) as UploadedFile);
-  };
-
-  const startButton = (
-    <div style={{ width: "100%" }}>
-      <Button
-        color="blue"
-        icon
-        labelPosition="right"
-        disabled={!selectedFile?.path || hadError}
-        onClick={startPopulation}
-        fluid
-        className="clear-margins"
-      >
-        Start
-        <Icon name="play" />
-      </Button>
-    </div>
-  );
+    ipcRenderer.send(MESSAGE.SET_INPUT_SPEED, inputSpeed);
+  }, [inputSpeed]);
 
   const getButtonWithPopup = (
     content: string,
@@ -89,22 +54,20 @@ const Main: React.FC = () => {
     />
   );
 
+  const getButton = (
+    content: string,
+    buttonInputSpeed: InputSpeed
+    ) => (
+      <Button
+        onClick={() => setInputSpeed(buttonInputSpeed)}
+        active={inputSpeed === buttonInputSpeed}
+      >
+        {content}
+      </Button>
+    );
+
   return (
     <div className="main-container">
-      <div className="main-file-upload">
-        <SectionTitle
-          className="data-popup"
-          title="Forgettable Data"
-          popup
-          popupContent="File should be exported from FIT Portal Scrubber"
-          popupPosition="bottom left"
-        />
-        <UploadFile
-          selectedFile={selectedFile}
-          hadError={hadError}
-          onChange={onFileChange}
-        />
-      </div>
       <div className="setting-container">
         <SectionTitle
           title="Wait Time"
@@ -112,24 +75,29 @@ const Main: React.FC = () => {
           popupContent="The time you will have to click the first cell of the CCC application before the population starts"
           popupPosition="left center"
         />
-        <Button.Group widths="4">
-          {getButtonWithPopup("Turtle", "extra-slow", "20s")}
-          {getButtonWithPopup("Slow", "slow", "15s")}
-          {getButtonWithPopup("Normal", "normal", "10s")}
-          {getButtonWithPopup("Fast", "fast", "5s")}
+        <Button.Group widths={Object.keys(WAIT_TIME_CONFIG).length.toString() as SemanticWIDTHS}>
+          {(Object.keys(WAIT_TIME_CONFIG) as Array<WaitTime>).map(key => {
+            const config = WAIT_TIME_CONFIG[key];
+
+            return getButtonWithPopup(config.title, key, `${config.value}s`);
+          })}
         </Button.Group>
       </div>
-      <Popup
-        disabled={!!selectedFile?.path && !hadError}
-        inverted
-        position="top center"
-        content={
-          !selectedFile?.path
-            ? "No file uploaded"
-            : "The selected file is invalid"
-        }
-        trigger={startButton}
-      />
+      <div className="setting-container">
+        <SectionTitle
+          title="Input speed"
+          popup
+          popupContent="The speed of the auto input population. Decrease the speed if you encounter missing symbols or cells"
+          popupPosition="left center"
+        />
+        <Button.Group widths={Object.keys(INPUT_SPEED_CONFIG).length.toString() as SemanticWIDTHS}>
+          {(Object.keys(INPUT_SPEED_CONFIG) as Array<InputSpeed>).map(key => {
+            const config = INPUT_SPEED_CONFIG[key];
+
+            return getButton(config.title, key);
+          })}
+        </Button.Group>
+      </div>
     </div>
   );
 };

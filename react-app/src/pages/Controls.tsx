@@ -4,8 +4,9 @@ import Timer from "../components/Timer";
 import ProgressBar from "../components/ProgressBar";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { ActionButton } from "../components/ActionButton";
-
+import { useToasts } from "react-toast-notifications";
 import { MESSAGE } from "@electron-app";
+
 const electron = window.require("electron");
 const { ipcRenderer } = electron;
 
@@ -14,6 +15,9 @@ const Controls: React.FC = () => {
   const [timer, setTimer] = useState<number>(-1);
   const [percentage, setPercentage] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const { addToast } = useToasts();
 
   const stopTablePopulationExecution = () => {
     setIsRunning(false);
@@ -44,6 +48,32 @@ const Controls: React.FC = () => {
     });
   }, []);
 
+  React.useEffect(() => {
+    ipcRenderer.on(MESSAGE.LOADING_UPDATE, (event: any, isLoading: boolean) => {
+      console.log('LOADING_UPDATE', isLoading);
+      setIsLoading(isLoading);
+    });
+  }, []);
+
+  React.useEffect(() => {
+    ipcRenderer.on(MESSAGE.ERROR, (event: any, message: string) => {
+      console.log('ERROR', message);
+      setHasError(true);
+      setIsLoading(false);
+      setIsRunning(false);
+      addToast(message, { appearance: "error", autoDismiss: false });
+    });
+  }, []);
+
+  const renderContentFailed = () => (
+    <Message
+      className="failed-modal"
+      error
+      header="Execution failed"
+      content="Please try again."
+    />
+  );
+
   const renderContentStopped = () => (
     <Message
       className="stopped-modal"
@@ -53,8 +83,12 @@ const Controls: React.FC = () => {
     />
   );
 
-  const renderContentWhenRunning = () => {
-    if (timer > 0 && isRunning) {
+  const renderContent = () => {
+    if (hasError) {
+      return renderContentFailed();
+    } else if (stoppedPrematurely) {
+      return renderContentStopped();
+    } else if (timer > 0 && isRunning) {
       return <Timer value={timer} />;
     } else {
       return <ProgressBar percentage={percentage} />;
@@ -63,11 +97,9 @@ const Controls: React.FC = () => {
 
   return (
     <div className="controls-loader">
-      {timer < 0 && <LoadingOverlay />}
+      {(isLoading && timer < 0) && <LoadingOverlay />}
       <div>
-        {stoppedPrematurely
-          ? renderContentStopped()
-          : renderContentWhenRunning()}
+        {renderContent()}
       </div>
       <div className="button-group">
         {isRunning ? (
