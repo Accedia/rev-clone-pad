@@ -6,9 +6,11 @@ The app takes control of the user’s keyboard and uses it to automatically popu
 
 ## Setup
 
+Navigate to `./electron-app` folder.
+
 ### Install
-- run `npm i`
-- run `./node_modules/.bin/electron-rebuild` to rebuild everything
+- run `npm i` (this has to be ran in `./react-app` as well)
+- run `npm run rebuild` to rebuild everything
 
 ### Run development
 
