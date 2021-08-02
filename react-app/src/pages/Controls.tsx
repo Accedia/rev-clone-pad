@@ -1,27 +1,31 @@
-import React, { useState } from "react";
+import React, { useReducer } from "react";
 import { Message } from "semantic-ui-react";
 import Timer from "../components/Timer";
 import ProgressBar from "../components/ProgressBar";
-import LoadingOverlay from "../components/LoadingOverlay";
+import LoadingIndicator from "../components/LoadingOverlay";
 import { ActionButton } from "../components/ActionButton";
 import { useToasts } from "react-toast-notifications";
 import { MESSAGE } from "@electron-app";
+import reducer, { INITIAL_STATE } from '../reducer';
 
 const electron = window.require("electron");
 const { ipcRenderer } = electron;
 
 const Controls: React.FC = () => {
-  const [stoppedPrematurely, setStoppedPrematurely] = useState(false);
-  const [timer, setTimer] = useState<number>(-1);
-  const [percentage, setPercentage] = useState<number>(0);
-  const [isRunning, setIsRunning] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState<boolean>(false);
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+
+  const { stoppedPrematurely, timer, percentage, isRunning, isLoading, hasError } = state;
   const { addToast } = useToasts();
 
   const stopTablePopulationExecution = () => {
-    setIsRunning(false);
-    setStoppedPrematurely(true);
+    dispatch({
+      type: '@SET_IS_RUNNING',
+      payload: false,
+    });
+    dispatch({
+      type: '@SET_STOPPED_PREMATURELY',
+      payload: true,
+    });
     ipcRenderer.send(MESSAGE.STOP_IMPORTER);
   };
 
@@ -35,33 +39,61 @@ const Controls: React.FC = () => {
       (event: any, percentage: number) => {
         const roundedPercentage = +percentage.toFixed(1);
         if (roundedPercentage >= 100) {
-          setIsRunning(false);
+          dispatch({
+            type: '@SET_IS_RUNNING',
+            payload: false,
+          });
         }
-        setPercentage(roundedPercentage);
+        dispatch({
+          type: '@SET_PERCENTAGE',
+          payload: roundedPercentage,
+        });
       }
     );
   }, []);
 
   React.useEffect(() => {
     ipcRenderer.on(MESSAGE.COUNTDOWN, (event: any, countdownTimer: number) => {
-      setTimer(countdownTimer);
+      dispatch({
+        type: '@SET_TIMER',
+        payload: countdownTimer,
+      });
     });
   }, []);
 
   React.useEffect(() => {
     ipcRenderer.on(MESSAGE.LOADING_UPDATE, (event: any, isLoading: boolean) => {
-      console.log('LOADING_UPDATE', isLoading);
-      setIsLoading(isLoading);
+      dispatch({
+        type: '@SET_IS_LOADING',
+        payload: isLoading,
+      });
     });
   }, []);
 
   React.useEffect(() => {
     ipcRenderer.on(MESSAGE.ERROR, (event: any, message: string) => {
       console.log('ERROR', message);
-      setHasError(true);
-      setIsLoading(false);
-      setIsRunning(false);
+      dispatch({
+        type: '@SET_HAS_ERROR',
+        payload: true,
+      });
+      dispatch({
+        type: '@SET_IS_LOADING',
+        payload: false,
+      });
+      dispatch({
+        type: '@SET_IS_RUNNING',
+        payload: false,
+      });
       addToast(message, { appearance: "error", autoDismiss: false });
+    });
+  }, []);
+
+  React.useEffect(() => {
+    ipcRenderer.on(MESSAGE.RESET_CONTROLS_STATE, () => {
+      dispatch({
+        type: '@RESET_STATE',
+      });
     });
   }, []);
 
@@ -97,17 +129,19 @@ const Controls: React.FC = () => {
 
   return (
     <div className="controls-loader">
-      {(isLoading && timer < 0) && <LoadingOverlay />}
-      <div>
-        {renderContent()}
-      </div>
-      <div className="button-group">
-        {isRunning ? (
-          <ActionButton.Stop onClick={stopTablePopulationExecution} />
-        ) : (
-          <ActionButton.Close onClick={closePopupWindow} />
-        )}
-      </div>
+      {(isLoading && timer < 0) ? <LoadingIndicator /> :
+      <>
+        <div>
+          {renderContent()}
+        </div>
+        <div className="button-group">
+          {isRunning ? (
+            <ActionButton.Stop onClick={stopTablePopulationExecution} />
+          ) : (
+            <ActionButton.Close onClick={closePopupWindow} />
+          )}
+        </div>
+      </>}
     </div>
   );
 };

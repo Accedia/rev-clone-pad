@@ -43,8 +43,10 @@ class Importer {
           await snooze(1000);
         }
       }
-      popupWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
-      await this.populateTableData(data, popupWindow);
+      if (this.isRunning) {
+        popupWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
+        await this.populateTableData(data, popupWindow);
+      }
     } catch (e) {
       console.log(e);
     }

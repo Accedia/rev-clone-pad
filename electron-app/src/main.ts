@@ -92,14 +92,18 @@ class Main {
     } else {
       app.on('second-instance', async (e, argv) => {
         if (this.windowManager.popupWindow) {
-          this.windowManager.closePopupWindow();
-          await snooze(CLOSE_POPUP_WAIT_TIME);
+          importer.stop();
+          this.windowManager.popupWindow.webContents.send(
+            MESSAGE.RESET_CONTROLS_STATE
+          );
+        } else {
+          await this.windowManager.createPopupWindow();
         }
-        await this.windowManager.createPopupWindow();
 
         if (process.platform !== 'darwin') {
           // Find the arg that is our custom protocol url and store it
           const url = getCustomProtocolUrl(argv);
+          await snooze(1500);
           this.fetchData(url);
         }
       });

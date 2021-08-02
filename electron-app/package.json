@@ -1,6 +1,6 @@
 {
   "name": "electron-quick-start-typescript",
-  "appname": "FIT CCC Automation",
+  "appname": "FIT CCC Input Automation",
   "appVersion": "0.1.0",
   "homepage": "./",
   "version": "0.1.0",
@@ -12,7 +12,7 @@
     "postbuild:react": "copyfiles -u 3 ../react-app/build/**/* build",
     "prebuild:electron": "rimraf -rf dist",
     "build:electron": "tsc",
-    "package": "electron-packager . \"FIT CCC Automation\" --out=\"release-app\" --icon=./icon.ico --overwrite",
+    "package": "electron-packager . \"FIT CCC Input Automation\" --out=\"release-app\" --icon=./icon.ico --overwrite",
     "build": "npm run build:react && npm run build:electron && npm run package",
     "dev:watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",

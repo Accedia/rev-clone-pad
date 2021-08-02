@@ -7,4 +7,5 @@ export const MESSAGE = {
   LOADING_UPDATE: "loading-update",
   SET_WAIT_TIME: "set-wait-time",
   SET_INPUT_SPEED: "set-input-speed",
+  RESET_CONTROLS_STATE: "reset-controls-state",
 };

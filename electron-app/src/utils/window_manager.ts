@@ -20,7 +20,7 @@ interface WindowConfig {
 
 const windowConfig: WindowConfig = {
   main: {
-    title: "FIT CCC Automation",
+    title: "FIT Input CCC Automation",
     icon: path.resolve(__dirname, "../../icon.ico"),
     height: 450,
     width: 390,
@@ -38,7 +38,7 @@ const windowConfig: WindowConfig = {
     height: 160,
     x: displayWidth - 450,
     y: 50,
-    title: "FIT CCC Automation",
+    title: "FIT Input CCC Automation",
     icon: path.resolve(__dirname, "../icon.ico"),
     acceptFirstMouse: true,
     autoHideMenuBar: true,
@@ -51,7 +51,7 @@ const windowConfig: WindowConfig = {
     },
   }),
   loading: {
-    title: "FIT CCC Automation",
+    title: "FIT Input CCC Automation",
     icon: path.resolve(__dirname, "../icon.ico"),
     width: 250,
     height: 300,
