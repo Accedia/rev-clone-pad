@@ -8,6 +8,8 @@ import * as path from "path";
 import importer from "./importer";
 import { snooze } from "./snooze";
 import { CLOSE_POPUP_WAIT_TIME } from '../constants/config';
+import { getCustomProtocolUrl } from './get_custom_protocol_url';
+import { fetchData } from '../main';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 interface WindowConfig {
@@ -38,7 +40,6 @@ const windowConfig: WindowConfig = {
     y: 50,
     title: "FIT CCC Automation",
     icon: path.resolve(__dirname, "../icon.ico"),
-    alwaysOnTop: true,
     acceptFirstMouse: true,
     autoHideMenuBar: true,
     resizable: false,
@@ -84,7 +85,7 @@ class WindowManager {
 
   startLoading = (): void => {
     this.loadingWindow = new BrowserWindow(windowConfig.loading);
-    this.loadingWindow.once("show", this.createMainWindow);
+    this.loadingWindow.once("show", this.startApp);
     if (isDev()) {
       this.loadingWindow.loadURL(`${this.devUrl}#${this.paths.loading}`);
     } else {
@@ -95,20 +96,37 @@ class WindowManager {
     this.loadingWindow.show();
   };
 
-  createMainWindow = (): void => {
-    snooze(5000).then(() => {
-      this.mainWindow = new BrowserWindow(windowConfig.main);
-      this.mainWindow.once("ready-to-show", () => {
-        this.mainWindow.show();
-        this.loadingWindow.hide();
-        this.loadingWindow.close();
-      });
-      if (isDev()) {
-        this.mainWindow.loadURL(this.devUrl);
-      } else {
-        this.mainWindow.loadFile(this.prodUrl);
+  startApp = (): void => {
+    console.log('process.argv', process.argv);
+    console.log('process.platform', process.platform);
+
+    snooze(5000).then(async () => {
+      this.createMainWindow();
+      if (process.platform !== 'darwin') {
+        const url = getCustomProtocolUrl(process.argv);
+
+        console.log('url', url)
+
+        if (url) {
+          await this.createPopupWindow();
+          fetchData(url);
+        }
       }
     });
+  };
+
+  createMainWindow = (): void => {
+    this.mainWindow = new BrowserWindow(windowConfig.main);
+    this.mainWindow.once("ready-to-show", () => {
+      this.mainWindow.show();
+      this.loadingWindow.hide();
+      this.loadingWindow.close();
+    });
+    if (isDev()) {
+      this.mainWindow.loadURL(this.devUrl);
+    } else {
+      this.mainWindow.loadFile(this.prodUrl);
+    }
   };
 
   createPopupWindow = (): Promise<void> => {
@@ -116,9 +134,11 @@ class WindowManager {
       const display = screen.getPrimaryDisplay();
       const popupConfig = windowConfig.popup(display.bounds.width);
       this.popupWindow = new BrowserWindow(popupConfig);
+      this.popupWindow.setAlwaysOnTop(true, 'pop-up-menu');
       this.popupWindow.on("close", this.listenerPopupOnClose);
       this.popupWindow.on("ready-to-show", () => {
         this.popupWindow.show();
+        this.popupWindow.blur();
         resolve();
       });
       this.mainWindow.minimize();

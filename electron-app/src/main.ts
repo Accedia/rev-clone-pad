@@ -6,12 +6,12 @@ import path from 'path';
 import axios from 'axios';
 import { Forgettable } from './interfaces/Forgettable';
 import { snooze } from './utils/snooze';
-import { CLOSE_POPUP_WAIT_TIME } from './constants/config';
+import { CLOSE_POPUP_WAIT_TIME, CUSTOM_PROTOCOL } from './constants/config';
 import Store from 'electron-store';
 import { WaitTime } from './interfaces/WaitTime';
 import { InputSpeed } from './interfaces/InputSpeed';
+import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 
-const CUSTOM_PROTOCOL = 'ccc';
 const WAIT_TIME_STORAGE_KEY = "waitTime";
 const INPUT_SPEED_STORAGE_KEY = "inputSpeed";
 
@@ -99,9 +99,7 @@ class Main {
 
         if (process.platform !== 'darwin') {
           // Find the arg that is our custom protocol url and store it
-          const customProtocolPrefix = `${CUSTOM_PROTOCOL}://`;
-          let url = argv.find((arg) => arg.startsWith(customProtocolPrefix));
-          url = url.replace(customProtocolPrefix, '');
+          const url = getCustomProtocolUrl(argv);
           this.fetchData(url);
         }
       });
@@ -175,7 +173,7 @@ class Main {
     );
   };
 
-  private fetchData = async (url: string) => {
+  fetchData = async (url: string) => {
     try {
       this.windowManager.popupWindow.webContents.send(
         MESSAGE.LOADING_UPDATE,
@@ -205,3 +203,4 @@ const main = new Main();
 
 export const getWaitTime = main.getWaitTime;
 export const getInputSpeed = main.getInputSpeed;
+export const fetchData = main.fetchData;

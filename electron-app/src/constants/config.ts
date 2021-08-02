@@ -1,5 +1,7 @@
 export const CLOSE_POPUP_WAIT_TIME = 500;
 
+export const CUSTOM_PROTOCOL = 'ccc';
+
 export const WAIT_TIME_CONFIG = {
   'extra-slow': {
     value: 20,
