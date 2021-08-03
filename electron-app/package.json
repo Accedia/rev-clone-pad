@@ -12,6 +12,7 @@
     "postbuild:react": "copyfiles -u 3 ../react-app/build/**/* build",
     "prebuild:electron": "rimraf -rf dist",
     "build:electron": "tsc",
+    "rebuild": "./node_modules/.bin/electron-rebuild",
     "package": "electron-packager . \"FIT CCC Input Automation\" --out=\"release-app\" --icon=./icon.ico --overwrite",
     "build": "npm run build:react && npm run build:electron && npm run package",
     "dev:watch": "tsc -w",
