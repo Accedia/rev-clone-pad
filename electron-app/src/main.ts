@@ -55,7 +55,7 @@ class Main {
       // These two additional parameters are only available on windows.
       app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);        
     } else {
-      // TODO SWITCH!!!!!!!!
+      // Switch when running on dev
       // app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);        
       app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL);
     }
@@ -67,22 +67,22 @@ class Main {
       app.quit();
     } else {
       app.on('second-instance', async (e, argv) => {
-        if (process.platform !== 'darwin') {
-          if (this.windowManager.popupWindow) {
-            importer.stop();
-            this.windowManager.popupWindow.webContents.send(
-              MESSAGE.RESET_CONTROLS_STATE
-            );
-          } else {
-            // Find the arg that is our custom protocol url and store it
-            const url = getCustomProtocolUrl(argv);
-            if (url) {
-              await this.windowManager.createPopupWindow();
-              await snooze(1500);
-              this.fetchData(url);
-            }
-            
+
+        const url = getCustomProtocolUrl(argv);
+
+        if (this.windowManager.popupWindow) {
+          importer.stop();
+          this.windowManager.popupWindow.webContents.send(
+            MESSAGE.RESET_CONTROLS_STATE
+          );
+        } else {
+          if (url) {
+            await this.windowManager.createPopupWindow();
           }
+        }
+        if (url) {
+          await snooze(1500);
+          this.fetchData(url);
         }
       });
     }
