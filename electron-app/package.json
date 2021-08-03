@@ -1,6 +1,6 @@
 {
   "name": "electron-quick-start-typescript",
-  "appname": "FIT CCC Automation",
+  "appname": "FIT CCC Input Automation",
   "appVersion": "0.1.0",
   "homepage": "./",
   "version": "0.1.0",
@@ -13,7 +13,7 @@
     "prebuild:electron": "rimraf -rf dist",
     "build:electron": "tsc",
     "rebuild": "./node_modules/.bin/electron-rebuild",
-    "package": "electron-packager . \"FIT CCC Automation\" --out=\"release-app\" --icon=./icon.ico --overwrite",
+    "package": "electron-packager . \"FIT CCC Input Automation\" --out=\"release-app\" --icon=./icon.ico --overwrite",
     "build": "npm run build:react && npm run build:electron && npm run package",
     "dev:watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
@@ -46,12 +46,26 @@
   },
   "dependencies": {
     "@nut-tree/nut-js": "^1.7.0",
-    "rimraf": "^3.0.2",
-    "concurrently": "^6.2.0"
+    "axios": "^0.21.1",
+    "concurrently": "^6.2.0",
+    "electron-store": "^8.0.0",
+    "rimraf": "^3.0.2"
   },
   "files": [
     "./build/**/*",
     "./dist/**/*",
     "./node_modules/**/*"
-  ]
+  ],
+  "build": {
+    "appId": "ccc.id",
+    "mac": {
+      "category": "ccc.category"
+    },
+    "protocols": {
+      "name": "ccc-protocol",
+      "schemes": [
+        "ccc"
+      ]
+    }
+  }
 }

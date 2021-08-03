@@ -1,12 +1,10 @@
 import React from "react";
-import { Dimmer, Loader } from "semantic-ui-react";
+import { Loader } from "semantic-ui-react";
 
-const LoadingOverlay: React.FC = () => {
+const LoadingIndicator: React.FC = () => {
   return (
-    <Dimmer active>
-      <Loader>Loading</Loader>
-    </Dimmer>
+    <Loader active inline='centered'>Loading</Loader>
   );
 };
 
-export default LoadingOverlay;
+export default LoadingIndicator;

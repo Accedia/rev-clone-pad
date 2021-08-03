@@ -7,6 +7,9 @@ import {
 import * as path from "path";
 import importer from "./importer";
 import { snooze } from "./snooze";
+import { CLOSE_POPUP_WAIT_TIME } from '../constants/config';
+import { getCustomProtocolUrl } from './get_custom_protocol_url';
+import { fetchData } from '../main';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 interface WindowConfig {
@@ -17,7 +20,7 @@ interface WindowConfig {
 
 const windowConfig: WindowConfig = {
   main: {
-    title: "FIT CCC Automation",
+    title: "FIT Input CCC Automation",
     icon: path.resolve(__dirname, "../../icon.ico"),
     height: 450,
     width: 390,
@@ -27,6 +30,7 @@ const windowConfig: WindowConfig = {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      enableRemoteModule: true,
     },
   },
   popup: (displayWidth: number) => ({
@@ -34,9 +38,8 @@ const windowConfig: WindowConfig = {
     height: 160,
     x: displayWidth - 450,
     y: 50,
-    title: "FIT CCC Automation",
+    title: "FIT Input CCC Automation",
     icon: path.resolve(__dirname, "../icon.ico"),
-    alwaysOnTop: true,
     acceptFirstMouse: true,
     autoHideMenuBar: true,
     resizable: false,
@@ -48,7 +51,7 @@ const windowConfig: WindowConfig = {
     },
   }),
   loading: {
-    title: "FIT CCC Automation",
+    title: "FIT Input CCC Automation",
     icon: path.resolve(__dirname, "../icon.ico"),
     width: 250,
     height: 300,
@@ -82,7 +85,7 @@ class WindowManager {
 
   startLoading = (): void => {
     this.loadingWindow = new BrowserWindow(windowConfig.loading);
-    this.loadingWindow.once("show", this.createMainWindow);
+    this.loadingWindow.once("show", this.startApp);
     if (isDev()) {
       this.loadingWindow.loadURL(`${this.devUrl}#${this.paths.loading}`);
     } else {
@@ -93,13 +96,27 @@ class WindowManager {
     this.loadingWindow.show();
   };
 
-  createMainWindow = (): void => {
-    snooze(5000).then(() => {
+  startApp = (): void => {
+    snooze(5000).then(async () => {
+      await this.createMainWindow();
+      if (process.platform !== 'darwin') {
+        const url = getCustomProtocolUrl(process.argv);
+        if (url) {
+          await this.createPopupWindow();
+          fetchData(url);
+        }
+      }
+    });
+  };
+
+  createMainWindow = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
       this.mainWindow = new BrowserWindow(windowConfig.main);
       this.mainWindow.once("ready-to-show", () => {
         this.mainWindow.show();
         this.loadingWindow.hide();
         this.loadingWindow.close();
+        resolve();
       });
       if (isDev()) {
         this.mainWindow.loadURL(this.devUrl);
@@ -109,20 +126,27 @@ class WindowManager {
     });
   };
 
-  createPopupWindow = (): void => {
-    const display = screen.getPrimaryDisplay();
-    const popupConfig = windowConfig.popup(display.bounds.width);
-    this.popupWindow = new BrowserWindow(popupConfig);
-    this.popupWindow.on("close", this.listenerPopupOnClose);
-    this.popupWindow.on("ready-to-show", () => this.popupWindow.show());
-    this.mainWindow.minimize();
-    if (isDev()) {
-      this.popupWindow.loadURL(`${this.devUrl}#${this.paths.controls}`);
-    } else {
-      this.popupWindow.loadFile(this.prodUrl, {
-        hash: this.paths.controls,
+  createPopupWindow = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const display = screen.getPrimaryDisplay();
+      const popupConfig = windowConfig.popup(display.bounds.width);
+      this.popupWindow = new BrowserWindow(popupConfig);
+      this.popupWindow.setAlwaysOnTop(true, 'pop-up-menu');
+      this.popupWindow.on("close", this.listenerPopupOnClose);
+      this.popupWindow.on("ready-to-show", () => {
+        this.popupWindow.show();
+        this.popupWindow.blur();
+        resolve();
       });
-    }
+      this.mainWindow.minimize();
+      if (isDev()) {
+        this.popupWindow.loadURL(`${this.devUrl}#${this.paths.controls}`);
+      } else {
+        this.popupWindow.loadFile(this.prodUrl, {
+          hash: this.paths.controls,
+        });
+      }
+    });
   };
 
   closePopupWindow = async (): Promise<void> => {
@@ -133,11 +157,10 @@ class WindowManager {
   private listenerPopupOnClose = async () => {
     if (importer.isRunning) {
       importer.stop();
-      await snooze(500);
+      await snooze(CLOSE_POPUP_WAIT_TIME);
     }
-    await snooze(500);
+    await snooze(CLOSE_POPUP_WAIT_TIME);
     this.popupWindow = null;
-    this.mainWindow.restore();
   };
 }
 

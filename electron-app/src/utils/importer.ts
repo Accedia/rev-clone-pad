@@ -1,7 +1,8 @@
 import { Key, keyboard } from "@nut-tree/nut-js";
 import { BrowserWindow } from "electron";
+import { getWaitTime, getInputSpeed } from '../main';
 import { MESSAGE } from "../constants/messages";
-import { getWaitTimeInSeconds } from "./get_wait_time_in_seconds";
+import { getWaitTimeInSeconds, getInputSpeedInSeconds } from "./get_config_values";
 import { snooze } from "./snooze";
 
 class Importer {
@@ -11,10 +12,10 @@ class Importer {
     return this._isRunning;
   }
 
-  constructor() {
-    keyboard.config.autoDelayMs = 1;
-    keyboard["nativeAdapter"].keyboard.setKeyboardDelay(100);
-  }
+  public setConfig = (inputSpeed: number) => {
+    keyboard.config.autoDelayMs = inputSpeed ** 2;
+    keyboard["nativeAdapter"].keyboard.setKeyboardDelay(inputSpeed * 100);
+  };
 
   public start = () => {
     this._isRunning = true;
@@ -26,10 +27,14 @@ class Importer {
 
   startPopulation = async (
     data: any[][],
-    popupWindow: BrowserWindow,
-    waitTime: string
+    popupWindow: BrowserWindow
   ) => {
+    this.start();
+    const waitTime = getWaitTime();
+    const inputSpeed = getInputSpeed();
     const waitTimeSeconds = getWaitTimeInSeconds(waitTime);
+    const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
+    this.setConfig(inputSpeedSeconds)
     try {
       for (let i = 0; i < waitTimeSeconds && this.isRunning; i++) {
         const remainingTime = waitTimeSeconds - i;
@@ -38,8 +43,10 @@ class Importer {
           await snooze(1000);
         }
       }
-      popupWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
-      await this.populateTableData(data, popupWindow);
+      if (this.isRunning) {
+        popupWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
+        await this.populateTableData(data, popupWindow);
+      }
     } catch (e) {
       console.log(e);
     }
