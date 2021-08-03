@@ -56,8 +56,8 @@ class Main {
       app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);        
     } else {
       // TODO SWITCH!!!!!!!!
-      app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);        
-      // app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL);
+      // app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);        
+      app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL);
     }
 
     // Force single application instance
