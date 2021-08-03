@@ -6,39 +6,15 @@ import path from 'path';
 import axios from 'axios';
 import { Forgettable } from './interfaces/Forgettable';
 import { snooze } from './utils/snooze';
-import { CLOSE_POPUP_WAIT_TIME, CUSTOM_PROTOCOL } from './constants/config';
+import { CUSTOM_PROTOCOL } from './constants/config';
 import Store from 'electron-store';
 import { WaitTime } from './interfaces/WaitTime';
 import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
+import { getPopulationData } from './utils/get_population_data';
 
 const WAIT_TIME_STORAGE_KEY = "waitTime";
 const INPUT_SPEED_STORAGE_KEY = "inputSpeed";
-
-// TODO remove and make the data arrive in the proper format from FIT
-const REPL = 'Repl';
-const RPR = 'Rpr';
-const REFN = 'Refn';
-const R_I = 'R_I';
-const SECT = 'Sect';
-const ALIGN = 'Align';
-const SUBL = 'Subl';
-const BLND = 'Blnd';
-const PDR = 'PDR';
-const NONE = 'None';
-
-const LINE_OPERATIONS = [
-  { id: NONE, title: 'None', disabled: true },
-  { id: REPL, title: 'Repl' },
-  { id: RPR, title: 'Rpr' },
-  { id: REFN, title: 'Refn' },
-  { id: R_I, title: 'R&I' },
-  { id: SECT, title: 'Sect' },
-  { id: ALIGN, title: 'Align' },
-  { id: SUBL, title: 'Subl' },
-  { id: BLND, title: 'Blnd' },
-  { id: PDR, title: 'PDR' },
-];
 class Main {
   windowManager = new WindowManager();
   store = new Store();
@@ -91,20 +67,22 @@ class Main {
       app.quit();
     } else {
       app.on('second-instance', async (e, argv) => {
-        if (this.windowManager.popupWindow) {
-          importer.stop();
-          this.windowManager.popupWindow.webContents.send(
-            MESSAGE.RESET_CONTROLS_STATE
-          );
-        } else {
-          await this.windowManager.createPopupWindow();
-        }
-
         if (process.platform !== 'darwin') {
-          // Find the arg that is our custom protocol url and store it
-          const url = getCustomProtocolUrl(argv);
-          await snooze(1500);
-          this.fetchData(url);
+          if (this.windowManager.popupWindow) {
+            importer.stop();
+            this.windowManager.popupWindow.webContents.send(
+              MESSAGE.RESET_CONTROLS_STATE
+            );
+          } else {
+            // Find the arg that is our custom protocol url and store it
+            const url = getCustomProtocolUrl(argv);
+            if (url) {
+              await this.windowManager.createPopupWindow();
+              await snooze(1500);
+              this.fetchData(url);
+            }
+            
+          }
         }
       });
     }
@@ -135,41 +113,8 @@ class Main {
     return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
   }
 
-  private getToStringOrNull = (value: number) => {
-    return value ? value.toString() : null;
-  }
-
-  // TODO refactor
   private startImporter = async (forgettables: Forgettable[]) => {
-    const data = [];
-
-    for (const forgettable of forgettables) {
-      const oper = LINE_OPERATIONS.find((lo) => lo.id === forgettable.oper);
-      const extPrice = ((forgettable.quantity || 0) * (forgettable.partPrice$ || 0)).toFixed(2);
-
-      data.push([
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        oper ? oper.title : null,
-        null,
-        forgettable.description,
-        null,
-        this.getToStringOrNull(forgettable.quantity),
-        this.getToStringOrNull(forgettable.partPrice$),
-        extPrice,
-        null,
-        null,
-        this.getToStringOrNull(forgettable.laborHours),
-        null,
-        this.getToStringOrNull(forgettable.paintHours),
-      ]);
-    }
-
-    console.log('data after', data);
+    const data = getPopulationData(forgettables);
 
     await importer.startPopulation(
       data,
@@ -186,7 +131,6 @@ class Main {
       url = url.replace('localhost', '[::1]');
       const result = await axios.get(url);
 
-      console.log('result.data', result.data);
       this.windowManager.popupWindow.webContents.send(
         MESSAGE.LOADING_UPDATE,
         false

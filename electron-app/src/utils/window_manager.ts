@@ -97,16 +97,10 @@ class WindowManager {
   };
 
   startApp = (): void => {
-    console.log('process.argv', process.argv);
-    console.log('process.platform', process.platform);
-
     snooze(5000).then(async () => {
-      this.createMainWindow();
+      await this.createMainWindow();
       if (process.platform !== 'darwin') {
         const url = getCustomProtocolUrl(process.argv);
-
-        console.log('url', url)
-
         if (url) {
           await this.createPopupWindow();
           fetchData(url);
@@ -115,18 +109,21 @@ class WindowManager {
     });
   };
 
-  createMainWindow = (): void => {
-    this.mainWindow = new BrowserWindow(windowConfig.main);
-    this.mainWindow.once("ready-to-show", () => {
-      this.mainWindow.show();
-      this.loadingWindow.hide();
-      this.loadingWindow.close();
+  createMainWindow = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      this.mainWindow = new BrowserWindow(windowConfig.main);
+      this.mainWindow.once("ready-to-show", () => {
+        this.mainWindow.show();
+        this.loadingWindow.hide();
+        this.loadingWindow.close();
+        resolve();
+      });
+      if (isDev()) {
+        this.mainWindow.loadURL(this.devUrl);
+      } else {
+        this.mainWindow.loadFile(this.prodUrl);
+      }
     });
-    if (isDev()) {
-      this.mainWindow.loadURL(this.devUrl);
-    } else {
-      this.mainWindow.loadFile(this.prodUrl);
-    }
   };
 
   createPopupWindow = (): Promise<void> => {

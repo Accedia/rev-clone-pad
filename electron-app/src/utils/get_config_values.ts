@@ -3,7 +3,7 @@ import { InputSpeed } from '../interfaces/InputSpeed';
 import { INPUT_SPEED_CONFIG, WAIT_TIME_CONFIG } from '../constants/config';
 
 export const getWaitTimeInSeconds = (waitTime: WaitTime): number => {
-  return WAIT_TIME_CONFIG[waitTime].value + 1;
+  return WAIT_TIME_CONFIG[waitTime].value;
 };
 
 export const getInputSpeedInSeconds = (inputSpeed: InputSpeed): number => {

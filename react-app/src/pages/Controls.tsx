@@ -72,7 +72,6 @@ const Controls: React.FC = () => {
 
   React.useEffect(() => {
     ipcRenderer.on(MESSAGE.ERROR, (event: any, message: string) => {
-      console.log('ERROR', message);
       dispatch({
         type: '@SET_HAS_ERROR',
         payload: true,
