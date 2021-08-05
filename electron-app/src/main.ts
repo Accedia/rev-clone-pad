@@ -52,10 +52,11 @@ class Main {
         if (this.windowManager.popupWindow) {
           importer.stop();
           this.windowManager.popupWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE);
+        } else if (url) {
+          await this.windowManager.createPopupWindow();
         }
 
         if (url) {
-          await this.windowManager.createPopupWindow();
           await snooze(1500);
           this.fetchData(url);
         }
@@ -88,6 +89,8 @@ class Main {
 
   private startImporter = async (forgettables: Forgettable[]) => {
     const data = getPopulationData(forgettables);
+
+    console.log('data', data);
 
     await importer.startPopulation(data, this.windowManager.popupWindow);
   };
