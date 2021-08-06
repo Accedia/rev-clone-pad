@@ -26,7 +26,7 @@ class Importer {
   };
 
   startPopulation = async (
-    data: any[][],
+    data: string[][],
     popupWindow: BrowserWindow
   ) => {
     this.start();
@@ -45,10 +45,18 @@ class Importer {
       }
       if (this.isRunning) {
         popupWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
+        await this.goToTheFirstCell();
         await this.populateTableData(data, popupWindow);
       }
     } catch (e) {
       console.log(e);
+    }
+  };
+
+  private goToTheFirstCell = async () => {
+    await keyboard.pressKey(Key.Home);
+    for (let i = 0; i < 5; i++) {
+      await keyboard.pressKey(Key.PageDown);
     }
   };
 
@@ -69,7 +77,7 @@ class Importer {
         if (value) {
           await keyboard.type(value);
         }
-        keyboard.pressKey(Key.Tab);
+        await keyboard.pressKey(Key.Tab);
         currentPercentage += percentagePerCell;
         popupWindow.webContents.send(
           MESSAGE.PROGRESS_UPDATE,
