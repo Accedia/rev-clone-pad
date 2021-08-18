@@ -90,7 +90,7 @@ class Main {
   private startImporter = async (forgettables: Forgettable[]) => {
     const data = getPopulationData(forgettables);
 
-    await importer.startPopulation(data, this.windowManager.popupWindow);
+    await importer.startPopulation(data, forgettables, this.windowManager.popupWindow);
   };
 
   fetchData = async (url: string) => {

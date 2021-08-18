@@ -4,6 +4,7 @@ import { getWaitTime, getInputSpeed } from '../main';
 import { MESSAGE } from "../constants/messages";
 import { getWaitTimeInSeconds, getInputSpeedInSeconds } from "./get_config_values";
 import { snooze } from "./snooze";
+import { Forgettable } from '../interfaces/Forgettable';
 
 class Importer {
   private _isRunning = false;
@@ -15,7 +16,7 @@ class Importer {
   public setConfig = (inputSpeed: number) => {
     keyboard.config.autoDelayMs = inputSpeed ** 2;
     keyboard["nativeAdapter"].keyboard.setKeyboardDelay(inputSpeed * 100);
-    // TODO detele. Left only for debug purposes
+    // TODO delete. Left only for debug purposes
     // screen.config.confidence = 0.7;
     // screen.config.autoHighlight = true;
     // screen.config.highlightDurationMs = 3000;
@@ -32,6 +33,7 @@ class Importer {
 
   startPopulation = async (
     data: string[][],
+    forgettables: Forgettable[],
     popupWindow: BrowserWindow
   ) => {
     this.start();
@@ -50,10 +52,10 @@ class Importer {
       }
       if (this.isRunning) {
         popupWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
-        const lineOperationCoordinates = await this.getLineOperationCoordinates();
+        const lineOperationCoordinates = await this.getLineOperationCoordinates(popupWindow);
         if (lineOperationCoordinates) {
           await this.goToTheFirstCell();
-          await this.populateTableData(data, popupWindow, lineOperationCoordinates);
+          await this.populateTableData(data, forgettables, popupWindow, lineOperationCoordinates);
         }
       }
     } catch (e) {
@@ -61,13 +63,13 @@ class Importer {
     }
   };
 
-  private getLineOperationCoordinates = async (): Promise<Point> => {
+  private getLineOperationCoordinates = async (popupWindow: BrowserWindow): Promise<Point> => {
     try {
       const imageCoordinates = await screen.find("./image.png");
 
       return await centerOf(imageCoordinates);
     } catch (e) {
-      // TODO return error to the user
+      popupWindow.webContents.send(MESSAGE.ERROR, 'Error identifying the Line Operation button. Please make sure the CCC is on your main screen and try again.');
       console.log('Error finding the Line Operation button:', e);
     }
   };
@@ -78,24 +80,25 @@ class Importer {
     await keyboard.releaseKey(Key.LeftControl);
   };
 
-  private populateModalData = async () => {
+  private populateModalData = async (partNum: string, partNumTabIndex: number, lineNote: string) => {
     await mouse.leftClick();
     await snooze(500);
     await keyboard.pressKey(Key.Down);
     await keyboard.pressKey(Key.Enter);
-    // TODO make conditional when there is no part num
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < partNumTabIndex; i++) {
       await keyboard.pressKey(Key.Tab);
     }
-    // TODO make the part number to come from the forgettablesForCommit end-point
-    await keyboard.type('test part num');
+    if (partNum) {
+      await keyboard.type(partNum);
+    }
     for (let i = 0; i < 2; i++) {
       await keyboard.pressKey(Key.LeftControl, Key.Tab);
       await keyboard.releaseKey(Key.LeftControl);
     }
     await keyboard.pressKey(Key.Tab);
-    // TODO make the line notes to come from the forgettablesForCommit end-point
-    await keyboard.type('test line note');
+    if (lineNote) {
+      await keyboard.type(lineNote);
+    }
     for (let i = 0; i < 4; i++) {
       await keyboard.pressKey(Key.Tab);
     }
@@ -107,6 +110,7 @@ class Importer {
 
   private populateTableData = async (
     data: any[][],
+    forgettables: Forgettable[],
     popupWindow: BrowserWindow,
     lineOperationCoordinates: Point,
   ) => {
@@ -115,19 +119,21 @@ class Importer {
 
     let currentPercentage = 0;
 
-    for (const row of data) {
-      for (let i = 0; i < row.length; i++) {
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      const { partNum, partNumTabIndex, lineNote } = forgettables[i];
+      for (let j = 0; j < row.length; j++) {
         if (!this.isRunning) {
           return;
         }
-        const value = row[i];
+        const value = row[j];
         if (value) {
           await keyboard.type(value);
         }
         await keyboard.pressKey(Key.Tab);
-        if (i === 8) {
+        if (j === 8) {
           await mouse.setPosition(lineOperationCoordinates);
-          await this.populateModalData();
+          await this.populateModalData(partNum, partNumTabIndex, lineNote);
         }
         currentPercentage += percentagePerCell;
         popupWindow.webContents.send(

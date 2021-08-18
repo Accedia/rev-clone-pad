@@ -6,4 +6,7 @@ export interface Forgettable {
   extPrice?: string;
   laborHours?: string;
   paintHours?: string;
+  partNum?: string;
+  partNumTabIndex?: number;
+  lineNote?: string;
 }
