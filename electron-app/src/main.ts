@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, ipcMain } from "electron";
 import WindowManager from "./utils/window_manager";
 import importer from "./utils/importer";
 import { MESSAGE } from "./constants/messages";
