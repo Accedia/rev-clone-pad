@@ -1,10 +1,11 @@
 import { Key, keyboard, mouse, screen, centerOf, Point } from "@nut-tree/nut-js";
-import { BrowserWindow } from "electron";
+import { app, BrowserWindow } from "electron";
 import { getWaitTime, getInputSpeed } from '../main';
 import { MESSAGE } from "../constants/messages";
 import { getWaitTimeInSeconds, getInputSpeedInSeconds } from "./get_config_values";
 import { snooze } from "./snooze";
 import { Forgettable } from '../interfaces/Forgettable';
+import { isAppDev } from './is_dev';
 
 class Importer {
   private _isRunning = false;
@@ -16,6 +17,7 @@ class Importer {
   public setConfig = (inputSpeed: number) => {
     keyboard.config.autoDelayMs = inputSpeed ** 2;
     keyboard["nativeAdapter"].keyboard.setKeyboardDelay(inputSpeed * 100);
+    
     // TODO delete. Left only for debug purposes
     // screen.config.confidence = 0.7;
     // screen.config.autoHighlight = true;
@@ -65,7 +67,9 @@ class Importer {
 
   private getLineOperationCoordinates = async (popupWindow: BrowserWindow): Promise<Point> => {
     try {
-      const imageCoordinates = await screen.find("./image.png");
+      const imagePath = isAppDev(app) ? './image.png' : 'resources/app/image.png';
+      console.log(imagePath);
+      const imageCoordinates = await screen.find(imagePath);
 
       return await centerOf(imageCoordinates);
     } catch (e) {
