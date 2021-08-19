@@ -19,7 +19,7 @@ class Importer {
     keyboard["nativeAdapter"].keyboard.setKeyboardDelay(inputSpeed * 100);
     
     // TODO delete. Left only for debug purposes
-    // screen.config.confidence = 0.7;
+    // screen.config.confidence = 0.98;
     // screen.config.autoHighlight = true;
     // screen.config.highlightDurationMs = 3000;
     // screen.config.highlightOpacity = 0.8;
@@ -67,10 +67,9 @@ class Importer {
 
   private getLineOperationCoordinates = async (popupWindow: BrowserWindow): Promise<Point> => {
     try {
-      const imagePath = isAppDev(app) ? './image.png' : 'resources/app/image.png';
-      console.log(imagePath);
+      const imagePath = isAppDev(app) ? './image2.png' : 'resources/app/image2.png';
       const imageCoordinates = await screen.find(imagePath);
-
+      
       return await centerOf(imageCoordinates);
     } catch (e) {
       popupWindow.webContents.send(MESSAGE.ERROR, 'Error identifying the Line Operation button. Please make sure the CCC is on your main screen and try again.');
@@ -89,17 +88,20 @@ class Importer {
     await snooze(500);
     await keyboard.pressKey(Key.Down);
     await keyboard.pressKey(Key.Enter);
-    for (let i = 0; i < partNumTabIndex; i++) {
-      await keyboard.pressKey(Key.Tab);
-    }
-    if (partNum) {
+   
+    if (partNum && partNumTabIndex > 0) {
+      for (let i = 0; i < partNumTabIndex; i++) {
+        await keyboard.pressKey(Key.Tab);
+      }
       await keyboard.type(partNum);
     }
+
     for (let i = 0; i < 2; i++) {
       await keyboard.pressKey(Key.LeftControl, Key.Tab);
       await keyboard.releaseKey(Key.LeftControl);
     }
     await keyboard.pressKey(Key.Tab);
+    
     if (lineNote) {
       await keyboard.type(lineNote);
     }
@@ -107,6 +109,7 @@ class Importer {
       await keyboard.pressKey(Key.Tab);
     }
     await keyboard.pressKey(Key.Enter);
+    
     for (let i = 0; i < 3; i++) {
       await keyboard.pressKey(Key.Tab);
     }
@@ -125,6 +128,7 @@ class Importer {
 
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
+
       const { partNum, partNumTabIndex, lineNote } = forgettables[i];
       for (let j = 0; j < row.length; j++) {
         if (!this.isRunning) {
