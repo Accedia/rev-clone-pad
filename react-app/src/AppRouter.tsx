@@ -1,7 +1,7 @@
 import React from "react";
 import { Route, Switch, HashRouter as Router } from "react-router-dom";
 import Controls from "./pages/Controls";
-import Main from "./pages/Main";
+import Homepage from "./pages/Homepage";
 import LoadingPage from "./pages/LoadingPage";
 
 const AppRouter: React.FC = () => {
@@ -9,7 +9,7 @@ const AppRouter: React.FC = () => {
     <Router>
       <Switch>
         <Route path="/" exact>
-          <Main />
+          <Homepage />
         </Route>
         <Route path="/controls">
           <Controls />
