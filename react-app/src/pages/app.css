@@ -107,3 +107,22 @@ html,
 .settings-segment {
   padding: 0 !important;
 }
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-body {
+  max-height: 200px;
+  overflow: hidden;
+
+  -webkit-transition: max-height 0.3s ease-out;
+  -moz-transition: max-height 0.3s ease-out;
+  transition: max-height 0.3s ease-out;
+}
+
+.settings-body.hidden {
+  max-height: 0px;
+}

@@ -94,6 +94,7 @@ class Main {
 
   fetchData = async (url: string) => {
     try {
+      this.windowManager.putWindowOnTop(this.windowManager.mainWindow);
       this.windowManager.mainWindow.webContents.send(MESSAGE.LOADING_UPDATE, true);
       this.windowManager.mainWindow.webContents.send(MESSAGE.IS_POPULATING_UPDATE, true);
       url = url.replace("localhost", "[::1]");

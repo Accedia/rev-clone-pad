@@ -1,11 +1,13 @@
 import React from "react";
-import { Header, Icon, Segment } from "semantic-ui-react";
+import { Button, Header, Icon, Popup, Segment } from "semantic-ui-react";
 import Settings from "./Settings";
 
 import "./app.css";
 import Controls from "./Controls";
 
 const Homepage: React.FC = () => {
+  const [isSettingsCollapsed, setIsSettingsCollapsed] = React.useState(true);
+
   return (
     <div className="homepage-container">
       <Segment.Group raised>
@@ -19,8 +21,25 @@ const Homepage: React.FC = () => {
       <Segment.Group raised>
         <Header as="h2" attached="top" size="medium">
           Settings
+          <Popup
+            inverted
+            content={`${isSettingsCollapsed ? "Show" : "Hide"} settings`}
+            trigger={
+              <Button
+                floated="right"
+                basic
+                icon={`caret ${isSettingsCollapsed ? "down" : "up"}`}
+                size="tiny"
+                onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)}
+              />
+            }
+          />
         </Header>
-        <Segment attached color="grey" className="settings-segment">
+        <Segment
+          attached
+          color="grey"
+          className={`settings-segment settings-body ${isSettingsCollapsed ? "hidden" : ""}`}
+        >
           <Settings />
         </Segment>
       </Segment.Group>

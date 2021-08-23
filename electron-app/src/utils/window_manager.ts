@@ -1,9 +1,7 @@
 import { isDev } from "./is_dev";
-import { BrowserWindow } from "electron";
+import { BrowserWindow, screen } from "electron";
 import * as path from "path";
-import importer from "./importer";
 import { snooze } from "./snooze";
-import { CLOSE_POPUP_WAIT_TIME } from "../constants/config";
 import { getCustomProtocolUrl } from "./get_custom_protocol_url";
 import { fetchData } from "../main";
 import { WINDOW_CONFIG } from "../config/window_config";
@@ -66,6 +64,14 @@ class WindowManager {
         this.mainWindow.loadFile(this.prodUrl);
       }
     });
+  };
+
+  public putWindowOnTop = (window: BrowserWindow): void => {
+    const display = screen.getPrimaryDisplay();
+    const [windowWidth] = window.getSize();
+
+    window.setAlwaysOnTop(true);
+    window.setPosition(display.bounds.width - windowWidth - 20, 20);
   };
 }
 

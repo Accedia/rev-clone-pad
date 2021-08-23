@@ -1,6 +1,6 @@
 import fs from "fs";
 import { Key, keyboard, mouse, screen, centerOf, Point, Region } from "@nut-tree/nut-js";
-import { app, BrowserWindow, screen as electronScreen } from "electron";
+import { app, BrowserWindow } from "electron";
 import { getWaitTime, getInputSpeed } from "../main";
 import { MESSAGE } from "../constants/messages";
 import { getWaitTimeInSeconds, getInputSpeedInSeconds } from "./get_config_values";
@@ -40,7 +40,6 @@ class Importer {
   };
 
   public startPopulation = async (data: string[][], forgettables: Forgettable[], electronWindow: BrowserWindow) => {
-    this.putWindowOnTop(electronWindow);
     this.start();
     const waitTime = getWaitTime();
     const inputSpeed = getInputSpeed();
@@ -67,14 +66,6 @@ class Importer {
     } catch (e) {
       console.log(e);
     }
-  };
-
-  private putWindowOnTop = (window: BrowserWindow) => {
-    const display = electronScreen.getPrimaryDisplay();
-    const [windowWidth] = window.getSize();
-
-    window.setAlwaysOnTop(true);
-    window.setPosition(display.bounds.width - windowWidth - 20, 20);
   };
 
   private getLineOperationCoordinates = async (popupWindow: BrowserWindow): Promise<Point> => {
