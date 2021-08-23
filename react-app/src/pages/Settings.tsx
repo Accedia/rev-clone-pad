@@ -1,6 +1,6 @@
 import { INPUT_SPEED_CONFIG, MESSAGE, WAIT_TIME_CONFIG } from "@electron-app";
 import React, { useState } from "react";
-import { Button, Popup } from "semantic-ui-react";
+import { Button, Dimmer, Icon, Loader, Popup, Segment } from "semantic-ui-react";
 import { SemanticWIDTHS } from "semantic-ui-react/dist/commonjs/generic";
 import SectionTitle from "../components/SectionTitle";
 
@@ -24,6 +24,17 @@ const Settings: React.FC = () => {
 
   const [waitTime, setWaitTime] = useState<WaitTime>(storageWaitTime || "normal");
   const [inputSpeed, setInputSpeed] = useState<InputSpeed>(storageInputSpeed || "normal");
+  const [isPopulating, setIsPopulating] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    const handler = (event: any, isLoading: boolean) => {
+      setIsPopulating(isLoading);
+      console.log(isLoading);
+    };
+
+    ipcRenderer.on(MESSAGE.IS_POPULATING_UPDATE, handler);
+    return () => ipcRenderer.removeListener(MESSAGE.IS_POPULATING_UPDATE, handler);
+  }, []);
 
   React.useEffect(() => {
     ipcRenderer.send(MESSAGE.SET_WAIT_TIME, waitTime);
@@ -37,6 +48,7 @@ const Settings: React.FC = () => {
     <Popup
       content={popupText}
       position="top center"
+      inverted
       trigger={
         <Button onClick={() => setWaitTime(buttonWaitTime)} active={waitTime === buttonWaitTime}>
           {content}
@@ -52,7 +64,11 @@ const Settings: React.FC = () => {
   );
 
   return (
-    <div className="main-container">
+    <Dimmer.Dimmable dimmed={isPopulating} className={`main-container ${isPopulating ? "population-in-progress" : ""}`}>
+      <Dimmer active={isPopulating}>
+        <Icon name="dont" />
+        Input in progress...
+      </Dimmer>
       <div className="setting-container">
         <SectionTitle
           title="Wait Time"
@@ -83,7 +99,7 @@ const Settings: React.FC = () => {
           })}
         </Button.Group>
       </div>
-    </div>
+    </Dimmer.Dimmable>
   );
 };
 

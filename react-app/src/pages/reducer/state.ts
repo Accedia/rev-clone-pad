@@ -1,10 +1,10 @@
 export interface ControlsState {
-  stoppedPrematurely: boolean,
-  timer: number,
-  percentage: number,
-  isRunning: boolean,
-  isLoading: boolean,
-  hasError: boolean,
+  stoppedPrematurely: boolean;
+  timer: number;
+  percentage: number;
+  isRunning: boolean;
+  isLoading: boolean;
+  hasError: boolean;
 }
 
 export const INITIAL_STATE: ControlsState = {
@@ -12,6 +12,6 @@ export const INITIAL_STATE: ControlsState = {
   timer: -1,
   percentage: 0,
   isRunning: true,
-  isLoading: true,
+  isLoading: false,
   hasError: false,
 };

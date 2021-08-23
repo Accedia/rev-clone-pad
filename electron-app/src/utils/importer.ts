@@ -1,23 +1,12 @@
-import fs from 'fs';
-import {
-  Key,
-  keyboard,
-  mouse,
-  screen,
-  centerOf,
-  Point,
-  Region,
-} from '@nut-tree/nut-js';
-import { app, BrowserWindow } from 'electron';
-import { getWaitTime, getInputSpeed } from '../main';
-import { MESSAGE } from '../constants/messages';
-import {
-  getWaitTimeInSeconds,
-  getInputSpeedInSeconds,
-} from './get_config_values';
-import { snooze } from './snooze';
-import { Forgettable } from '../interfaces/Forgettable';
-import { isAppDev } from './is_dev';
+import fs from "fs";
+import { Key, keyboard, mouse, screen, centerOf, Point, Region } from "@nut-tree/nut-js";
+import { app, BrowserWindow, screen as electronScreen } from "electron";
+import { getWaitTime, getInputSpeed } from "../main";
+import { MESSAGE } from "../constants/messages";
+import { getWaitTimeInSeconds, getInputSpeedInSeconds } from "./get_config_values";
+import { snooze } from "./snooze";
+import { Forgettable } from "../interfaces/Forgettable";
+import { isAppDev } from "./is_dev";
 
 interface ImageSearchResult {
   coordinates: Region | null;
@@ -33,7 +22,7 @@ class Importer {
 
   public setConfig = (inputSpeed: number) => {
     keyboard.config.autoDelayMs = inputSpeed ** 2;
-    keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 100);
+    keyboard["nativeAdapter"].keyboard.setKeyboardDelay(inputSpeed * 100);
 
     // TODO delete. Left only for debug purposes
     // screen.config.confidence = 0.98;
@@ -50,11 +39,8 @@ class Importer {
     this._isRunning = false;
   };
 
-  startPopulation = async (
-    data: string[][],
-    forgettables: Forgettable[],
-    popupWindow: BrowserWindow
-  ) => {
+  public startPopulation = async (data: string[][], forgettables: Forgettable[], electronWindow: BrowserWindow) => {
+    this.putWindowOnTop(electronWindow);
     this.start();
     const waitTime = getWaitTime();
     const inputSpeed = getInputSpeed();
@@ -64,35 +50,35 @@ class Importer {
     try {
       for (let i = 0; i < waitTimeSeconds && this.isRunning; i++) {
         const remainingTime = waitTimeSeconds - i;
-        popupWindow.webContents.send(MESSAGE.COUNTDOWN, remainingTime);
+        electronWindow.webContents.send(MESSAGE.COUNTDOWN, remainingTime);
         if (remainingTime > 0) {
           await snooze(1000);
         }
       }
       if (this.isRunning) {
-        popupWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
-        const lineOperationCoordinates = await this.getLineOperationCoordinates(
-          popupWindow
-        );
+        electronWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
+        const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
         if (lineOperationCoordinates) {
           await this.goToTheFirstCell();
-          await this.populateTableData(
-            data,
-            forgettables,
-            popupWindow,
-            lineOperationCoordinates
-          );
+          await this.populateTableData(data, forgettables, electronWindow, lineOperationCoordinates);
         }
       }
+      electronWindow.setAlwaysOnTop(false);
     } catch (e) {
       console.log(e);
     }
   };
 
-  private getLineOperationCoordinates = async (
-    popupWindow: BrowserWindow
-  ): Promise<Point> => {
-    const imageDirectory = isAppDev(app) ? './assets' : 'resources/app/assets';
+  private putWindowOnTop = (window: BrowserWindow) => {
+    const display = electronScreen.getPrimaryDisplay();
+    const [windowWidth] = window.getSize();
+
+    window.setAlwaysOnTop(true);
+    window.setPosition(display.bounds.width - windowWidth - 20, 20);
+  };
+
+  private getLineOperationCoordinates = async (popupWindow: BrowserWindow): Promise<Point> => {
+    const imageDirectory = isAppDev(app) ? "./assets" : "resources/app/assets";
     const images = fs.readdirSync(imageDirectory);
     const result: ImageSearchResult = {
       coordinates: null,
@@ -117,11 +103,9 @@ class Importer {
     } else {
       popupWindow.webContents.send(
         MESSAGE.ERROR,
-        'Error identifying the Line Operation button. Please make sure the CCC is on your main screen and try again.'
+        "Error identifying the Line Operation button. Please make sure the CCC is on your main screen and try again."
       );
-      result.errors.forEach((error) =>
-        console.log('Error finding the Line Operation button:', error)
-      );
+      result.errors.forEach((error) => console.log("Error finding the Line Operation button:", error));
     }
   };
 
@@ -131,11 +115,7 @@ class Importer {
     await keyboard.releaseKey(Key.LeftControl);
   };
 
-  private populateModalData = async (
-    partNum: string,
-    partNumTabIndex: number,
-    lineNote: string
-  ) => {
+  private populateModalData = async (partNum: string, partNumTabIndex: number, lineNote: string) => {
     await mouse.leftClick();
     await snooze(500);
     await keyboard.pressKey(Key.Down);
@@ -196,10 +176,7 @@ class Importer {
           await this.populateModalData(partNum, partNumTabIndex, lineNote);
         }
         currentPercentage += percentagePerCell;
-        popupWindow.webContents.send(
-          MESSAGE.PROGRESS_UPDATE,
-          currentPercentage
-        );
+        popupWindow.webContents.send(MESSAGE.PROGRESS_UPDATE, currentPercentage);
       }
     }
     this.stop();

@@ -49,11 +49,11 @@ class Main {
       app.on("second-instance", async (e, argv) => {
         const url = getCustomProtocolUrl(argv);
 
-        if (this.windowManager.popupWindow) {
+        if (this.windowManager.mainWindow) {
           importer.stop();
-          this.windowManager.popupWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE);
+          this.windowManager.mainWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE);
         } else if (url) {
-          await this.windowManager.createPopupWindow();
+          await this.windowManager.createMainWindow();
         }
 
         if (url) {
@@ -66,7 +66,6 @@ class Main {
 
   private registerMainListeners = () => {
     ipcMain.on(MESSAGE.STOP_IMPORTER, importer.stop);
-    ipcMain.on(MESSAGE.CLOSE_POPUP, this.windowManager.closePopupWindow);
     ipcMain.on(MESSAGE.SET_WAIT_TIME, this.setWaitTime);
     ipcMain.on(MESSAGE.SET_INPUT_SPEED, this.setInputSpeed);
   };
@@ -90,20 +89,22 @@ class Main {
   private startImporter = async (forgettables: Forgettable[]) => {
     const data = getPopulationData(forgettables);
 
-    await importer.startPopulation(data, forgettables, this.windowManager.popupWindow);
+    await importer.startPopulation(data, forgettables, this.windowManager.mainWindow);
   };
 
   fetchData = async (url: string) => {
     try {
-      this.windowManager.popupWindow.webContents.send(MESSAGE.LOADING_UPDATE, true);
+      this.windowManager.mainWindow.webContents.send(MESSAGE.LOADING_UPDATE, true);
+      this.windowManager.mainWindow.webContents.send(MESSAGE.IS_POPULATING_UPDATE, true);
       url = url.replace("localhost", "[::1]");
       const result = await axios.get(url);
 
-      this.windowManager.popupWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
-      this.startImporter(result.data);
+      this.windowManager.mainWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
+      await this.startImporter(result.data);
+      this.windowManager.mainWindow.webContents.send(MESSAGE.IS_POPULATING_UPDATE, false);
     } catch (e) {
       console.log("Error retrieving the forgettables", e.message);
-      this.windowManager.popupWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
+      this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
     }
   };
 }
