@@ -133,8 +133,10 @@ class Importer {
     }
     await keyboard.pressKey(Key.Enter);
 
-    for (let i = 0; i < 3; i++) {
-      await keyboard.pressKey(Key.Tab);
+    if (lineNote || partNum) {
+      for (let i = 0; i < 3; i++) {
+        await keyboard.pressKey(Key.Tab);
+      }
     }
   };
 

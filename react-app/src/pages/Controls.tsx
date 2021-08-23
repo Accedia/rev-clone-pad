@@ -17,6 +17,7 @@ const Controls: React.FC = () => {
   const { addToast } = useToasts();
 
   const resetState = () => {
+    console.log("state reset");
     dispatch({
       type: "@RESET_STATE",
     });
@@ -94,8 +95,6 @@ const Controls: React.FC = () => {
     }
   };
 
-  console.log({ isLoading, timer });
-
   if (!isLoading && timer < 0) {
     return <Message>No input currently running</Message>;
   }
@@ -108,8 +107,6 @@ const Controls: React.FC = () => {
       </Loader>
     );
   }
-
-  console.log("main return", { isLoading, timer });
 
   return (
     <div className="controls-loader">

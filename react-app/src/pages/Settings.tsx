@@ -64,7 +64,7 @@ const Settings: React.FC = () => {
   );
 
   return (
-    <Dimmer.Dimmable dimmed={isPopulating} className={`main-container ${isPopulating ? "population-in-progress" : ""}`}>
+    <Dimmer.Dimmable dimmed={isPopulating} className={`main-container`}>
       <Dimmer active={isPopulating}>
         <Icon name="dont" />
         Input in progress...
