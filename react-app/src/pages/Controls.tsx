@@ -1,5 +1,5 @@
 import React, { useReducer } from "react";
-import { Divider, Icon, Loader, Message, Segment } from "semantic-ui-react";
+import { Divider, Loader, Message } from "semantic-ui-react";
 import Timer from "../components/Timer";
 import ProgressBar from "../components/ProgressBar";
 import { ActionButton } from "../components/ActionButton";
@@ -10,7 +10,11 @@ import reducer, { INITIAL_STATE } from "./reducer";
 const electron = window.require("electron");
 const { ipcRenderer } = electron;
 
-const Controls: React.FC = () => {
+interface ControlsProps {
+  onBack?: () => void;
+}
+
+const Controls: React.FC<ControlsProps> = ({ onBack }) => {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
   const { timer, percentage, isRunning, isLoading } = state;
@@ -24,7 +28,14 @@ const Controls: React.FC = () => {
   };
 
   const stopTablePopulationExecution = () => {
-    resetState();
+    dispatch({
+      type: "@SET_IS_RUNNING",
+      payload: false,
+    });
+    dispatch({
+      type: "@SET_STOPPED_PREMATURELY",
+      payload: true,
+    });
     ipcRenderer.send(MESSAGE.STOP_IMPORTER);
     addToast("Execution stopped successfully", { appearance: "success" });
   };
@@ -80,6 +91,7 @@ const Controls: React.FC = () => {
 
     ipcRenderer.on(MESSAGE.ERROR, handler);
     return () => ipcRenderer.removeListener(MESSAGE.ERROR, handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   React.useEffect(() => {
@@ -87,36 +99,41 @@ const Controls: React.FC = () => {
     return () => ipcRenderer.removeListener(MESSAGE.RESET_CONTROLS_STATE, resetState);
   }, []);
 
+  const isIdle = !isLoading && timer < 0;
+  const isDownloadingForgettables = isLoading && timer < 0;
+  const isInWaitTime = timer > 0 && isRunning;
+
   const renderContent = () => {
-    if (timer > 0 && isRunning) {
+    if (isIdle) {
+      return <Message>No input currently running</Message>;
+    } else if (isDownloadingForgettables) {
+      return (
+        <Loader active inline="centered">
+          Downloading forgettables...
+        </Loader>
+      );
+    }
+    if (isInWaitTime) {
       return <Timer value={timer} />;
     } else {
       return <ProgressBar percentage={percentage} />;
     }
   };
 
-  if (!isLoading && timer < 0) {
-    return <Message>No input currently running</Message>;
-  }
-
-  if (isLoading && timer < 0) {
-    console.log("show loading");
-    return (
-      <Loader active inline="centered">
-        Downloading forgettables...
-      </Loader>
-    );
-  }
-
   return (
     <div className="controls-loader">
-      {renderContent()}
-      {isRunning && (
-        <>
-          <Divider horizontal>Actions</Divider>
-          <ActionButton.Stop onClick={stopTablePopulationExecution} />
-        </>
-      )}
+      <div>{renderContent()}</div>
+      <div>
+        {!isDownloadingForgettables && (
+          <>
+            <Divider horizontal>Actions</Divider>
+            <div className="button-group">
+              {isRunning && <ActionButton.Stop onClick={stopTablePopulationExecution} />}
+              {onBack && <ActionButton.Settings onClick={onBack} disabled={isRunning} />}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

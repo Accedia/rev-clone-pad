@@ -1,6 +1,6 @@
 import { INPUT_SPEED_CONFIG, MESSAGE, WAIT_TIME_CONFIG } from "@electron-app";
 import React, { useState } from "react";
-import { Button, Dimmer, Icon, Loader, Popup, Segment } from "semantic-ui-react";
+import { Button, Popup } from "semantic-ui-react";
 import { SemanticWIDTHS } from "semantic-ui-react/dist/commonjs/generic";
 import SectionTitle from "../components/SectionTitle";
 
@@ -24,17 +24,6 @@ const Settings: React.FC = () => {
 
   const [waitTime, setWaitTime] = useState<WaitTime>(storageWaitTime || "normal");
   const [inputSpeed, setInputSpeed] = useState<InputSpeed>(storageInputSpeed || "normal");
-  const [isPopulating, setIsPopulating] = useState<boolean>(false);
-
-  React.useEffect(() => {
-    const handler = (event: any, isLoading: boolean) => {
-      setIsPopulating(isLoading);
-      console.log(isLoading);
-    };
-
-    ipcRenderer.on(MESSAGE.IS_POPULATING_UPDATE, handler);
-    return () => ipcRenderer.removeListener(MESSAGE.IS_POPULATING_UPDATE, handler);
-  }, []);
 
   React.useEffect(() => {
     ipcRenderer.send(MESSAGE.SET_WAIT_TIME, waitTime);
@@ -64,17 +53,13 @@ const Settings: React.FC = () => {
   );
 
   return (
-    <Dimmer.Dimmable dimmed={isPopulating} className={`main-container`}>
-      <Dimmer active={isPopulating}>
-        <Icon name="dont" />
-        Input in progress...
-      </Dimmer>
+    <div>
       <div className="setting-container">
         <SectionTitle
           title="Wait Time"
           popup
           popupContent="The time you will have to click the first cell of the CCC application before the population starts"
-          popupPosition="left center"
+          popupPosition="bottom left"
         />
         <Button.Group widths={Object.keys(WAIT_TIME_CONFIG).length.toString() as SemanticWIDTHS}>
           {(Object.keys(WAIT_TIME_CONFIG) as Array<WaitTime>).map((key) => {
@@ -99,7 +84,7 @@ const Settings: React.FC = () => {
           })}
         </Button.Group>
       </div>
-    </Dimmer.Dimmable>
+    </div>
   );
 };
 

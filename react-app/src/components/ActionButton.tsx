@@ -3,23 +3,24 @@ import { Button, Icon } from "semantic-ui-react";
 
 interface ButtonProps {
   onClick: () => void;
+  disabled?: boolean;
 }
 
-const CloseButton: React.FC<ButtonProps> = ({ onClick }) => (
-  <Button icon labelPosition="right" onClick={onClick}>
-    Close
-    <Icon name="close" />
+const SettingsButton: React.FC<ButtonProps> = ({ onClick, disabled }) => (
+  <Button icon labelPosition="right" onClick={onClick} disabled={disabled}>
+    Settings
+    <Icon name="setting" />
   </Button>
 );
 
-const StopButton: React.FC<ButtonProps> = ({ onClick }) => (
-  <Button icon labelPosition="right" color="red" onClick={onClick}>
+const StopButton: React.FC<ButtonProps> = ({ onClick, disabled }) => (
+  <Button icon labelPosition="right" color="red" onClick={onClick} disabled={disabled}>
     Stop
     <Icon name="stop" />
   </Button>
 );
 
 export const ActionButton = {
-  Close: CloseButton,
+  Settings: SettingsButton,
   Stop: StopButton,
 };

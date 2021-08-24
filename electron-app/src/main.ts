@@ -94,15 +94,14 @@ class Main {
 
   fetchData = async (url: string) => {
     try {
+      this.windowManager.appStateUpdate("populating");
       this.windowManager.putWindowOnTop(this.windowManager.mainWindow);
       this.windowManager.mainWindow.webContents.send(MESSAGE.LOADING_UPDATE, true);
-      this.windowManager.mainWindow.webContents.send(MESSAGE.IS_POPULATING_UPDATE, true);
       url = url.replace("localhost", "[::1]");
       const result = await axios.get(url);
 
       this.windowManager.mainWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
       await this.startImporter(result.data);
-      this.windowManager.mainWindow.webContents.send(MESSAGE.IS_POPULATING_UPDATE, false);
     } catch (e) {
       console.log("Error retrieving the forgettables", e.message);
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);

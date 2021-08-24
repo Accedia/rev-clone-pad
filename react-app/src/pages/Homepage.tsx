@@ -1,50 +1,38 @@
-import React from "react";
-import { Button, Header, Icon, Popup, Segment } from "semantic-ui-react";
+import React, { useEffect, useMemo, useState } from "react";
 import Settings from "./Settings";
+import Controls from "./Controls";
+import { APP_STATE, MESSAGE } from "@electron-app";
 
 import "./app.css";
-import Controls from "./Controls";
+
+const electron = window.require("electron");
+const { ipcRenderer } = electron;
+
+type AppStateType = keyof typeof APP_STATE;
 
 const Homepage: React.FC = () => {
-  const [isSettingsCollapsed, setIsSettingsCollapsed] = React.useState(true);
+  const [appState, setAppState] = useState<AppStateType>("idle");
 
-  return (
-    <div className="homepage-container">
-      <Segment.Group raised>
-        <Header as="h2" attached="top" size="medium">
-          Input Info
-        </Header>
-        <Segment attached color="blue">
-          <Controls />
-        </Segment>
-      </Segment.Group>
-      <Segment.Group raised>
-        <Header as="h2" attached="top" size="medium">
-          Settings
-          <Popup
-            inverted
-            content={`${isSettingsCollapsed ? "Show" : "Hide"} settings`}
-            trigger={
-              <Button
-                floated="right"
-                basic
-                icon={`caret ${isSettingsCollapsed ? "down" : "up"}`}
-                size="tiny"
-                onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)}
-              />
-            }
-          />
-        </Header>
-        <Segment
-          attached
-          color="grey"
-          className={`settings-segment settings-body ${isSettingsCollapsed ? "hidden" : ""}`}
-        >
-          <Settings />
-        </Segment>
-      </Segment.Group>
-    </div>
-  );
+  useEffect(() => {
+    const handler = (event: any, newAppState: AppStateType) => {
+      setAppState(newAppState);
+    };
+
+    ipcRenderer.on(MESSAGE.UPDATE_APP_STATE, handler);
+    return () => ipcRenderer.removeListener(MESSAGE.UPDATE_APP_STATE, handler);
+  }, []);
+
+  const renderContent = useMemo(() => {
+    switch (appState) {
+      case "populating":
+      default:
+        return <Controls onBack={() => setAppState("idle")} />;
+      case "idle":
+        return <Settings />;
+    }
+  }, [appState]);
+
+  return <div className="homepage-container">{renderContent}</div>;
 };
 
 export default Homepage;

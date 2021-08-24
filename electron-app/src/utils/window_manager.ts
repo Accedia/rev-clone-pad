@@ -5,6 +5,7 @@ import { snooze } from "./snooze";
 import { getCustomProtocolUrl } from "./get_custom_protocol_url";
 import { fetchData } from "../main";
 import { WINDOW_CONFIG } from "../config/window_config";
+import { MESSAGE, APP_STATE } from "../constants/messages";
 
 type MaybeBrowserWindow = BrowserWindow | null;
 
@@ -72,6 +73,10 @@ class WindowManager {
 
     window.setAlwaysOnTop(true);
     window.setPosition(display.bounds.width - windowWidth - 20, 20);
+  };
+
+  public appStateUpdate = (newState: keyof typeof APP_STATE): void => {
+    this.mainWindow.webContents.send(MESSAGE.UPDATE_APP_STATE, newState);
   };
 }
 
