@@ -13,10 +13,12 @@ import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { getPopulationData } from './utils/get_population_data';
 import { isAppDev } from './utils/is_dev';
+import { handleSquirrelEvent } from './utils/handle_squirrel_events';
 
 const WAIT_TIME_STORAGE_KEY = 'waitTime';
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
+if (require('electron-squirrel-startup')) app.quit();
 class Main {
   windowManager = new WindowManager();
   store = new Store();
