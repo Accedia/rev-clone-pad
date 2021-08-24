@@ -1,12 +1,14 @@
-import fs from "fs";
-import { Key, keyboard, mouse, screen, centerOf, Point, Region } from "@nut-tree/nut-js";
-import { app, BrowserWindow } from "electron";
-import { getWaitTime, getInputSpeed } from "../main";
-import { MESSAGE } from "../constants/messages";
-import { getWaitTimeInSeconds, getInputSpeedInSeconds } from "./get_config_values";
-import { snooze } from "./snooze";
-import { Forgettable } from "../interfaces/Forgettable";
-import { isAppDev } from "./is_dev";
+import fs from 'fs';
+import { Key, keyboard, mouse, screen, centerOf, Point, Region, getActiveWindow } from '@nut-tree/nut-js';
+import { app, BrowserWindow, screen as electronScreen } from 'electron';
+import { getWaitTime, getInputSpeed } from '../main';
+import { MESSAGE } from '../constants/messages';
+import { getWaitTimeInSeconds, getInputSpeedInSeconds } from './get_config_values';
+import { snooze } from './snooze';
+import { Forgettable } from '../interfaces/Forgettable';
+import { isAppDev } from './is_dev';
+import { sendError } from './send_error';
+import { times } from './times_do';
 
 interface ImageSearchResult {
   coordinates: Region | null;
@@ -22,7 +24,7 @@ class Importer {
 
   public setConfig = (inputSpeed: number) => {
     keyboard.config.autoDelayMs = inputSpeed ** 2;
-    keyboard["nativeAdapter"].keyboard.setKeyboardDelay(inputSpeed * 100);
+    keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 100);
 
     // TODO delete. Left only for debug purposes
     // screen.config.confidence = 0.98;
@@ -39,22 +41,27 @@ class Importer {
     this._isRunning = false;
   };
 
-  public startPopulation = async (data: string[][], forgettables: Forgettable[], electronWindow: BrowserWindow) => {
+  public startPopulation = async (
+    data: string[][],
+    forgettables: Forgettable[],
+    electronWindow: BrowserWindow
+  ) => {
     this.start();
-    const waitTime = getWaitTime();
     const inputSpeed = getInputSpeed();
-    const waitTimeSeconds = getWaitTimeInSeconds(waitTime);
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
     this.setConfig(inputSpeedSeconds);
     try {
-      for (let i = 0; i < waitTimeSeconds && this.isRunning; i++) {
-        const remainingTime = waitTimeSeconds - i;
-        electronWindow.webContents.send(MESSAGE.COUNTDOWN, remainingTime);
-        if (remainingTime > 0) {
-          await snooze(1000);
-        }
-      }
+      electronWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
+
+      await this.waitTimeTimer(electronWindow);
+
       if (this.isRunning) {
+        const isCccOnFocus = await this.checkIsCccOnFocus(electronWindow);
+        if (!isCccOnFocus) {
+          this.stop();
+          return;
+        }
+
         electronWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
         if (lineOperationCoordinates) {
@@ -68,8 +75,21 @@ class Importer {
     }
   };
 
-  private getLineOperationCoordinates = async (popupWindow: BrowserWindow): Promise<Point> => {
-    const imageDirectory = isAppDev(app) ? "./assets" : "resources/app/assets";
+  private waitTimeTimer = async (electronWindow: BrowserWindow) => {
+    const waitTime = getWaitTime();
+    const waitTimeSeconds = getWaitTimeInSeconds(waitTime);
+
+    for (let i = 0; i < waitTimeSeconds && this.isRunning; i++) {
+      const remainingTime = waitTimeSeconds - i;
+      electronWindow.webContents.send(MESSAGE.COUNTDOWN, remainingTime);
+      if (remainingTime > 0) {
+        await snooze(1000);
+      }
+    }
+  };
+
+  private getLineOperationCoordinates = async (electronWindow: BrowserWindow): Promise<Point> => {
+    const imageDirectory = isAppDev(app) ? './assets' : 'resources/app/assets';
     const images = fs.readdirSync(imageDirectory);
     const result: ImageSearchResult = {
       coordinates: null,
@@ -92,11 +112,11 @@ class Importer {
     if (result.coordinates) {
       return await centerOf(result.coordinates);
     } else {
-      popupWindow.webContents.send(
-        MESSAGE.ERROR,
-        "Error identifying the Line Operation button. Please make sure the CCC is on your main screen and try again."
+      sendError(
+        electronWindow,
+        'Error identifying the Line Operation button. Please make sure the CCC is on your main screen and try again.'
       );
-      result.errors.forEach((error) => console.log("Error finding the Line Operation button:", error));
+      result.errors.forEach((error) => console.log('Error finding the Line Operation button:', error));
     }
   };
 
@@ -113,30 +133,26 @@ class Importer {
     await keyboard.pressKey(Key.Enter);
 
     if (partNum && partNumTabIndex > 0) {
-      for (let i = 0; i < partNumTabIndex; i++) {
-        await keyboard.pressKey(Key.Tab);
-      }
+      await times(partNumTabIndex).pressKey(Key.Tab);
       await keyboard.type(partNum);
     }
 
-    for (let i = 0; i < 2; i++) {
+    await times(2).do(async () => {
       await keyboard.pressKey(Key.LeftControl, Key.Tab);
       await keyboard.releaseKey(Key.LeftControl);
-    }
+    });
+
     await keyboard.pressKey(Key.Tab);
 
     if (lineNote) {
       await keyboard.type(lineNote);
     }
-    for (let i = 0; i < 4; i++) {
-      await keyboard.pressKey(Key.Tab);
-    }
+
+    await times(4).pressKey(Key.Tab);
     await keyboard.pressKey(Key.Enter);
 
     if (lineNote || partNum) {
-      for (let i = 0; i < 3; i++) {
-        await keyboard.pressKey(Key.Tab);
-      }
+      await times(3).pressKey(Key.Tab);
     }
   };
 
@@ -173,6 +189,33 @@ class Importer {
       }
     }
     this.stop();
+  };
+
+  private checkIsCccOnFocus = async (electronWindow: BrowserWindow): Promise<boolean> => {
+    const primaryDisplay = electronScreen.getPrimaryDisplay();
+    const { bounds } = primaryDisplay;
+    const activeWindow = await getActiveWindow();
+
+    const title = await activeWindow.title;
+    const region = await activeWindow.region;
+
+    if (title !== 'vs.fit-admin.com - Remote Desktop Connection') {
+      sendError(electronWindow, 'Please make sure CCC is open and focused.');
+      return false;
+    }
+
+    const cccOnMainScreen =
+      region.left > bounds.x &&
+      region.left < bounds.width &&
+      region.top > bounds.y &&
+      region.top < bounds.height;
+
+    if (!cccOnMainScreen) {
+      sendError(electronWindow, 'CCC must be on the main screen');
+      return false;
+    }
+
+    return true;
   };
 }
 

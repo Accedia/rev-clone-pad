@@ -1,5 +1,5 @@
-import React from "react";
-import { Button, Icon } from "semantic-ui-react";
+import React from 'react';
+import { Button, Icon } from 'semantic-ui-react';
 
 interface ButtonProps {
   onClick: () => void;
@@ -15,7 +15,7 @@ const SettingsButton: React.FC<ButtonProps> = ({ onClick, disabled }) => (
 
 const StopButton: React.FC<ButtonProps> = ({ onClick, disabled }) => (
   <Button icon labelPosition="right" color="red" onClick={onClick} disabled={disabled}>
-    Stop
+    Stop (F10)
     <Icon name="stop" />
   </Button>
 );
