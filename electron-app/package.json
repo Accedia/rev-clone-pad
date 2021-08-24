@@ -17,22 +17,14 @@
     "build": "npm run build:react && npm run build:electron",
     "dev:watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "electron-forge start",
+    "start": "cross-env NODE_ENV=development electron-forge start",
     "electron": "cross-env NODE_ENV=development electron ./dist/main.js",
     "dev:react": "npm run --prefix ../react-app start",
     "dev": "concurrently \"npm:dev:*\"",
     "make": "npm run build && electron-forge make"
   },
-  "repository": "https://github.com/electron/electron-quick-start-typescript",
-  "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo",
-    "typescript"
-  ],
-  "author": "GitHub",
+  "repository": "https://github.com/Accedia/fit-ccc-input-automation",
+  "author": "Full Impact Technologies",
   "license": "CC0-1.0",
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.59",
