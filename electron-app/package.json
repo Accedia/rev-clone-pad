@@ -22,7 +22,7 @@
     "dev": "concurrently \"npm:dev:*\"",
     "package": "npm run build && electron-forge package",
     "make": "npm run build && electron-forge make",
-    "publish": "npm run build && electron-forge publish"
+    "publish": "electron-forge publish"
   },
   "repository": "https://github.com/Accedia/fit-ccc-input-automation",
   "author": "Full Impact Technologies",
@@ -42,7 +42,6 @@
     "electron": "^13.1.6",
     "electron-rebuild": "^2.3.5",
     "eslint": "^7.30.0",
-    "exe-icon-extractor": "^1.0.8",
     "typescript": "^4.3.5"
   },
   "dependencies": {
