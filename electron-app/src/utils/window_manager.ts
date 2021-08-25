@@ -39,7 +39,7 @@ class WindowManager {
   };
 
   startApp = (): void => {
-    snooze(5000).then(async () => {
+    const startFn = async () => {
       await this.createMainWindow();
       if (process.platform !== 'darwin') {
         const url = getCustomProtocolUrl(process.argv);
@@ -47,7 +47,13 @@ class WindowManager {
           fetchData(url);
         }
       }
-    });
+    };
+
+    if (isDev()) {
+      startFn();
+    } else {
+      snooze(5000).then(startFn);
+    }
   };
 
   createMainWindow = (): Promise<void> => {

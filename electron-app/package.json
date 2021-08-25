@@ -1,9 +1,9 @@
 {
-  "name": "electron-quick-start-typescript",
+  "name": "fit-ccc-input-automation",
   "appname": "FIT CCC Input Automation",
-  "appVersion": "0.1.0",
+  "productName": "FIT CCC Input Automation",
+  "version": "2.1.0",
   "homepage": "./",
-  "version": "0.1.0",
   "main": "./dist/main.js",
   "description": "Automation for CCC by FIT",
   "scripts": {
@@ -12,44 +12,47 @@
     "postbuild:react": "copyfiles -u 3 ../react-app/build/**/* build",
     "prebuild:electron": "rimraf -rf dist",
     "build:electron": "tsc",
+    "build": "npm run build:react && npm run build:electron",
     "rebuild": "./node_modules/.bin/electron-rebuild",
-    "package": "electron-packager . \"FIT CCC Input Automation\" --out=\"release-app\" --icon=./icon.ico --overwrite",
-    "build": "npm run build:react && npm run build:electron && npm run package",
-    "dev:watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "cross-env NODE_ENV=development electron ./dist/main.js",
     "electron": "cross-env NODE_ENV=development electron ./dist/main.js",
+    "start": "cross-env NODE_ENV=development electron-forge start",
+    "dev:watch": "tsc -w",
     "dev:react": "npm run --prefix ../react-app start",
-    "dev": "concurrently \"npm:dev:*\""
+    "dev": "concurrently \"npm:dev:*\"",
+    "package": "npm run build && electron-forge package",
+    "make": "npm run build && electron-forge make",
+    "publish": "npm run build && electron-forge publish"
   },
-  "repository": "https://github.com/electron/electron-quick-start-typescript",
-  "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo",
-    "typescript"
-  ],
-  "author": "GitHub",
+  "repository": "https://github.com/Accedia/fit-ccc-input-automation",
+  "author": "Full Impact Technologies",
   "license": "CC0-1.0",
   "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.59",
+    "@electron-forge/maker-deb": "^6.0.0-beta.59",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.59",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.59",
+    "@electron-forge/maker-wix": "^6.0.0-beta.59",
+    "@electron-forge/maker-zip": "^6.0.0-beta.59",
+    "@electron-forge/publisher-github": "^6.0.0-beta.59",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.2",
     "electron": "^13.1.6",
-    "electron-packager": "^15.3.0",
     "electron-rebuild": "^2.3.5",
     "eslint": "^7.30.0",
+    "exe-icon-extractor": "^1.0.8",
     "typescript": "^4.3.5"
   },
   "dependencies": {
     "@nut-tree/nut-js": "^1.7.0",
     "axios": "^0.21.1",
     "concurrently": "^6.2.0",
+    "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "update-electron-app": "^2.0.1"
   },
   "files": [
     "./build/**/*",
@@ -67,5 +70,8 @@
         "ccc"
       ]
     }
+  },
+  "config": {
+    "forge": "./forge.config.js"
   }
 }
