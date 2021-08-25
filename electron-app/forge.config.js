@@ -14,7 +14,6 @@ module.exports = {
     {
       name: '@electron-forge/publisher-github',
       config: {
-        authToken: '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',
         repository: {
           owner: 'Accedia',
           name: 'fit-ccc-input-automation',
@@ -25,6 +24,7 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
+      platforms: ['win32'],
       config: {
         authors: 'Full Impact Technologies',
         name: 'FitCCCInputAutomation',
