@@ -1,10 +1,10 @@
-import { INPUT_SPEED_CONFIG, MESSAGE, WAIT_TIME_CONFIG } from "@electron-app";
-import React, { useState } from "react";
-import { Button, Popup } from "semantic-ui-react";
-import { SemanticWIDTHS } from "semantic-ui-react/dist/commonjs/generic";
-import SectionTitle from "../components/SectionTitle";
+import { INPUT_SPEED_CONFIG, MESSAGE, WAIT_TIME_CONFIG } from '@electron-app';
+import React, { useState } from 'react';
+import { Button, Popup } from 'semantic-ui-react';
+import { SemanticWIDTHS } from 'semantic-ui-react/dist/commonjs/generic';
+import SectionTitle from '../components/SectionTitle';
 
-import "./app.css";
+import './app.css';
 
 type WaitTime = keyof typeof WAIT_TIME_CONFIG;
 type InputSpeed = keyof typeof INPUT_SPEED_CONFIG;
@@ -13,17 +13,17 @@ interface ElectronRemote {
   getInputSpeed: () => InputSpeed;
 }
 
-const electron = window.require("electron");
+const electron = window.require('electron');
 const { ipcRenderer } = electron;
-const getElectronRemote = (): ElectronRemote => electron.remote.require("./main.js");
+const getElectronRemote = (): ElectronRemote => electron.remote.require('./main.js');
 
 const Settings: React.FC = () => {
   const { getWaitTime, getInputSpeed } = getElectronRemote();
   const storageWaitTime = getWaitTime();
   const storageInputSpeed = getInputSpeed();
 
-  const [waitTime, setWaitTime] = useState<WaitTime>(storageWaitTime || "normal");
-  const [inputSpeed, setInputSpeed] = useState<InputSpeed>(storageInputSpeed || "normal");
+  const [waitTime, setWaitTime] = useState<WaitTime>(storageWaitTime || 'normal');
+  const [inputSpeed, setInputSpeed] = useState<InputSpeed>(storageInputSpeed || 'normal');
 
   React.useEffect(() => {
     ipcRenderer.send(MESSAGE.SET_WAIT_TIME, waitTime);
@@ -33,24 +33,39 @@ const Settings: React.FC = () => {
     ipcRenderer.send(MESSAGE.SET_INPUT_SPEED, inputSpeed);
   }, [inputSpeed]);
 
-  const getButtonWithPopup = (content: string, buttonWaitTime: WaitTime, popupText: string) => (
-    <Popup
-      content={popupText}
-      position="top center"
-      inverted
-      trigger={
-        <Button onClick={() => setWaitTime(buttonWaitTime)} active={waitTime === buttonWaitTime}>
-          {content}
-        </Button>
-      }
-    />
-  );
+  const getButtonWithPopup = (content: string, buttonWaitTime: WaitTime, popupText: string) => {
+    const isActive = waitTime === buttonWaitTime;
+    return (
+      <Popup
+        content={popupText}
+        position="top center"
+        inverted
+        trigger={
+          <Button
+            color={isActive ? 'blue' : 'black'}
+            onClick={() => setWaitTime(buttonWaitTime)}
+            active={isActive}
+          >
+            {content}
+          </Button>
+        }
+      />
+    );
+  };
 
-  const getButton = (content: string, buttonInputSpeed: InputSpeed) => (
-    <Button onClick={() => setInputSpeed(buttonInputSpeed)} active={inputSpeed === buttonInputSpeed}>
-      {content}
-    </Button>
-  );
+  const getButton = (content: string, buttonInputSpeed: InputSpeed) => {
+    const isActive = inputSpeed === buttonInputSpeed;
+
+    return (
+      <Button
+        color={isActive ? 'blue' : 'black'}
+        onClick={() => setInputSpeed(buttonInputSpeed)}
+        active={isActive}
+      >
+        {content}
+      </Button>
+    );
+  };
 
   return (
     <div>
