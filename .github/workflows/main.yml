@@ -22,10 +22,18 @@ jobs:
           commit-message: 'CI: bumps version to {{version}} [skip ci]'
           target-branch: 'release'
           
-      - name: npm install
+      - name: npm install electron
         working-directory: ./electron-app
         run: npm install
+        
+      - name: npm install react
+        working-directory: ./react-app
+        run: npm install
+        
+      - name: Build
+        working-directory: ./electron-app
+        run: npm run build
 
-      - name: Publish application
+      - name: Publish Application
         working-directory: ./electron-app
         run: npm run publish
