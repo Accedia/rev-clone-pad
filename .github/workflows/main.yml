@@ -23,6 +23,7 @@ jobs:
           target-branch: 'release'
           
       - name: npm install
+        working-directory: ./electron-app
         run: npm install
 
       - name: Publish application
