@@ -12,7 +12,7 @@ import { WaitTime } from './interfaces/WaitTime';
 import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { getPopulationData } from './utils/get_population_data';
-import { isAppDev } from './utils/is_dev';
+import { isAppDev, isDev } from './utils/is_dev';
 import { setupAutoUpdater } from './utils/auto_updater';
 
 const WAIT_TIME_STORAGE_KEY = 'waitTime';
@@ -20,7 +20,9 @@ const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
 if (require('electron-squirrel-startup')) app.quit();
 
-setupAutoUpdater();
+if (!isAppDev(app) && !isDev()) {
+  setupAutoUpdater();
+}
 
 class Main {
   windowManager = new WindowManager();
