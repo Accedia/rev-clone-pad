@@ -1,5 +1,5 @@
 {
-  "name": "electron-quick-start-typescript",
+  "name": "fit-ccc-input-automation",
   "appname": "FIT CCC Input Automation",
   "productName": "FIT CCC Input Automation",
   "version": "2.1.0",
@@ -12,16 +12,17 @@
     "postbuild:react": "copyfiles -u 3 ../react-app/build/**/* build",
     "prebuild:electron": "rimraf -rf dist",
     "build:electron": "tsc",
-    "rebuild": "./node_modules/.bin/electron-rebuild",
-    "package": "npm run build && electron-forge package",
     "build": "npm run build:react && npm run build:electron",
-    "dev:watch": "tsc -w",
+    "rebuild": "./node_modules/.bin/electron-rebuild",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "cross-env NODE_ENV=development electron-forge start",
     "electron": "cross-env NODE_ENV=development electron ./dist/main.js",
+    "start": "cross-env NODE_ENV=development electron-forge start",
+    "dev:watch": "tsc -w",
     "dev:react": "npm run --prefix ../react-app start",
     "dev": "concurrently \"npm:dev:*\"",
-    "make": "npm run build && electron-forge make"
+    "package": "npm run build && electron-forge package",
+    "make": "npm run build && electron-forge make",
+    "publish": "npm run build && electron-forge publish"
   },
   "repository": "https://github.com/Accedia/fit-ccc-input-automation",
   "author": "Full Impact Technologies",
@@ -33,6 +34,7 @@
     "@electron-forge/maker-squirrel": "^6.0.0-beta.59",
     "@electron-forge/maker-wix": "^6.0.0-beta.59",
     "@electron-forge/maker-zip": "^6.0.0-beta.59",
+    "@electron-forge/publisher-github": "^6.0.0-beta.59",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "copyfiles": "^2.4.1",
@@ -49,7 +51,8 @@
     "concurrently": "^6.2.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "update-electron-app": "^2.0.1"
   },
   "files": [
     "./build/**/*",

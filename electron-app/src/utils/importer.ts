@@ -199,6 +199,7 @@ class Importer {
     const title = await activeWindow.title;
     const region = await activeWindow.region;
 
+    // TODO: Change this title to something for CCC
     if (title !== 'vs.fit-admin.com - Remote Desktop Connection') {
       sendError(electronWindow, 'Please make sure CCC is open and focused.');
       return false;
