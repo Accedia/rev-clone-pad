@@ -21,6 +21,9 @@ jobs:
           tag-prefix:  'v'
           commit-message: 'CI: bumps version to {{version}} [skip ci]'
           target-branch: 'release'
+          
+      - name: npm install
+        run: npm install
 
       - name: Publish application
         working-directory: ./electron-app
