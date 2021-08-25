@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  tag-and-publish:
-    runs-on: windows-latest
-
+  tag-and-bump:
+    runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checkout@v2
       
@@ -21,6 +21,13 @@ jobs:
           tag-prefix:  'v'
           commit-message: 'CI: bumps version to {{version}} [skip ci]'
           target-branch: 'release'
+    
+  build-and-publish:
+    runs-on: windows-latest
+    needs: tag-and-bump
+
+    steps:
+      - uses: actions/checkout@v2      
           
       - name: npm install electron
         working-directory: ./electron-app
