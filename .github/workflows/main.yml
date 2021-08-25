@@ -23,4 +23,5 @@ jobs:
           target-branch: 'release'
 
       - name: Publish application
+        working-directory: ./electron-app
         run: npm run publish
