@@ -1,0 +1,22 @@
+name: BUMP
+
+on:
+  push:
+    branches: [ release ]
+
+jobs:
+  tag-and-bump:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name:  'Automated Version Bump'
+        uses:  'phips28/gh-action-bump-version@master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGEJSON_DIR: 'electron-app'
+        with:
+          tag-prefix:  'v'
+          commit-message: 'CI: bumps version to {{version}} [skip ci]'
+          target-branch: 'release'
