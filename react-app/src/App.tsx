@@ -11,12 +11,7 @@ declare global {
 function App() {
   return (
     <div className="App">
-      <ToastProvider
-        autoDismiss={true}
-        autoDismissTimeout={3500}
-        placement="top-center"
-        transitionDuration={100}
-      >
+      <ToastProvider autoDismiss={true} autoDismissTimeout={3500} placement="bottom-center" transitionDuration={100}>
         <AppRouter />
       </ToastProvider>
     </div>
