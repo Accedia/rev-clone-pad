@@ -2,7 +2,7 @@ name: BUMP
 
 on:
   push:
-    branches: [ release ]
+    branches: [ develop ]
 
 jobs:
   tag-and-bump:
@@ -20,3 +20,5 @@ jobs:
           tag-prefix:  'v'
           commit-message: 'CI: bumps version to {{version}} [skip ci]'
           target-branch: 'release'
+          major-wording:  'MAJOR,major'
+          minor-wording:  'MINOR,minor'
