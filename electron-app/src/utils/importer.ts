@@ -1,6 +1,7 @@
+import { ResponseData } from './../interfaces/ResponseData';
 import fs from 'fs';
 import { Key, keyboard, mouse, screen, centerOf, Point, Region, getActiveWindow } from '@nut-tree/nut-js';
-import { app, BrowserWindow, screen as electronScreen } from 'electron';
+import { app, BrowserWindow, dialog, MessageBoxOptions, screen as electronScreen } from 'electron';
 import { getWaitTime, getInputSpeed } from '../main';
 import { MESSAGE } from '../constants/messages';
 import { getWaitTimeInSeconds, getInputSpeedInSeconds } from './get_config_values';
@@ -9,6 +10,7 @@ import { Forgettable } from '../interfaces/Forgettable';
 import { isAppDev } from './is_dev';
 import { sendError } from './send_error';
 import { times } from './times_do';
+import { getPopulationData } from './get_population_data';
 
 interface ImageSearchResult {
   coordinates: Region | null;
@@ -41,11 +43,9 @@ class Importer {
     this._isRunning = false;
   };
 
-  public startPopulation = async (
-    data: string[][],
-    forgettables: Forgettable[],
-    electronWindow: BrowserWindow
-  ) => {
+  public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
+    const { forgettables, orderCustomerName, orderNumber } = data;
+
     this.start();
     const inputSpeed = getInputSpeed();
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
@@ -56,7 +56,7 @@ class Importer {
       await this.waitTimeTimer(electronWindow);
 
       if (this.isRunning) {
-        const isCccOnFocus = await this.checkIsCccOnFocus(electronWindow);
+        const isCccOnFocus = await this.checkIsCccOnFocus(electronWindow, { orderCustomerName, orderNumber });
         if (!isCccOnFocus) {
           this.stop();
           return;
@@ -66,7 +66,7 @@ class Importer {
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
         if (lineOperationCoordinates) {
           await this.goToTheFirstCell();
-          await this.populateTableData(data, forgettables, electronWindow, lineOperationCoordinates);
+          await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
         }
       }
       electronWindow.setAlwaysOnTop(false);
@@ -157,11 +157,11 @@ class Importer {
   };
 
   private populateTableData = async (
-    data: any[][],
     forgettables: Forgettable[],
     popupWindow: BrowserWindow,
     lineOperationCoordinates: Point
   ) => {
+    const data = getPopulationData(forgettables);
     const numberOfCells = data.length * data[0].length;
     const percentagePerCell = 100 / numberOfCells;
 
@@ -191,7 +191,10 @@ class Importer {
     this.stop();
   };
 
-  private checkIsCccOnFocus = async (electronWindow: BrowserWindow): Promise<boolean> => {
+  private checkIsCccOnFocus = async (
+    electronWindow: BrowserWindow,
+    orderData: Omit<ResponseData, 'forgettables'>
+  ): Promise<boolean> => {
     const primaryDisplay = electronScreen.getPrimaryDisplay();
     const { bounds } = primaryDisplay;
     const activeWindow = await getActiveWindow();
@@ -199,10 +202,27 @@ class Importer {
     const title = await activeWindow.title;
     const region = await activeWindow.region;
 
-    // TODO: Change this title to something for CCC
-    if (title !== 'vs.fit-admin.com - Remote Desktop Connection') {
-      sendError(electronWindow, 'Please make sure CCC is open and focused.');
-      return false;
+    if (!title.includes(orderData.orderNumber) && !title.includes(orderData.orderCustomerName)) {
+      const dialogOpts: MessageBoxOptions = {
+        type: 'warning',
+        buttons: ['Yes, continue', 'Abort'],
+        title: 'Warning',
+        message: 'CCC estimate may not correspond to the selected RO',
+        detail: `The CCC Estimate and the scrubbed estimate (${orderData.orderNumber}) do not match or CCC Estimate is not opened or on focus. Do you want to continue?`,
+        noLink: true,
+      };
+
+      const result = await dialog.showMessageBox(
+        new BrowserWindow({
+          show: false,
+          alwaysOnTop: true,
+        }),
+        dialogOpts
+      );
+      if (result.response === 1) {
+        electronWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
+        return false;
+      }
     }
 
     const cccOnMainScreen =

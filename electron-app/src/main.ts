@@ -1,17 +1,16 @@
+import { ResponseData } from './interfaces/ResponseData';
 import { app, globalShortcut, ipcMain } from 'electron';
 import WindowManager from './utils/window_manager';
 import importer from './utils/importer';
 import { MESSAGE } from './constants/messages';
 import path from 'path';
 import axios from 'axios';
-import { Forgettable } from './interfaces/Forgettable';
 import { snooze } from './utils/snooze';
 import { CUSTOM_PROTOCOL } from './constants/config';
 import Store from 'electron-store';
 import { WaitTime } from './interfaces/WaitTime';
 import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
-import { getPopulationData } from './utils/get_population_data';
 import { isAppDev } from './utils/is_dev';
 
 const WAIT_TIME_STORAGE_KEY = 'waitTime';
@@ -101,18 +100,12 @@ class Main {
     return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
   };
 
-  private startImporter = async (forgettables: Forgettable[]) => {
-    const data = getPopulationData(forgettables);
-
-    await importer.startPopulation(data, forgettables, this.windowManager.mainWindow);
-  };
-
-  fetchData = async (url: string) => {
+  public fetchData = async (url: string) => {
     try {
       url = url.replace('localhost', '[::1]');
-      const result = await axios.get(url);
+      const { data } = await axios.get<ResponseData>(url);
 
-      await this.startImporter(result.data.forgettables);
+      await importer.startPopulation(data, this.windowManager.mainWindow);
     } catch (e) {
       console.log('Error retrieving the forgettables', e.message);
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
