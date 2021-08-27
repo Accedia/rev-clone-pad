@@ -112,7 +112,7 @@ class Main {
       url = url.replace('localhost', '[::1]');
       const result = await axios.get(url);
 
-      await this.startImporter(result.data);
+      await this.startImporter(result.data.forgettables);
     } catch (e) {
       console.log('Error retrieving the forgettables', e.message);
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
