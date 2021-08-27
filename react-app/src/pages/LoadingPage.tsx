@@ -1,39 +1,25 @@
-import React from "react";
-import { useEffect } from "react";
-import { Dimmer, Loader } from "semantic-ui-react";
+import React from 'react';
+import { useEffect } from 'react';
+import { Dimmer, Loader } from 'semantic-ui-react';
+import { MESSAGE } from '@electron-app';
 
-const steps = [
-  "Initial load...",
-  "Checking for updates...",
-  "Loading main window...",
-  "Ready",
-];
+const electron = window.require('electron');
+const { ipcRenderer } = electron;
 
 const LoadingPage: React.FC = () => {
-  const [currentStep, setCurrentStep] = React.useState(0);
+  const [status, setStatus] = React.useState('Loading...');
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (currentStep < steps.length - 2) {
-        setCurrentStep((prevStep) => prevStep + 1);
-      } else {
-        clearInterval(interval);
-        return;
-      }
-    }, 1000);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    ipcRenderer.on(MESSAGE.LOADER_CHECK_UPDATE_STATUS, (event: any, updateMessage: string) => {
+      setStatus(updateMessage);
+    });
   }, []);
 
   return (
     <Dimmer active inverted>
-      <img
-        src={process.env.PUBLIC_URL + "/icon.ico"}
-        alt="FIT Logo"
-        width="75"
-        className="fit-loader-logo"
-      />
+      <img src={process.env.PUBLIC_URL + '/icon.ico'} alt="FIT Logo" width="75" className="fit-loader-logo" />
       <Loader inverted inline="centered">
-        {steps[currentStep]} {currentStep + 1}/{steps.length}
+        {status}
       </Loader>
     </Dimmer>
   );
