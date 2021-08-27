@@ -12,17 +12,12 @@ import { WaitTime } from './interfaces/WaitTime';
 import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { getPopulationData } from './utils/get_population_data';
-import { isAppDev, isDev } from './utils/is_dev';
-import { setupAutoUpdater } from './utils/auto_updater';
+import { isAppDev } from './utils/is_dev';
 
 const WAIT_TIME_STORAGE_KEY = 'waitTime';
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
 if (require('electron-squirrel-startup')) app.quit();
-
-if (!isAppDev(app) && !isDev()) {
-  setupAutoUpdater();
-}
 
 class Main {
   windowManager = new WindowManager();
@@ -117,7 +112,7 @@ class Main {
       url = url.replace('localhost', '[::1]');
       const result = await axios.get(url);
 
-      await this.startImporter(result.data);
+      await this.startImporter(result.data.forgettables);
     } catch (e) {
       console.log('Error retrieving the forgettables', e.message);
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
