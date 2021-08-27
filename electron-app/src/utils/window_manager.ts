@@ -1,11 +1,11 @@
-import { isDev } from './is_dev';
-import { BrowserWindow, screen } from 'electron';
+import { isAppDev, isDev } from './is_dev';
+import { app, BrowserWindow, screen } from 'electron';
 import * as path from 'path';
-import { snooze } from './snooze';
 import { getCustomProtocolUrl } from './get_custom_protocol_url';
 import { fetchData } from '../main';
 import { WINDOW_CONFIG } from '../config/window_config';
 import { MESSAGE, APP_STATE } from '../constants/messages';
+import { AutoUpdater } from './auto_updater';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 
@@ -25,9 +25,7 @@ class WindowManager {
     this.loadingWindow = null;
   }
 
-  startLoading = (): void => {
-    this.loadingWindow = new BrowserWindow(WINDOW_CONFIG.loading);
-    this.loadingWindow.once('show', this.startApp);
+  private loadLoadingWindowContent = () => {
     if (isDev()) {
       this.loadingWindow.loadURL(`${this.devUrl}#${this.paths.loading}`);
     } else {
@@ -35,24 +33,29 @@ class WindowManager {
         hash: this.paths.loading,
       });
     }
-    this.loadingWindow.show();
   };
 
-  startApp = (): void => {
-    const startFn = async () => {
-      await this.createMainWindow();
-      if (process.platform !== 'darwin') {
-        const url = getCustomProtocolUrl(process.argv);
-        if (url) {
-          fetchData(url);
-        }
+  startLoading = (): void => {
+    this.loadingWindow = new BrowserWindow(WINDOW_CONFIG.loading);
+    this.loadLoadingWindowContent();
+    this.loadingWindow.once('show', async () => {
+      if (!isAppDev(app) && !isDev()) {
+        const autoUpdater = new AutoUpdater(this.loadingWindow);
+        await autoUpdater.checkAndDownloadUpdates();
       }
-    };
 
-    if (isDev()) {
-      startFn();
-    } else {
-      snooze(5000).then(startFn);
+      await this.startApp();
+    });
+    this.loadingWindow.on('ready-to-show', this.loadingWindow.show);
+  };
+
+  startApp = async (): Promise<void> => {
+    await this.createMainWindow();
+    if (process.platform !== 'darwin') {
+      const url = getCustomProtocolUrl(process.argv);
+      if (url) {
+        fetchData(url);
+      }
     }
   };
 

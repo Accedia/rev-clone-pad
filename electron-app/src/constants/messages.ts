@@ -10,6 +10,7 @@ export const MESSAGE = {
   SET_WAIT_TIME: 'set-wait-time',
   SET_INPUT_SPEED: 'set-input-speed',
   RESET_CONTROLS_STATE: 'reset-controls-state',
+  LOADER_CHECK_UPDATE_STATUS: 'loader-check-update-status',
 };
 
 export const APP_STATE = {

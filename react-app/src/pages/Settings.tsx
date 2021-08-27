@@ -42,7 +42,7 @@ const Settings: React.FC = () => {
         inverted
         trigger={
           <Button
-            color={isActive ? 'red' : 'black'}
+            color={isActive ? 'blue' : undefined}
             onClick={() => setWaitTime(buttonWaitTime)}
             active={isActive}
           >
@@ -58,7 +58,7 @@ const Settings: React.FC = () => {
 
     return (
       <Button
-        color={isActive ? 'red' : 'black'}
+        color={isActive ? 'blue' : undefined}
         onClick={() => setInputSpeed(buttonInputSpeed)}
         active={isActive}
       >
