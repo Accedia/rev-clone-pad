@@ -1,13 +1,13 @@
 import React from 'react';
 import { useEffect } from 'react';
-import { Dimmer, Loader } from 'semantic-ui-react';
 import { MESSAGE } from '@electron-app';
+import './app.css';
 
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
 
 const LoadingPage: React.FC = () => {
-  const [status, setStatus] = React.useState('Loading...');
+  const [status, setStatus] = React.useState('Loading');
 
   useEffect(() => {
     ipcRenderer.on(MESSAGE.LOADER_CHECK_UPDATE_STATUS, (event: any, updateMessage: string) => {
@@ -16,12 +16,20 @@ const LoadingPage: React.FC = () => {
   }, []);
 
   return (
-    <Dimmer active inverted>
-      <img src={process.env.PUBLIC_URL + '/icon.ico'} alt="FIT Logo" width="75" className="fit-loader-logo" />
-      <Loader inverted inline="centered">
+    <div className="loading-page-container">
+      <img
+        src={process.env.PUBLIC_URL + '/logo_gif_transparent.gif'}
+        alt="FIT Logo"
+        width="125"
+        className="fit-loader-logo"
+      />
+      <p>
         {status}
-      </Loader>
-    </Dimmer>
+        <span className="dot" />
+        <span className="dot" />
+        <span className="dot" />
+      </p>
+    </div>
   );
 };
 
