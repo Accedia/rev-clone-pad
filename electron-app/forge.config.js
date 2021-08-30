@@ -1,13 +1,15 @@
 /* eslint-disable */
 const path = require('path');
 
+const iconPath = path.resolve(__dirname, './assets/icon-white-bg.ico');
+
 module.exports = {
   packagerConfig: {
     arch: 'x64',
     platform: 'win32',
     dir: '.',
     out: 'release-app',
-    icon: path.resolve(__dirname, './icon.ico'),
+    icon: iconPath,
     overwrite: true,
   },
   publishers: [
@@ -30,8 +32,10 @@ module.exports = {
         authors: 'Full Impact Technologies',
         name: 'FitCCCInputAutomation',
         exe: 'FIT CCC Input Automation.exe',
-        iconUrl: path.resolve(__dirname, './icon.ico'),
-        setupExe: 'FIT CCC Input Automation.exe',
+        iconUrl: iconPath,
+        setupIcon: iconPath,
+        setupExe: 'Install FIT CCC Input Automation.exe',
+        loadingGif: path.resolve(__dirname, './assets/logo_spinning_white.gif'),
         noMsi: true,
       },
     },

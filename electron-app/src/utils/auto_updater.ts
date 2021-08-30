@@ -31,16 +31,16 @@ export class AutoUpdater {
   }
 
   public checkAndDownloadUpdates = async () => {
-    this.sendUpdate('Checking for updates...');
+    this.sendUpdate('Checking for updates');
     const { url, latestVersion } = await this.getLatestVersionInfo();
 
     const shouldUpdate = this.isUpdateAvailable(app.getVersion(), latestVersion);
     if (!shouldUpdate) {
-      this.sendUpdate('No updates found...');
+      this.sendUpdate('No updates found');
       return false;
     }
 
-    this.sendUpdate('Update found, downloading...');
+    this.sendUpdate('Update found, downloading');
 
     const links = await this.getDownloadLinks(url, latestVersion);
 
@@ -49,7 +49,7 @@ export class AutoUpdater {
       this.download(links.nupkg.name, links.nupkg.url),
     ]);
 
-    this.sendUpdate('Applying updates...');
+    this.sendUpdate('Applying updates');
     try {
       await this.applyUpdates();
     } catch (e) {
@@ -146,11 +146,11 @@ export class AutoUpdater {
       });
 
       autoUpdater.on('update-available', () => {
-        this.sendUpdate('Finalizing...');
+        this.sendUpdate('Finalizing');
       });
 
       autoUpdater.on('update-downloaded', () => {
-        this.sendUpdate('Awaiting restart...');
+        this.sendUpdate('Awaiting restart');
         const dialogOpts = {
           type: 'info',
           buttons: ['Restart'],
@@ -166,7 +166,7 @@ export class AutoUpdater {
       });
 
       autoUpdater.on('update-not-available', () => {
-        this.sendUpdate('Update not available...');
+        this.sendUpdate('Update not available');
         resolve();
       });
 
