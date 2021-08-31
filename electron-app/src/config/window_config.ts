@@ -1,5 +1,5 @@
-import { BrowserWindowConstructorOptions } from "electron";
-import * as path from "path";
+import { BrowserWindowConstructorOptions } from 'electron';
+import * as path from 'path';
 
 type CommonConfigOptions = Partial<BrowserWindowConstructorOptions>;
 
@@ -9,8 +9,8 @@ interface WindowConfig {
 }
 
 const COMMON_CONFIG: CommonConfigOptions = {
-  title: "FIT Input CCC Automation",
-  icon: path.resolve(__dirname, "../../icon.ico"),
+  title: 'FIT Input CCC Automation',
+  icon: path.resolve(__dirname, '../../assets/icon-white-bg.ico'),
   autoHideMenuBar: true,
   show: false,
   webPreferences: {
@@ -32,6 +32,6 @@ export const WINDOW_CONFIG: WindowConfig = {
     width: 250,
     height: 300,
     frame: false,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
   },
 };
