@@ -27,7 +27,8 @@ export class AutoUpdater {
 
   public checkAndDownloadUpdates = async () => {
     this.sendUpdate('Checking for updates');
-    const { version: latestVersion, assets } = await this.getLatestVersion();
+    const { version, assets } = await this.getLatestVersion();
+    const latestVersion = version.replace(/v/, '');
 
     const shouldUpdate = this.isUpdateAvailable(app.getVersion(), latestVersion);
     if (!shouldUpdate) {
@@ -62,6 +63,8 @@ export class AutoUpdater {
   private isUpdateAvailable = (appVersion: string, latestVersion: string) => {
     const [appMajor, appMinor, appPatch] = appVersion.split('.');
     const [latestMajor, latestMinor, latestPatch] = latestVersion.split('.');
+
+    console.log(appVersion, latestVersion);
 
     if (appMajor < latestMajor) return true;
     if (appMajor === latestMajor && appMinor < latestMinor) return true;
