@@ -37,7 +37,8 @@ There are two CI/CD jobs that run on `develop` and `master`.
   - *MINOR or minor* keyword in commit message - bumps the minor version `0.X.0` (the X)
   - no keyworrds - bumps the patch version `0.0.X` (the X)
 - **RELEASE workflow** - runs on every push to `master`. This job builds the latest version of the app, adds it's make files to the respective (latest) tag. The release is saved as a draft, and to make it public you need to go the the release in the [releases](https://github.com/Accedia/fit-ccc-input-automation/releases) section and manually save it.
+  - uses **FORGE_TOKEN** as env variable, which has to be set in the repository secrets section. This secret is your accounts GITHUB_TOKEN and allows the workflow to upload the releases to GitHub.
 
 ## Auto Update
 
-// TODO
+The app checks for updates from the GitHub API for the latest release and downloads it locally in a TEMP folder (if the version is higher than the currently installed). Then installs it and restarts the app to apply the updates. Uses the electron built-in `autoUpdater` with some queries to the GitHub API.
