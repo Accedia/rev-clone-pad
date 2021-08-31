@@ -64,8 +64,6 @@ export class AutoUpdater {
     const [appMajor, appMinor, appPatch] = appVersion.split('.');
     const [latestMajor, latestMinor, latestPatch] = latestVersion.split('.');
 
-    console.log(appVersion, latestVersion);
-
     if (appMajor < latestMajor) return true;
     if (appMajor === latestMajor && appMinor < latestMinor) return true;
     if (appMajor === latestMajor && appMinor === latestMinor && appPatch < latestPatch) return true;
