@@ -27,7 +27,8 @@ export class AutoUpdater {
 
   public checkAndDownloadUpdates = async () => {
     this.sendUpdate('Checking for updates');
-    const { version: latestVersion, assets } = await this.getLatestVersion();
+    const { version, assets } = await this.getLatestVersion();
+    const latestVersion = version.replace(/v/, '');
 
     const shouldUpdate = this.isUpdateAvailable(app.getVersion(), latestVersion);
     if (!shouldUpdate) {
