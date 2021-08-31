@@ -1,19 +1,14 @@
 import { MESSAGE } from './../constants/messages';
-import { app, autoUpdater, dialog, MessageBoxOptions, BrowserWindow } from 'electron';
+import { Endpoints } from '@octokit/types';
+import { app, autoUpdater, dialog, MessageBoxOptions, shell, BrowserWindow } from 'electron';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import * as stream from 'stream';
 import { promisify } from 'util';
+import { AppState } from '../interfaces/AppState';
 
-const server = 'https://electron-hazel.vercel.app';
-
-interface HazelResponse {
-  url: string;
-  name: string;
-  note: string;
-  pub_date: string;
-}
+type LatestRelease = Endpoints['GET /repos/{owner}/{repo}/releases/latest']['response']['data'];
 
 export class AutoUpdater {
   private window: BrowserWindow;
@@ -32,7 +27,7 @@ export class AutoUpdater {
 
   public checkAndDownloadUpdates = async () => {
     this.sendUpdate('Checking for updates');
-    const { url, latestVersion } = await this.getLatestVersionInfo();
+    const { version: latestVersion, assets } = await this.getLatestVersion();
 
     const shouldUpdate = this.isUpdateAvailable(app.getVersion(), latestVersion);
     if (!shouldUpdate) {
@@ -40,16 +35,21 @@ export class AutoUpdater {
       return false;
     }
 
-    this.sendUpdate('Update found, downloading');
+    this.sendUpdate('Downloading update');
+    this.sendAction('downloading');
 
-    const links = await this.getDownloadLinks(url, latestVersion);
+    const releases = assets.find((asset) => asset.type === null);
+    const nupkg = assets.find((asset) => asset.type === 'nupkg');
+
+    this.progressUpdates(nupkg.name, nupkg.size);
 
     await Promise.all([
-      this.download(links.releases.name, links.releases.url),
-      this.download(links.nupkg.name, links.nupkg.url),
+      this.download(releases.name, releases.download_url),
+      this.download(nupkg.name, nupkg.download_url),
     ]);
 
-    this.sendUpdate('Applying updates');
+    this.sendAction('installing');
+
     try {
       await this.applyUpdates();
     } catch (e) {
@@ -69,41 +69,45 @@ export class AutoUpdater {
     return false;
   };
 
-  private getLatestVersionInfo = async () => {
-    const hazelUrl = `${server}/update/win32/${this.currentVersion}/`;
-    const { data } = await axios.get<HazelResponse>(hazelUrl);
-    if (!data) {
-      this.latestVersion = this.currentVersion;
-      return {
-        url: null,
-        latestVersion: this.currentVersion,
-      };
-    }
+  private getLatestVersion = async () => {
+    const response = await axios.get<LatestRelease>(
+      'https://api.github.com/repos/Accedia/fit-ccc-input-automation/releases/latest'
+    );
 
-    const { name, url } = data;
+    const assets = response.data.assets.map((asset) => ({
+      url: asset.url,
+      name: asset.name,
+      type: this.getExtension(asset.name),
+      download_url: asset.browser_download_url,
+      size: asset.size,
+    }));
 
-    const latestVersion = name.replace('v', '');
-    this.latestVersion = latestVersion;
+    const latestRelease = {
+      version: response.data.tag_name,
+      assets,
+    };
 
-    return { url, latestVersion };
+    return latestRelease;
   };
 
-  private getDownloadLinks = async (url: string, latestVersion: string) => {
-    const baseUrl = url.substring(0, url.lastIndexOf('/'));
+  private getExtension = (name: string): string | null => {
+    if (!name.includes('.')) {
+      return null;
+    }
 
-    const nupkgName = `/FitCCCInputAutomation-${latestVersion}-full.nupkg`;
-    const releasesName = '/RELEASES';
+    const nameParts = name.split('.');
+    return nameParts[nameParts.length - 1];
+  };
 
-    return {
-      nupkg: {
-        name: nupkgName,
-        url: baseUrl + nupkgName,
-      },
-      releases: {
-        name: releasesName,
-        url: baseUrl + '/RELEASES',
-      },
-    };
+  private progressUpdates = (name: string, size: number) => {
+    const timeout = setInterval(() => {
+      const filePath = `${this.tempDir}/${name}`;
+      const stats = fs.statSync(filePath);
+      const fileSizeInBytes = stats.size;
+      const progress = (fileSizeInBytes / size) * 100;
+      this.window.webContents.send(MESSAGE.LOADER_PROGRESS, progress);
+      if (progress >= 98) clearTimeout(timeout);
+    }, 150);
   };
 
   private download = async (name: string, url: string) => {
@@ -125,6 +129,9 @@ export class AutoUpdater {
   private sendUpdate = (update: string) => {
     this.window.webContents.send(MESSAGE.LOADER_CHECK_UPDATE_STATUS, update);
   };
+  private sendAction = (action: AppState) => {
+    this.window.webContents.send(MESSAGE.LOADER_ACTION_REQUIRED, action);
+  };
 
   private applyUpdates = (): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -134,35 +141,33 @@ export class AutoUpdater {
 
       autoUpdater.on('error', (error: any) => {
         this.sendUpdate('Something went wrong, please restart');
+        this.window.webContents.send(MESSAGE.LOADER_ACTION_REQUIRED, 'error');
+        this.window.show();
+
+        shell.beep();
         const dialogOpts: MessageBoxOptions = {
           type: 'error',
           buttons: ['Close'],
           title: 'Application Update',
-          message: 'Could not update application',
-          detail: `Something went wrong with the app update: ${error}`,
+          message: 'Error updating the application',
+          detail: `Please report this issue to FIT. \n\n ${error}`,
         };
 
-        dialog.showMessageBox(dialogOpts).then(() => reject(error));
+        dialog.showMessageBox(dialogOpts);
       });
 
       autoUpdater.on('update-available', () => {
-        this.sendUpdate('Finalizing');
+        this.sendUpdate('Installing');
       });
 
       autoUpdater.on('update-downloaded', () => {
-        this.sendUpdate('Awaiting restart');
-        const dialogOpts = {
-          type: 'info',
-          buttons: ['Restart'],
-          title: 'Application Update',
-          message: 'Update downloaded',
-          detail: 'In order to use the app with the latest update, please restart the application now.',
-        };
+        this.sendUpdate('Restarting to apply updates');
+        this.sendAction('complete');
+        shell.beep();
 
-        dialog.showMessageBox(dialogOpts).then(() => {
+        setTimeout(() => {
           autoUpdater.quitAndInstall();
-          resolve();
-        });
+        }, 3000);
       });
 
       autoUpdater.on('update-not-available', () => {

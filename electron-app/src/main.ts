@@ -73,6 +73,7 @@ class Main {
     ipcMain.on(MESSAGE.STOP_IMPORTER, importer.stop);
     ipcMain.on(MESSAGE.SET_WAIT_TIME, this.setWaitTime);
     ipcMain.on(MESSAGE.SET_INPUT_SPEED, this.setInputSpeed);
+    ipcMain.on(MESSAGE.CLOSE_APP, app.quit);
   };
 
   private registerKeyboardShortcuts = () => {
