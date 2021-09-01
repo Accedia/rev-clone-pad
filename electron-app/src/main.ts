@@ -7,7 +7,6 @@ import path from 'path';
 import axios from 'axios';
 import { CUSTOM_PROTOCOL } from './constants/config';
 import Store from 'electron-store';
-import { WaitTime } from './interfaces/WaitTime';
 import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { isAppDev, isDev } from './utils/is_dev';
@@ -101,10 +100,6 @@ class Main {
     this.store.set(INPUT_SPEED_STORAGE_KEY, inputSpeed);
   };
 
-  public getWaitTime = (): WaitTime => {
-    return this.store.get(WAIT_TIME_STORAGE_KEY) as WaitTime;
-  };
-
   public getInputSpeed = (): InputSpeed => {
     return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
   };
@@ -131,6 +126,5 @@ class Main {
 
 const main = new Main();
 
-export const getWaitTime = main.getWaitTime;
 export const getInputSpeed = main.getInputSpeed;
 export const fetchDataAndStartImporter = main.fetchDataAndStartImporter;

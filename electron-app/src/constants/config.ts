@@ -1,24 +1,5 @@
 export const CUSTOM_PROTOCOL = 'ccc';
 
-export const WAIT_TIME_CONFIG = {
-  'extra-slow': {
-    value: 20,
-    title: 'Turtle',
-  },
-  slow: {
-    value: 15,
-    title: 'Slow',
-  },
-  normal: {
-    value: 10,
-    title: 'Normal',
-  },
-  fast: {
-    value: 5,
-    title: 'Fast',
-  },
-};
-
 export const INPUT_SPEED_CONFIG = {
   'extra-slow': {
     value: 4,

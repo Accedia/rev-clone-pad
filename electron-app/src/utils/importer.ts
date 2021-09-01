@@ -2,13 +2,12 @@ import { ResponseData } from './../interfaces/ResponseData';
 import fs from 'fs';
 import { Key, keyboard, mouse, screen, centerOf, Point, Region, getActiveWindow } from '@nut-tree/nut-js';
 import { app, BrowserWindow, dialog, MessageBoxOptions } from 'electron';
-import { getWaitTime, getInputSpeed } from '../main';
+import { getInputSpeed } from '../main';
 import { MESSAGE } from '../constants/messages';
-import { getWaitTimeInSeconds, getInputSpeedInSeconds } from './get_config_values';
+import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
 import { Forgettable } from '../interfaces/Forgettable';
 import { isAppDev } from './is_dev';
-import { sendError } from './send_error';
 import { times } from './times_do';
 import { getPopulationData } from './get_population_data';
 
@@ -29,7 +28,7 @@ class Importer {
     keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 100);
 
     // TODO delete. Left only for debug purposes
-    // screen.config.confidence = 0.98;
+    // screen.config.confidence = 0.84;
     // screen.config.autoHighlight = true;
     // screen.config.highlightDurationMs = 3000;
     // screen.config.highlightOpacity = 0.8;
@@ -53,8 +52,6 @@ class Importer {
     try {
       electronWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
 
-      await this.waitTimeTimer(electronWindow);
-
       if (this.isRunning) {
         // TODO fix issue when click Abort
         // const isCccOnFocus = await this.checkIsCccOnFocus(electronWindow, { orderCustomerName, orderNumber });
@@ -63,9 +60,10 @@ class Importer {
         //   return;
         // }
 
-        electronWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
+        electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
         if (lineOperationCoordinates) {
+          electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
           await this.goToTheFirstCell();
           await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
         }
@@ -76,21 +74,19 @@ class Importer {
     }
   };
 
-  private waitTimeTimer = async (electronWindow: BrowserWindow) => {
-    const waitTime = getWaitTime();
-    const waitTimeSeconds = getWaitTimeInSeconds(waitTime);
+  private getLineOperationCoordinates = async (electronWindow: BrowserWindow): Promise<Point> => {
+    const lineOperationCoordinates = await this.checkForLineOperationCoordinates();
 
-    for (let i = 0; i < waitTimeSeconds && this.isRunning; i++) {
-      const remainingTime = waitTimeSeconds - i;
-      electronWindow.webContents.send(MESSAGE.COUNTDOWN, remainingTime);
-      if (remainingTime > 0) {
-        await snooze(1000);
-      }
+    if (lineOperationCoordinates) {
+      return lineOperationCoordinates;
+    } else if (this.isRunning) {
+      snooze(1000);
+      return this.getLineOperationCoordinates(electronWindow);
     }
   };
 
-  private getLineOperationCoordinates = async (electronWindow: BrowserWindow): Promise<Point> => {
-    const imageDirectory = isAppDev(app) ? './assets' : 'resources/app/assets';
+  private checkForLineOperationCoordinates = async (): Promise<Point> => {
+    const imageDirectory = isAppDev(app) ? './assets/line-operation' : 'resources/app/assets/line-operation';
     const images = fs.readdirSync(imageDirectory);
     const result: ImageSearchResult = {
       coordinates: null,
@@ -113,15 +109,12 @@ class Importer {
     if (result.coordinates) {
       return await centerOf(result.coordinates);
     } else {
-      sendError(
-        electronWindow,
-        'Error identifying the Line Operation button. Please make sure the CCC is on your main screen and try again.'
-      );
       result.errors.forEach((error) => console.log('Error finding the Line Operation button:', error));
     }
   };
 
   private goToTheFirstCell = async () => {
+    await times(2).pressKey(Key.Tab);
     await keyboard.pressKey(Key.Home);
     await keyboard.pressKey(Key.LeftControl, Key.Down);
     await keyboard.releaseKey(Key.LeftControl);
