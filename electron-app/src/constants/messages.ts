@@ -2,7 +2,6 @@ export const MESSAGE = {
   STOP_IMPORTER: 'stop-table-population',
   STOP_IMPORTER_SHORTCUT: 'stop-table-population-from-shortcut',
   ERROR: 'error-message',
-  COUNTDOWN: 'countdown-timer-change',
   PROGRESS_UPDATE: 'import-progress-update',
   LOADING_UPDATE: 'loading-update',
   UPDATE_APP_STATE: 'update-app-state',
@@ -13,6 +12,7 @@ export const MESSAGE = {
   LOADER_ACTION_REQUIRED: 'loader-action-required',
   LOADER_PROGRESS: 'loader-progress',
   CLOSE_APP: 'close-app',
+  WAITING_CCC_UPDATE: 'waiting-ccc-update',
 };
 
 export const APP_STATE = {
