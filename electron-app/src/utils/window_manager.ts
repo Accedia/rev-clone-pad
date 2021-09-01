@@ -2,7 +2,7 @@ import { isAppDev, isDev } from './is_dev';
 import { app, BrowserWindow, screen } from 'electron';
 import * as path from 'path';
 import { getCustomProtocolUrl } from './get_custom_protocol_url';
-import { fetchData } from '../main';
+import { fetchDataAndStartImporter } from '../main';
 import { WINDOW_CONFIG } from '../config/window_config';
 import { MESSAGE, APP_STATE } from '../constants/messages';
 import { AutoUpdater } from './auto_updater';
@@ -35,7 +35,7 @@ class WindowManager {
     }
   };
 
-  startLoading = (): void => {
+  public startLoading = (): void => {
     this.loadingWindow = new BrowserWindow(WINDOW_CONFIG.loading);
     this.loadLoadingWindowContent();
     this.loadingWindow.once('show', async () => {
@@ -49,17 +49,21 @@ class WindowManager {
     this.loadingWindow.on('ready-to-show', this.loadingWindow.show);
   };
 
-  startApp = async (): Promise<void> => {
+  public startApp = async (): Promise<void> => {
     await this.createMainWindow();
     if (process.platform !== 'darwin') {
       const url = getCustomProtocolUrl(process.argv);
       if (url) {
-        fetchData(url);
+        /**
+         * If the app has been opened by pressing the "Commit" button in REV
+         * without the app being opened before that
+         */
+        await fetchDataAndStartImporter(url);
       }
     }
   };
 
-  createMainWindow = (): Promise<void> => {
+  public createMainWindow = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       this.mainWindow = new BrowserWindow(WINDOW_CONFIG.main);
       this.mainWindow.once('ready-to-show', () => {

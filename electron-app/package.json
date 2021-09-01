@@ -2,7 +2,7 @@
   "name": "fit-ccc-input-automation",
   "appname": "FIT CCC Input Automation",
   "productName": "FIT CCC Input Automation",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "homepage": "./",
   "main": "./dist/main.js",
   "description": "Automation for CCC by FIT",
@@ -36,6 +36,7 @@
     "@electron-forge/maker-zip": "^6.0.0-beta.59",
     "@electron-forge/publisher-github": "^6.0.0-beta.59",
     "@octokit/types": "^6.25.0",
+    "@types/source-map-support": "^0.5.4",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "copyfiles": "^2.4.1",
@@ -43,6 +44,7 @@
     "electron": "^13.1.6",
     "electron-rebuild": "^2.3.5",
     "eslint": "^7.30.0",
+    "source-map-support": "^0.5.19",
     "typescript": "^4.3.5"
   },
   "dependencies": {

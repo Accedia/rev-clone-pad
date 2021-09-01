@@ -5,16 +5,19 @@ import importer from './utils/importer';
 import { MESSAGE } from './constants/messages';
 import path from 'path';
 import axios from 'axios';
-import { snooze } from './utils/snooze';
 import { CUSTOM_PROTOCOL } from './constants/config';
 import Store from 'electron-store';
 import { WaitTime } from './interfaces/WaitTime';
 import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
-import { isAppDev } from './utils/is_dev';
+import { isAppDev, isDev } from './utils/is_dev';
 
 const WAIT_TIME_STORAGE_KEY = 'waitTime';
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
+
+if (isDev() && isAppDev(app)) {
+  require('source-map-support').install();
+}
 
 if (require('electron-squirrel-startup')) app.quit();
 
@@ -52,18 +55,23 @@ class Main {
         const url = getCustomProtocolUrl(argv);
 
         if (this.windowManager.mainWindow) {
+          /**
+           * Enters here when app is opened from the browser
+           * after it has been started manually before that
+           */
           importer.stop();
           this.windowManager.mainWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE);
         } else if (url) {
+          /**
+           * I don't know when we enter here
+           */
           await this.windowManager.createMainWindow();
         }
 
         if (url) {
-          this.windowManager.appStateUpdate('populating');
-          this.windowManager.putWindowOnTop(this.windowManager.mainWindow);
-          this.windowManager.mainWindow.webContents.send(MESSAGE.LOADING_UPDATE, true);
-          await snooze(1500);
-          this.fetchData(url);
+          // ? Is this snooze necessary, check if it causes problems
+          // await snooze(1500);
+          this.fetchDataAndStartImporter(url);
         }
       });
     }
@@ -93,16 +101,17 @@ class Main {
     this.store.set(INPUT_SPEED_STORAGE_KEY, inputSpeed);
   };
 
-  getWaitTime = (): WaitTime => {
+  public getWaitTime = (): WaitTime => {
     return this.store.get(WAIT_TIME_STORAGE_KEY) as WaitTime;
   };
 
-  getInputSpeed = (): InputSpeed => {
+  public getInputSpeed = (): InputSpeed => {
     return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
   };
 
-  public fetchData = async (url: string) => {
+  public fetchDataAndStartImporter = async (url: string) => {
     try {
+      this.updateMainWindowStateToFetching();
       url = url.replace('localhost', '[::1]');
       const { data } = await axios.get<ResponseData>(url);
 
@@ -112,10 +121,16 @@ class Main {
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
     }
   };
+
+  private updateMainWindowStateToFetching = () => {
+    this.windowManager.appStateUpdate('populating');
+    this.windowManager.putWindowOnTop(this.windowManager.mainWindow);
+    this.windowManager.mainWindow.webContents.send(MESSAGE.LOADING_UPDATE, true);
+  };
 }
 
 const main = new Main();
 
 export const getWaitTime = main.getWaitTime;
 export const getInputSpeed = main.getInputSpeed;
-export const fetchData = main.fetchData;
+export const fetchDataAndStartImporter = main.fetchDataAndStartImporter;
