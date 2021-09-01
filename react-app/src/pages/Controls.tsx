@@ -1,6 +1,5 @@
 import React, { useCallback, useReducer } from 'react';
 import { Divider, Loader, Message } from 'semantic-ui-react';
-import Timer from '../components/Timer';
 import ProgressBar from '../components/ProgressBar';
 import { ActionButton } from '../components/ActionButton';
 import { useToasts } from 'react-toast-notifications';
@@ -17,7 +16,7 @@ interface ControlsProps {
 const Controls: React.FC<ControlsProps> = ({ onBack }) => {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
-  const { timer, percentage, isRunning, isLoading } = state;
+  const { percentage, isRunning, isLoading, isWaitingCcc, isReady } = state;
   const { addToast } = useToasts();
 
   const resetState = () => {
@@ -59,6 +58,10 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
           type: '@SET_IS_RUNNING',
           payload: false,
         });
+        dispatch({
+          type: '@SET_IS_READY',
+          payload: true,
+        })
       }
       dispatch({
         type: '@SET_PERCENTAGE',
@@ -68,18 +71,6 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
 
     ipcRenderer.on(MESSAGE.PROGRESS_UPDATE, handler);
     return () => ipcRenderer.removeListener(MESSAGE.PROGRESS_UPDATE, handler);
-  }, []);
-
-  React.useEffect(() => {
-    const handler = (event: any, countdownTimer: number) => {
-      dispatch({
-        type: '@SET_TIMER',
-        payload: countdownTimer,
-      });
-    };
-
-    ipcRenderer.on(MESSAGE.COUNTDOWN, handler);
-    return () => ipcRenderer.removeListener(MESSAGE.COUNTDOWN, handler);
   }, []);
 
   React.useEffect(() => {
@@ -114,9 +105,20 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
     return () => ipcRenderer.removeListener(MESSAGE.RESET_CONTROLS_STATE, resetState);
   }, []);
 
-  const isIdle = !isLoading && timer < 0;
-  const isDownloadingForgettables = isLoading && timer < 0;
-  const isInWaitTime = timer > 0 && isRunning;
+  React.useEffect(() => {
+    const handler = (event: any, isWaitingCcc: boolean) => {
+      dispatch({
+        type: '@SET_IS_WAITING_CCC',
+        payload: isWaitingCcc,
+      });
+    };
+
+    ipcRenderer.on(MESSAGE.WAITING_CCC_UPDATE, handler);
+    return () => ipcRenderer.removeListener(MESSAGE.WAITING_CCC_UPDATE, handler);
+  }, []);
+
+  const isIdle = !isLoading && !isWaitingCcc && !isRunning && !isReady;
+  const isDownloadingForgettables = isLoading && !isWaitingCcc && !isReady;
 
   const renderContent = () => {
     if (isIdle) {
@@ -126,10 +128,14 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
           You can start one from FIT REV Scrubber
         </Message>
       );
-    }
-
-    if (isInWaitTime) {
-      return <Timer value={timer} />;
+    } else if (isWaitingCcc) {
+      return (
+        <div className="loader-container">
+          <Loader active inline="centered">
+            Waiting for you to open CCC and put it on your main screen...
+          </Loader>
+        </div>
+      );
     }
 
     return <ProgressBar percentage={percentage} />;

@@ -156,3 +156,11 @@ html,
     text-shadow: 0.25em 0 0 inherit, 0.5em 0 0 inherit;
   }
 }
+
+.home-page-logo-container {
+  text-align: center;
+}
+
+.home-page-logo {
+  width: 60px;
+}

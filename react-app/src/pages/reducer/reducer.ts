@@ -11,11 +11,6 @@ const reducer = (
         ...state,
         stoppedPrematurely: action.payload
       }
-    case '@SET_TIMER':
-      return {
-        ...state,
-        timer: action.payload,
-      }
     case '@SET_PERCENTAGE':
       return {
         ...state,
@@ -39,6 +34,16 @@ const reducer = (
     case '@RESET_STATE':
       state = INITIAL_STATE;
       return state;
+    case '@SET_IS_WAITING_CCC':
+      return {
+        ...state,
+        isWaitingCcc: action.payload,
+      }
+    case '@SET_IS_READY':
+      return {
+        ...state,
+        isReady: action.payload,
+      }
     default:
       return state;
   }
