@@ -1,7 +1,7 @@
 import { ResponseData } from './../interfaces/ResponseData';
 import fs from 'fs';
 import { Key, keyboard, mouse, screen, centerOf, Point, Region, getActiveWindow } from '@nut-tree/nut-js';
-import { app, BrowserWindow, dialog, MessageBoxOptions, screen as electronScreen } from 'electron';
+import { app, BrowserWindow, dialog, MessageBoxOptions } from 'electron';
 import { getWaitTime, getInputSpeed } from '../main';
 import { MESSAGE } from '../constants/messages';
 import { getWaitTimeInSeconds, getInputSpeedInSeconds } from './get_config_values';
@@ -56,11 +56,12 @@ class Importer {
       await this.waitTimeTimer(electronWindow);
 
       if (this.isRunning) {
-        const isCccOnFocus = await this.checkIsCccOnFocus(electronWindow, { orderCustomerName, orderNumber });
-        if (!isCccOnFocus) {
-          this.stop();
-          return;
-        }
+        // TODO fix issue when click Abort
+        // const isCccOnFocus = await this.checkIsCccOnFocus(electronWindow, { orderCustomerName, orderNumber });
+        // if (!isCccOnFocus) {
+        //   this.stop();
+        //   return;
+        // }
 
         electronWindow.webContents.send(MESSAGE.COUNTDOWN, 0);
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
@@ -195,12 +196,9 @@ class Importer {
     electronWindow: BrowserWindow,
     orderData: Omit<ResponseData, 'forgettables'>
   ): Promise<boolean> => {
-    const primaryDisplay = electronScreen.getPrimaryDisplay();
-    const { bounds } = primaryDisplay;
     const activeWindow = await getActiveWindow();
 
     const title = await activeWindow.title;
-    const region = await activeWindow.region;
 
     if (!title.includes(orderData.orderNumber) && !title.includes(orderData.orderCustomerName)) {
       const dialogOpts: MessageBoxOptions = {
@@ -223,17 +221,6 @@ class Importer {
         electronWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
         return false;
       }
-    }
-
-    const cccOnMainScreen =
-      region.left > bounds.x &&
-      region.left < bounds.width &&
-      region.top > bounds.y &&
-      region.top < bounds.height;
-
-    if (!cccOnMainScreen) {
-      sendError(electronWindow, 'CCC must be on the main screen');
-      return false;
     }
 
     return true;
