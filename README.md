@@ -42,3 +42,11 @@ There are two CI/CD jobs that run on `develop` and `master`.
 ## Auto Update
 
 The app checks for updates from the GitHub API for the latest release and downloads it locally in a TEMP folder (if the version is higher than the currently installed). Then installs it and restarts the app to apply the updates. Uses the electron built-in `autoUpdater` with some queries to the GitHub API.
+
+
+## Logs
+
+The application writes logs in the following locations:
+on Linux: `~/.config/FIT CCC Input Automation/logs/{process type}.log`
+on macOS: `~/Library/Logs/FIT CCC Input Automation/{process type}.log`
+on Windows: `%USERPROFILE%\AppData\Roaming\FIT CCC Input Automation\logs\{process type}.log`
