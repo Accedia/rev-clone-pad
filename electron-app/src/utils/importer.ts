@@ -11,6 +11,7 @@ import { isAppDev } from './is_dev';
 import { times } from './times_do';
 import { getPopulationData } from './get_population_data';
 import log from 'electron-log';
+import path from 'path';
 
 interface ImageSearchResult {
   coordinates: Region | null;
@@ -27,6 +28,7 @@ class Importer {
   public setConfig = (inputSpeed: number) => {
     keyboard.config.autoDelayMs = inputSpeed ** 2;
     keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 100);
+    screen.config.resourceDirectory = this.getAssetsPath();
 
     // TODO delete. Left only for debug purposes
     // screen.config.confidence = 0.84;
@@ -72,6 +74,7 @@ class Importer {
       electronWindow.setAlwaysOnTop(false);
     } catch (e) {
       log.error('Error populating the data', e);
+      electronWindow.webContents.send(MESSAGE.ERROR, e.message);
     }
   };
 
@@ -87,9 +90,15 @@ class Importer {
     }
   };
 
+  private getAssetsPath = () => {
+    const imageDirectory = isAppDev(app) ? '../../assets/line-operation' : 'resources/app/assets/line-operation';
+
+    return path.resolve(__dirname, imageDirectory);
+  };
+
   private checkForLineOperationCoordinates = async (): Promise<Point> => {
-    const imageDirectory = isAppDev(app) ? './assets/line-operation' : 'resources/app/assets/line-operation';
-    const images = fs.readdirSync(imageDirectory);
+   
+    const images = fs.readdirSync(this.getAssetsPath());
     const result: ImageSearchResult = {
       coordinates: null,
       errors: [],
@@ -97,10 +106,9 @@ class Importer {
 
     for (let i = 0; i < images.length; i++) {
       const name = images[i];
-      const fullPath = `${imageDirectory}/${name}`;
 
       try {
-        const coordinates = await screen.find(fullPath);
+        const coordinates = await screen.find(name);
         result.coordinates = coordinates;
         break;
       } catch (err) {
