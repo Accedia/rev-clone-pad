@@ -1,5 +1,8 @@
+![develop version](https://img.shields.io/badge/dynamic/json?color=blue&label=develop&prefix=v&query=%24.version&url=https%3A%2F%2Fraw.githubusercontent.com%2FAccedia%2Ffit-ccc-input-automation%2Fdevelop%2Felectron-app%2Fpackage.json)
+![master version](https://img.shields.io/badge/dynamic/json?color=blue&label=master&prefix=v&query=%24.version&url=https%3A%2F%2Fraw.githubusercontent.com%2FAccedia%2Ffit-ccc-input-automation%2Fmaster%2Felectron-app%2Fpackage.json)
 ![Bump](https://github.com/Accedia/fit-ccc-input-automation/actions/workflows/bump.yml/badge.svg)
 ![Release](https://github.com/Accedia/fit-ccc-input-automation/actions/workflows/release.yml/badge.svg)
+
 # FIT CCC Input Automation
 
 ## Description 
