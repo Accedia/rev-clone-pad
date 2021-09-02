@@ -1,3 +1,5 @@
+![Bump](https://github.com/Accedia/fit-ccc-input-automation/actions/workflows/bump.yml/badge.svg)
+![Release](https://github.com/Accedia/fit-ccc-input-automation/actions/workflows/release.yml/badge.svg)
 # FIT CCC Input Automation
 
 ## Description 
@@ -47,6 +49,6 @@ The app checks for updates from the GitHub API for the latest release and downlo
 ## Logs
 
 The application writes logs in the following locations:
-on Linux: `~/.config/FIT CCC Input Automation/logs/{process type}.log`
-on macOS: `~/Library/Logs/FIT CCC Input Automation/{process type}.log`
-on Windows: `%USERPROFILE%\AppData\Roaming\FIT CCC Input Automation\logs\{process type}.log`
+- on Linux: `~/.config/FIT CCC Input Automation/logs/{process type}.log`
+- on macOS: `~/Library/Logs/FIT CCC Input Automation/{process type}.log`
+- on Windows: `%USERPROFILE%\AppData\Roaming\FIT CCC Input Automation\logs\{process type}.log`
