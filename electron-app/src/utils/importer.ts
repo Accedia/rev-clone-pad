@@ -10,6 +10,7 @@ import { Forgettable } from '../interfaces/Forgettable';
 import { isAppDev } from './is_dev';
 import { times } from './times_do';
 import { getPopulationData } from './get_population_data';
+import log from 'electron-log';
 
 interface ImageSearchResult {
   coordinates: Region | null;
@@ -70,7 +71,7 @@ class Importer {
       }
       electronWindow.setAlwaysOnTop(false);
     } catch (e) {
-      console.log(e);
+      log.error('Error populating the data', e);
     }
   };
 
@@ -81,6 +82,7 @@ class Importer {
       return lineOperationCoordinates;
     } else if (this.isRunning) {
       snooze(1000);
+      log.warn('Still searching for CCC on the main screen. Retrying...');
       return this.getLineOperationCoordinates(electronWindow);
     }
   };
@@ -109,7 +111,7 @@ class Importer {
     if (result.coordinates) {
       return await centerOf(result.coordinates);
     } else {
-      result.errors.forEach((error) => console.log('Error finding the Line Operation button:', error));
+      result.errors.forEach((error) => log.warn('Error finding the Line Operation button', error));
     }
   };
 

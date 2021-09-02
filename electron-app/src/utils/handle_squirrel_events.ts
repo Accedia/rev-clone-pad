@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { app, globalShortcut, ipcMain } from 'electron';
+import { app } from 'electron';
+import log from 'electron-log';
 
 export function handleSquirrelEvent() {
   if (process.argv.length === 1) {
@@ -15,12 +16,12 @@ export function handleSquirrelEvent() {
   const exeName = path.basename(process.execPath);
 
   const spawn = function (command: any, args: any) {
-    let spawnedProcess, error;
+    let spawnedProcess;
 
     try {
       spawnedProcess = ChildProcess.spawn(command, args, { detached: true });
     } catch (error) {
-      console.log('Error spawning child process' + error);
+      log.error('Error spawning child process', error);
     }
 
     return spawnedProcess;

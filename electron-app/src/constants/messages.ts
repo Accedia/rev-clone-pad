@@ -5,7 +5,6 @@ export const MESSAGE = {
   PROGRESS_UPDATE: 'import-progress-update',
   LOADING_UPDATE: 'loading-update',
   UPDATE_APP_STATE: 'update-app-state',
-  SET_WAIT_TIME: 'set-wait-time',
   SET_INPUT_SPEED: 'set-input-speed',
   RESET_CONTROLS_STATE: 'reset-controls-state',
   LOADER_CHECK_UPDATE_STATUS: 'loader-check-update-status',
