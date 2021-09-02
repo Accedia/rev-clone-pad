@@ -1,3 +1,5 @@
+![Bump](https://github.com/Accedia/fit-ccc-input-automation/actions/workflows/bump.yml/badge.svg)
+![Release](https://github.com/Accedia/fit-ccc-input-automation/actions/workflows/release.yml/badge.svg)
 # FIT CCC Input Automation
 
 ## Description 
