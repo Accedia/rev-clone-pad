@@ -1,13 +1,12 @@
 import { ResponseData } from './../interfaces/ResponseData';
 import fs from 'fs';
 import { Key, keyboard, mouse, screen, centerOf, Point, Region, getActiveWindow } from '@nut-tree/nut-js';
-import { app, BrowserWindow, dialog, MessageBoxOptions } from 'electron';
+import { BrowserWindow, dialog, MessageBoxOptions } from 'electron';
 import { getInputSpeed } from '../main';
 import { MESSAGE } from '../constants/messages';
 import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
 import { Forgettable } from '../interfaces/Forgettable';
-import { isAppDev } from './is_dev';
 import { times } from './times_do';
 import { getPopulationData } from './get_population_data';
 import log from 'electron-log';
@@ -91,9 +90,7 @@ class Importer {
   };
 
   private getAssetsPath = () => {
-    const imageDirectory = isAppDev(app) ? '../../assets/line-operation' : 'resources/app/assets/line-operation';
-
-    return path.resolve(__dirname, imageDirectory);
+    return path.resolve(__dirname, '../../assets/line-operation');
   };
 
   private checkForLineOperationCoordinates = async (): Promise<Point> => {
