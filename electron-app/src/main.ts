@@ -10,8 +10,8 @@ import Store from 'electron-store';
 import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { isAppDev, isDev } from './utils/is_dev';
+import log from 'electron-log';
 
-const WAIT_TIME_STORAGE_KEY = 'waitTime';
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
 if (isDev() && isAppDev(app)) {
@@ -64,6 +64,7 @@ class Main {
           /**
            * I don't know when we enter here
            */
+          log.debug('It seems we need this');
           await this.windowManager.createMainWindow();
         }
 
@@ -78,7 +79,6 @@ class Main {
 
   private registerMainListeners = () => {
     ipcMain.on(MESSAGE.STOP_IMPORTER, importer.stop);
-    ipcMain.on(MESSAGE.SET_WAIT_TIME, this.setWaitTime);
     ipcMain.on(MESSAGE.SET_INPUT_SPEED, this.setInputSpeed);
     ipcMain.on(MESSAGE.CLOSE_APP, app.quit);
   };
@@ -90,10 +90,6 @@ class Main {
         this.windowManager.mainWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
       });
     });
-  };
-
-  private setWaitTime = (event: any, waitTime: string) => {
-    this.store.set(WAIT_TIME_STORAGE_KEY, waitTime);
   };
 
   private setInputSpeed = (event: any, inputSpeed: string) => {
@@ -112,7 +108,7 @@ class Main {
 
       await importer.startPopulation(data, this.windowManager.mainWindow);
     } catch (e) {
-      console.log('Error retrieving the forgettables', e.message);
+      log.error('Error retrieving the forgettables', e.message);
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
     }
   };

@@ -51,6 +51,7 @@
     "@nut-tree/nut-js": "^1.7.0",
     "axios": "^0.21.1",
     "concurrently": "^6.2.0",
+    "electron-log": "^4.4.1",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.0",
     "rimraf": "^3.0.2",

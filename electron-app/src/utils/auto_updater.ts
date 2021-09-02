@@ -7,6 +7,7 @@ import path from 'path';
 import * as stream from 'stream';
 import { promisify } from 'util';
 import { AppState } from '../interfaces/AppState';
+import log from 'electron-log';
 
 type LatestRelease = Endpoints['GET /repos/{owner}/{repo}/releases/latest']['response']['data'];
 
@@ -54,6 +55,7 @@ export class AutoUpdater {
     try {
       await this.applyUpdates();
     } catch (e) {
+      log.error('Error applying the updates', e);
       app.quit();
     }
 
