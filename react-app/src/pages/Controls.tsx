@@ -1,13 +1,12 @@
 import React, { useCallback, useReducer } from 'react';
-import { Divider, Loader, Message } from 'semantic-ui-react';
+import { Divider, Icon, Loader, Message } from 'semantic-ui-react';
 import ProgressBar from '../components/ProgressBar';
 import { ActionButton } from '../components/ActionButton';
 import { useToasts } from 'react-toast-notifications';
 import { MESSAGE } from '@electron-app';
 import reducer, { INITIAL_STATE } from './reducer';
-
-const electron = window.require('electron');
-const { ipcRenderer } = electron;
+import Dots from '../components/Dots';
+import { ipcRenderer } from '@react-app/utils/electron_remote';
 
 interface ControlsProps {
   onBack?: () => void;
@@ -46,7 +45,9 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
 
   React.useEffect(() => {
     ipcRenderer.on(MESSAGE.STOP_IMPORTER_SHORTCUT, stopPopulationStateUpdate);
-    return () => ipcRenderer.removeListener(MESSAGE.STOP_IMPORTER_SHORTCUT, stopPopulationStateUpdate);
+    return () => {
+      ipcRenderer.removeListener(MESSAGE.STOP_IMPORTER_SHORTCUT, stopPopulationStateUpdate);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,7 +62,7 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
         dispatch({
           type: '@SET_IS_READY',
           payload: true,
-        })
+        });
       }
       dispatch({
         type: '@SET_PERCENTAGE',
@@ -70,7 +71,10 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
     };
 
     ipcRenderer.on(MESSAGE.PROGRESS_UPDATE, handler);
-    return () => ipcRenderer.removeListener(MESSAGE.PROGRESS_UPDATE, handler);
+
+    return () => {
+      ipcRenderer.removeListener(MESSAGE.PROGRESS_UPDATE, handler);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -82,7 +86,10 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
     };
 
     ipcRenderer.on(MESSAGE.LOADING_UPDATE, handler);
-    return () => ipcRenderer.removeListener(MESSAGE.LOADING_UPDATE, handler);
+
+    return () => {
+      ipcRenderer.removeListener(MESSAGE.LOADING_UPDATE, handler);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -96,13 +103,19 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
     };
 
     ipcRenderer.on(MESSAGE.ERROR, handler);
-    return () => ipcRenderer.removeListener(MESSAGE.ERROR, handler);
+
+    return () => {
+      ipcRenderer.removeListener(MESSAGE.ERROR, handler);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   React.useEffect(() => {
     ipcRenderer.on(MESSAGE.RESET_CONTROLS_STATE, resetState);
-    return () => ipcRenderer.removeListener(MESSAGE.RESET_CONTROLS_STATE, resetState);
+
+    return () => {
+      ipcRenderer.removeListener(MESSAGE.RESET_CONTROLS_STATE, resetState);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -114,7 +127,10 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
     };
 
     ipcRenderer.on(MESSAGE.WAITING_CCC_UPDATE, handler);
-    return () => ipcRenderer.removeListener(MESSAGE.WAITING_CCC_UPDATE, handler);
+
+    return () => {
+      ipcRenderer.removeListener(MESSAGE.WAITING_CCC_UPDATE, handler);
+    };
   }, []);
 
   const isIdle = !isLoading && !isWaitingCcc && !isRunning && !isReady;
@@ -124,16 +140,24 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
     if (isIdle) {
       return (
         <Message>
-          <Message.Header>No input currently running</Message.Header>
-          You can start one from FIT REV Scrubber
+          <Message.Content>
+            <Message.Header>No input currently running</Message.Header>
+            You can start one from FIT REV Scrubber
+          </Message.Content>
         </Message>
       );
     } else if (isWaitingCcc) {
       return (
         <div className="loader-container">
-          <Loader active inline="centered">
-            Waiting for you to open CCC and put it on your main screen...
-          </Loader>
+          <Message icon color="blue">
+            <Icon name="circle notched" loading />
+            <Message.Content>
+              <Message.Header>
+                Detecting CCC Estimate window <Dots compact />
+              </Message.Header>
+              Waiting for you to open CCC and put it on your main screen
+            </Message.Content>
+          </Message>
         </div>
       );
     }
