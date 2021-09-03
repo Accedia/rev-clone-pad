@@ -21,6 +21,7 @@ module.exports = {
           owner: 'Accedia',
           name: 'fit-ccc-input-automation',
         },
+        draft: false,
       },
     },
   ],
