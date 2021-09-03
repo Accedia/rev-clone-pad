@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from 'semantic-ui-react';
 import { SemanticWIDTHS } from 'semantic-ui-react/dist/commonjs/generic';
 import SectionTitle from '../components/SectionTitle';
+import { electron, ipcRenderer } from '@react-app/utils/electron_remote';
 
 import './app.css';
 
@@ -11,8 +12,6 @@ interface ElectronRemote {
   getInputSpeed: () => InputSpeed;
 }
 
-const electron = window.require('electron');
-const { ipcRenderer } = electron;
 const getElectronRemote = (): ElectronRemote => electron.remote.require('./main.js');
 
 const Settings: React.FC = () => {
@@ -41,8 +40,8 @@ const Settings: React.FC = () => {
 
   return (
     <div>
-      <div className='home-page-logo-container'>
-        <img className='home-page-logo' src={process.env.PUBLIC_URL + '/icon.ico'} alt='logo' />
+      <div className="home-page-logo-container">
+        <img className="home-page-logo" src={process.env.PUBLIC_URL + '/icon.ico'} alt="logo" />
       </div>
       <div className="setting-container">
         <SectionTitle

@@ -3,9 +3,7 @@ import { useEffect } from 'react';
 import { MESSAGE, AppState } from '@electron-app';
 import './app.css';
 import { Button, Progress } from 'semantic-ui-react';
-
-const electron = window.require('electron');
-const { ipcRenderer } = electron;
+import { ipcRenderer } from '@react-app/utils/electron_remote';
 
 const LoadingPage: React.FC = () => {
   const [status, setStatus] = React.useState('Loading');
