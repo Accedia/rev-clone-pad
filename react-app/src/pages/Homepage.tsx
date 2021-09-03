@@ -4,7 +4,8 @@ import Controls from './Controls';
 import { APP_STATE, MESSAGE } from '@electron-app';
 import { ipcRenderer } from '@react-app/utils/electron_remote';
 
-import './app.css';
+import '../styles/app.scss';
+import { ToastProvider } from 'react-toast-notifications';
 
 type AppStateType = keyof typeof APP_STATE;
 
@@ -28,7 +29,20 @@ const Homepage: React.FC = () => {
       default:
         return <Controls onBack={() => setAppState('idle')} />;
       case 'idle':
-        return <Settings />;
+        /**
+         * The ToastProvider overrides the one in App.tsx;
+         * reason: change the placement to top-center
+         */
+        return (
+          <ToastProvider
+            autoDismiss={true}
+            autoDismissTimeout={2500}
+            placement="top-center"
+            transitionDuration={300}
+          >
+            <Settings />
+          </ToastProvider>
+        );
     }
   }, [appState]);
 

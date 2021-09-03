@@ -1,9 +1,11 @@
 import React, { useCallback } from 'react';
 import { useEffect } from 'react';
 import { MESSAGE, AppState } from '@electron-app';
-import './app.css';
 import { Button, Progress } from 'semantic-ui-react';
 import { ipcRenderer } from '@react-app/utils/electron_remote';
+import Dots from '../components/Dots';
+
+import '../styles/app.scss';
 
 const LoadingPage: React.FC = () => {
   const [status, setStatus] = React.useState('Loading');
@@ -48,11 +50,7 @@ const LoadingPage: React.FC = () => {
       />
       <p className="status-text">
         {status}
-        <span>
-          <span className="dot" />
-          <span className="dot" />
-          <span className="dot" />
-        </span>
+        <Dots />
       </p>
       {appState === 'downloading' && (
         <Progress percent={progress} size="tiny" color="blue" className="progress-bar" />
