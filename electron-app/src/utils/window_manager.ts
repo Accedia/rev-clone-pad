@@ -6,6 +6,7 @@ import { fetchDataAndStartImporter } from '../main';
 import { WINDOW_CONFIG } from '../config/window_config';
 import { MESSAGE, APP_STATE } from '../constants/messages';
 import { AutoUpdater } from './auto_updater';
+import { getScreenSize } from './screen_size';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 
@@ -18,12 +19,31 @@ class WindowManager {
   private paths = {
     controls: '/controls',
     loading: '/loading',
+    blockOverlay: '/block-overlay',
   };
 
   constructor() {
     this.mainWindow = null;
     this.loadingWindow = null;
   }
+
+  private loadContent = (window: BrowserWindow, path?: string) => {
+    if (isDev()) {
+      let url = this.devUrl;
+      if (path) {
+        url += `#${path}`;
+      }
+
+      window.loadURL(url);
+    } else {
+      const options: Electron.LoadFileOptions = {};
+      if (path) {
+        options.hash = path;
+      }
+
+      window.loadFile(this.prodUrl, options);
+    }
+  };
 
   private loadLoadingWindowContent = () => {
     if (isDev()) {
@@ -77,6 +97,21 @@ class WindowManager {
       } else {
         this.mainWindow.loadFile(this.prodUrl);
       }
+    });
+  };
+
+  public createBlockOVerlayWindow = (): void => {
+    const { width, height } = getScreenSize();
+    const overlayWindow = new BrowserWindow({
+      ...WINDOW_CONFIG.blockOverlay,
+      width,
+      height,
+    });
+    this.loadContent(overlayWindow, this.paths.blockOverlay);
+    overlayWindow.on('ready-to-show', () => {
+      overlayWindow.show();
+      overlayWindow.setIgnoreMouseEvents(true);
+      overlayWindow.moveTop();
     });
   };
 
