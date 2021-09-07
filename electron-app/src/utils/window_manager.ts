@@ -6,24 +6,45 @@ import { fetchDataAndStartImporter } from '../main';
 import { WINDOW_CONFIG } from '../config/window_config';
 import { MESSAGE, APP_STATE } from '../constants/messages';
 import { AutoUpdater } from './auto_updater';
+import { getScreenSize } from './screen_size';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 
 class WindowManager {
   mainWindow: MaybeBrowserWindow;
   loadingWindow: MaybeBrowserWindow;
+  overlayWindow: MaybeBrowserWindow;
 
   private devUrl = 'http://localhost:3000';
   private prodUrl = path.resolve(__dirname, '../../build/index.html');
   private paths = {
     controls: '/controls',
     loading: '/loading',
+    blockOverlay: '/block-overlay',
   };
 
   constructor() {
     this.mainWindow = null;
     this.loadingWindow = null;
   }
+
+  private loadContent = (window: BrowserWindow, path?: string) => {
+    if (isDev()) {
+      let url = this.devUrl;
+      if (path) {
+        url += `#${path}`;
+      }
+
+      window.loadURL(url);
+    } else {
+      const options: Electron.LoadFileOptions = {};
+      if (path) {
+        options.hash = path;
+      }
+
+      window.loadFile(this.prodUrl, options);
+    }
+  };
 
   private loadLoadingWindowContent = () => {
     if (isDev()) {
@@ -66,6 +87,7 @@ class WindowManager {
   public createMainWindow = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       this.mainWindow = new BrowserWindow(WINDOW_CONFIG.main);
+      this.createBlockOverlayWindow();
       this.mainWindow.once('ready-to-show', () => {
         this.mainWindow.show();
         this.loadingWindow.hide();
@@ -77,6 +99,20 @@ class WindowManager {
       } else {
         this.mainWindow.loadFile(this.prodUrl);
       }
+    });
+  };
+
+  public createBlockOverlayWindow = (): void => {
+    const { width, height } = getScreenSize();
+    this.overlayWindow = new BrowserWindow({
+      ...WINDOW_CONFIG.blockOverlay,
+      width,
+      height,
+    });
+    this.loadContent(this.overlayWindow, this.paths.blockOverlay);
+    this.overlayWindow.on('ready-to-show', () => {
+      this.overlayWindow.setIgnoreMouseEvents(true);
+      this.overlayWindow.setAlwaysOnTop(true);
     });
   };
 

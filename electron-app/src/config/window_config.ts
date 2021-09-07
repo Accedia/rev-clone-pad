@@ -6,6 +6,7 @@ type CommonConfigOptions = Partial<BrowserWindowConstructorOptions>;
 interface WindowConfig {
   main: BrowserWindowConstructorOptions;
   loading: BrowserWindowConstructorOptions;
+  blockOverlay: BrowserWindowConstructorOptions;
 }
 
 const COMMON_CONFIG: CommonConfigOptions = {
@@ -33,5 +34,12 @@ export const WINDOW_CONFIG: WindowConfig = {
     height: 300,
     frame: false,
     backgroundColor: '#ffffff',
+  },
+  blockOverlay: {
+    ...COMMON_CONFIG,
+    opacity: 0.4,
+    frame: false,
+    focusable: false,
+    backgroundColor: '#000000',
   },
 };

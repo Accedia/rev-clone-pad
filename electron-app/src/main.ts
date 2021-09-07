@@ -124,3 +124,4 @@ const main = new Main();
 
 export const getInputSpeed = main.getInputSpeed;
 export const fetchDataAndStartImporter = main.fetchDataAndStartImporter;
+export const mainWindowManager = main.windowManager;

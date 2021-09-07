@@ -2,7 +2,7 @@ import { ResponseData } from './../interfaces/ResponseData';
 import fs from 'fs';
 import { Key, keyboard, mouse, screen, centerOf, Point, Region, getActiveWindow } from '@nut-tree/nut-js';
 import { BrowserWindow, dialog, MessageBoxOptions } from 'electron';
-import { getInputSpeed } from '../main';
+import { getInputSpeed, mainWindowManager } from '../main';
 import { MESSAGE } from '../constants/messages';
 import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
@@ -65,11 +65,14 @@ class Importer {
         electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
         if (lineOperationCoordinates) {
+          mainWindowManager.overlayWindow.show();
           electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
+          await this.focusCccTable(lineOperationCoordinates);
           await this.goToTheFirstCell();
           await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
         }
       }
+      mainWindowManager.overlayWindow.hide();
       electronWindow.setAlwaysOnTop(false);
     } catch (e) {
       log.error('Error populating the data', e);
@@ -94,7 +97,6 @@ class Importer {
   };
 
   private checkForLineOperationCoordinates = async (): Promise<Point> => {
-   
     const images = fs.readdirSync(this.getAssetsPath());
     const result: ImageSearchResult = {
       coordinates: null,
@@ -120,8 +122,13 @@ class Importer {
     }
   };
 
+  private focusCccTable = async (lineOperationCoordinates: Point) => {
+    const tableCoordinates = new Point(lineOperationCoordinates.x, lineOperationCoordinates.y + 200);
+    await mouse.setPosition(tableCoordinates);
+    await mouse.leftClick();
+  };
+
   private goToTheFirstCell = async () => {
-    await times(2).pressKey(Key.Tab);
     await keyboard.pressKey(Key.Home);
     await keyboard.pressKey(Key.LeftControl, Key.Down);
     await keyboard.releaseKey(Key.LeftControl);
