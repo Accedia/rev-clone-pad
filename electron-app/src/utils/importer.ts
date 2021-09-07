@@ -69,6 +69,7 @@ class Importer {
           electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
           await this.goToTheFirstCell();
           await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
+          mainWindowManager.destroyBlockOverlayWindow();
         }
       }
       electronWindow.setAlwaysOnTop(false);

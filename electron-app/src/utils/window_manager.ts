@@ -13,6 +13,7 @@ type MaybeBrowserWindow = BrowserWindow | null;
 class WindowManager {
   mainWindow: MaybeBrowserWindow;
   loadingWindow: MaybeBrowserWindow;
+  overlayWindow: MaybeBrowserWindow;
 
   private devUrl = 'http://localhost:3000';
   private prodUrl = path.resolve(__dirname, '../../build/index.html');
@@ -102,17 +103,22 @@ class WindowManager {
 
   public createBlockOVerlayWindow = (): void => {
     const { width, height } = getScreenSize();
-    const overlayWindow = new BrowserWindow({
+    this.overlayWindow = new BrowserWindow({
       ...WINDOW_CONFIG.blockOverlay,
       width,
       height,
     });
-    this.loadContent(overlayWindow, this.paths.blockOverlay);
-    overlayWindow.on('ready-to-show', () => {
-      overlayWindow.show();
-      overlayWindow.setIgnoreMouseEvents(true);
-      overlayWindow.moveTop();
+    this.loadContent(this.overlayWindow, this.paths.blockOverlay);
+    this.overlayWindow.on('ready-to-show', () => {
+      this.overlayWindow.show();
+      this.overlayWindow.setIgnoreMouseEvents(true);
+      this.overlayWindow.moveTop();
     });
+  };
+
+  public destroyBlockOverlayWindow = (): void => {
+    this.overlayWindow.close();
+    this.overlayWindow = null;
   };
 
   public putWindowOnTop = (window: BrowserWindow): void => {
