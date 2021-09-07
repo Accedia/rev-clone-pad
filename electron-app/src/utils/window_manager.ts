@@ -94,6 +94,10 @@ class WindowManager {
         this.loadingWindow.close();
         resolve();
       });
+      this.mainWindow.on('close', () => {
+        this.overlayWindow.close();
+        app.quit();
+      });
       if (isDev()) {
         this.mainWindow.loadURL(this.devUrl);
       } else {
