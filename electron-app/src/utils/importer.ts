@@ -65,14 +65,14 @@ class Importer {
         electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
         if (lineOperationCoordinates) {
-          mainWindowManager.createBlockOVerlayWindow();
+          mainWindowManager.overlayWindow.show();
           electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
           await this.focusCccTable(lineOperationCoordinates);
           await this.goToTheFirstCell();
           await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
-          mainWindowManager.destroyBlockOverlayWindow();
         }
       }
+      mainWindowManager.overlayWindow.hide();
       electronWindow.setAlwaysOnTop(false);
     } catch (e) {
       log.error('Error populating the data', e);

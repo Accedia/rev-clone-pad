@@ -37,7 +37,7 @@ export const WINDOW_CONFIG: WindowConfig = {
   },
   blockOverlay: {
     ...COMMON_CONFIG,
-    opacity: 0.6,
+    opacity: 0.4,
     frame: false,
     focusable: false,
     backgroundColor: '#000000',
