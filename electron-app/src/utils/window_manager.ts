@@ -87,6 +87,7 @@ class WindowManager {
   public createMainWindow = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       this.mainWindow = new BrowserWindow(WINDOW_CONFIG.main);
+      this.createBlockOverlayWindow();
       this.mainWindow.once('ready-to-show', () => {
         this.mainWindow.show();
         this.loadingWindow.hide();
@@ -101,7 +102,7 @@ class WindowManager {
     });
   };
 
-  public createBlockOVerlayWindow = (): void => {
+  public createBlockOverlayWindow = (): void => {
     const { width, height } = getScreenSize();
     this.overlayWindow = new BrowserWindow({
       ...WINDOW_CONFIG.blockOverlay,
@@ -110,15 +111,9 @@ class WindowManager {
     });
     this.loadContent(this.overlayWindow, this.paths.blockOverlay);
     this.overlayWindow.on('ready-to-show', () => {
-      this.overlayWindow.show();
       this.overlayWindow.setIgnoreMouseEvents(true);
-      this.overlayWindow.moveTop();
+      this.overlayWindow.setAlwaysOnTop(true);
     });
-  };
-
-  public destroyBlockOverlayWindow = (): void => {
-    this.overlayWindow.close();
-    this.overlayWindow = null;
   };
 
   public putWindowOnTop = (window: BrowserWindow): void => {
