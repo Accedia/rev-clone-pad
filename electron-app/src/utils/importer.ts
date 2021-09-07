@@ -2,7 +2,7 @@ import { ResponseData } from './../interfaces/ResponseData';
 import fs from 'fs';
 import { Key, keyboard, mouse, screen, centerOf, Point, Region, getActiveWindow } from '@nut-tree/nut-js';
 import { BrowserWindow, dialog, MessageBoxOptions } from 'electron';
-import { getInputSpeed } from '../main';
+import { getInputSpeed, mainWindowManager } from '../main';
 import { MESSAGE } from '../constants/messages';
 import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
@@ -65,9 +65,11 @@ class Importer {
         electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
         if (lineOperationCoordinates) {
+          mainWindowManager.createBlockOVerlayWindow();
           electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
           await this.goToTheFirstCell();
           await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
+          mainWindowManager.destroyBlockOverlayWindow();
         }
       }
       electronWindow.setAlwaysOnTop(false);
@@ -94,7 +96,6 @@ class Importer {
   };
 
   private checkForLineOperationCoordinates = async (): Promise<Point> => {
-   
     const images = fs.readdirSync(this.getAssetsPath());
     const result: ImageSearchResult = {
       coordinates: null,

@@ -1,8 +1,9 @@
-import React from "react";
-import { Route, Switch, HashRouter as Router } from "react-router-dom";
-import Controls from "./pages/Controls";
-import Homepage from "./pages/Homepage";
-import LoadingPage from "./pages/LoadingPage";
+import React from 'react';
+import { Route, Switch, HashRouter as Router } from 'react-router-dom';
+import BlockOverlay from './pages/BlockOverlay';
+import Controls from './pages/Controls';
+import Homepage from './pages/Homepage';
+import LoadingPage from './pages/LoadingPage';
 
 const AppRouter: React.FC = () => {
   return (
@@ -16,6 +17,9 @@ const AppRouter: React.FC = () => {
         </Route>
         <Route path="/loading">
           <LoadingPage />
+        </Route>
+        <Route path="/block-overlay">
+          <BlockOverlay />
         </Route>
       </Switch>
     </Router>
