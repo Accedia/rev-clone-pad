@@ -107,6 +107,10 @@ class Main {
       const { data } = await axios.get<ResponseData>(url);
 
       await importer.startPopulation(data, this.windowManager.mainWindow);
+
+      const urlOrigin = url.substring(0, url.indexOf('api'));
+      const finishAutomationUrl = `${urlOrigin}/api/finishAutomation/${data.automationId}`;
+      await axios.post<ResponseData>(finishAutomationUrl);
     } catch (e) {
       log.error('Error retrieving the forgettables', e.message);
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
