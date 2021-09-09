@@ -18,7 +18,6 @@ class WindowManager {
   private devUrl = 'http://localhost:3000';
   private prodUrl = path.resolve(__dirname, '../../build/index.html');
   private paths = {
-    controls: '/controls',
     loading: '/loading',
     blockOverlay: '/block-overlay',
   };
