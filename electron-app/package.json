@@ -2,7 +2,7 @@
   "name": "fit-ccc-input-automation",
   "appname": "FIT CCC Input Automation",
   "productName": "FIT CCC Input Automation",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "homepage": "./",
   "main": "./dist/main.js",
   "description": "Automation for CCC by FIT",
