@@ -97,7 +97,8 @@ class Main {
   };
 
   public getInputSpeed = (): InputSpeed => {
-    return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
+    return 'slow';
+    // return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
   };
 
   public fetchDataAndStartImporter = async (url: string) => {

@@ -13,19 +13,32 @@
     justify-content: center;
   }
 
-  .button-group {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 10px;
-  }
-
   .controls-progress {
     width: 100%;
+    padding: 5px;
+    & .status-info {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    & .status-info-progress {
+      margin-left: 10px;
+    }
+
+    & .progress-bar {
+      margin: 0 !important;
+    }
   }
 }
 .loader-container {
   height: 100%;
   display: flex;
   align-items: center;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }

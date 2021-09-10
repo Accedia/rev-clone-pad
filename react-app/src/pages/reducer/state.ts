@@ -11,7 +11,7 @@ export interface ControlsState {
 export const INITIAL_STATE: ControlsState = {
   stoppedPrematurely: false,
   percentage: 0,
-  isRunning: true,
+  isRunning: false,
   isLoading: false,
   hasError: false,
   isWaitingCcc: false,

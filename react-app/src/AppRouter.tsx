@@ -2,7 +2,6 @@ import React from 'react';
 import { Route, Switch, HashRouter as Router } from 'react-router-dom';
 import BlockOverlay from './pages/BlockOverlay';
 import Controls from './pages/Controls';
-import Homepage from './pages/Homepage';
 import LoadingPage from './pages/LoadingPage';
 
 const AppRouter: React.FC = () => {
@@ -10,10 +9,9 @@ const AppRouter: React.FC = () => {
     <Router>
       <Switch>
         <Route path="/" exact>
-          <Homepage />
-        </Route>
-        <Route path="/controls">
-          <Controls />
+          <div className="homepage-container">
+            <Controls />
+          </div>
         </Route>
         <Route path="/loading">
           <LoadingPage />

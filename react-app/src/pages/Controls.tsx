@@ -7,6 +7,7 @@ import { MESSAGE } from '@electron-app';
 import reducer, { INITIAL_STATE } from './reducer';
 import Dots from '../components/Dots';
 import { ipcRenderer } from '@react-app/utils/electron_remote';
+import FitHeader from '../components/FitHeader';
 
 interface ControlsProps {
   onBack?: () => void;
@@ -124,6 +125,10 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
         type: '@SET_IS_WAITING_CCC',
         payload: isWaitingCcc,
       });
+      dispatch({
+        type: '@SET_IS_RUNNING',
+        payload: true,
+      });
     };
 
     ipcRenderer.on(MESSAGE.WAITING_CCC_UPDATE, handler);
@@ -138,14 +143,7 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
 
   const renderContent = () => {
     if (isIdle) {
-      return (
-        <Message>
-          <Message.Content>
-            <Message.Header>No input currently running</Message.Header>
-            You can start one from FIT REV Scrubber
-          </Message.Content>
-        </Message>
-      );
+      return <FitHeader />;
     } else if (isWaitingCcc) {
       return (
         <div className="loader-container">
@@ -183,8 +181,18 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
           <>
             <Divider horizontal>Actions</Divider>
             <div className="button-group">
+              {!isRunning && !isReady && (
+                <>
+                  <ActionButton.Manual />
+                  <ActionButton.OpenFit />
+                </>
+              )}
+              {!isRunning && isReady && (
+                <>
+                  <ActionButton.Finish onClick={resetState} />
+                </>
+              )}
               {isRunning && <ActionButton.Stop onClick={stopTablePopulationExecution} />}
-              {onBack && <ActionButton.Settings onClick={onBack} disabled={isRunning} />}
             </div>
           </>
         )}
