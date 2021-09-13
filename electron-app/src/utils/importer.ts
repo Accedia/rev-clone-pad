@@ -216,17 +216,19 @@ class Importer {
         buttons: ['Yes, continue', 'Abort'],
         title: 'Warning',
         message: 'CCC estimate may not correspond to the selected RO',
-        detail: `The CCC Estimate and the scrubbed estimate (${orderData.orderNumber}) do not match or CCC Estimate is not opened or on focus. Do you want to continue?`,
+        detail: `The CCC Estimate and the scrubbed estimate (${orderData.orderNumber}) do not match. Do you want to continue?`,
         noLink: true,
       };
 
+      let dialogWindow;
       const result = await dialog.showMessageBox(
-        new BrowserWindow({
+        (dialogWindow = new BrowserWindow({
           show: false,
           alwaysOnTop: true,
-        }),
+        })),
         dialogOpts
       );
+      dialogWindow.destroy();
       if (result.response === 1) {
         electronWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
         return false;
