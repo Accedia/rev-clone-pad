@@ -55,22 +55,23 @@ class Importer {
       electronWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
 
       if (this.isRunning) {
-        // TODO fix issue when click Abort
-        // const isCccOnFocus = await this.checkIsCccOnFocus(electronWindow, { orderCustomerName, orderNumber });
-        // if (!isCccOnFocus) {
-        //   this.stop();
-        //   return;
-        // }
-
         electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
         if (lineOperationCoordinates) {
-          mainWindowManager.overlayWindow.show();
           electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
-          await snooze(3000);
-          await this.focusCccTable(lineOperationCoordinates);
-          await this.goToTheFirstCell();
-          await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
+          const shouldPopulate = await this.checkIsCccOnFocus(electronWindow, {
+            orderCustomerName,
+            orderNumber,
+          });
+          if (shouldPopulate) {
+            mainWindowManager.overlayWindow.show();
+            await snooze(3000);
+            await this.focusCccTable(lineOperationCoordinates);
+            await this.goToTheFirstCell();
+            await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
+          } else {
+            this.stop();
+          }
         }
       }
       mainWindowManager.overlayWindow.hide();
@@ -200,9 +201,10 @@ class Importer {
     this.stop();
   };
 
+  // TODO why is Omit not working??
   private checkIsCccOnFocus = async (
     electronWindow: BrowserWindow,
-    orderData: Omit<ResponseData, 'forgettables'>
+    orderData: Omit<ResponseData, 'forgettables' | 'automationId'>
   ): Promise<boolean> => {
     const activeWindow = await getActiveWindow();
 
@@ -214,17 +216,19 @@ class Importer {
         buttons: ['Yes, continue', 'Abort'],
         title: 'Warning',
         message: 'CCC estimate may not correspond to the selected RO',
-        detail: `The CCC Estimate and the scrubbed estimate (${orderData.orderNumber}) do not match or CCC Estimate is not opened or on focus. Do you want to continue?`,
+        detail: `The CCC Estimate and the scrubbed estimate (${orderData.orderNumber}) do not match. Do you want to continue?`,
         noLink: true,
       };
 
+      let dialogWindow;
       const result = await dialog.showMessageBox(
-        new BrowserWindow({
+        (dialogWindow = new BrowserWindow({
           show: false,
           alwaysOnTop: true,
-        }),
+        })),
         dialogOpts
       );
+      dialogWindow.destroy();
       if (result.response === 1) {
         electronWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
         return false;
