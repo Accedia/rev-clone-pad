@@ -204,8 +204,7 @@ class Importer {
   // TODO why is Omit not working??
   private checkIsCccOnFocus = async (
     electronWindow: BrowserWindow,
-    // orderData: Omit<ResponseData, 'forgettables | automationId'>
-    orderData: any
+    orderData: Omit<ResponseData, 'forgettables' | 'automationId'>
   ): Promise<boolean> => {
     const activeWindow = await getActiveWindow();
 
