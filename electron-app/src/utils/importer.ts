@@ -67,6 +67,7 @@ class Importer {
         if (lineOperationCoordinates) {
           mainWindowManager.overlayWindow.show();
           electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
+          await snooze(3000);
           await this.focusCccTable(lineOperationCoordinates);
           await this.goToTheFirstCell();
           await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
