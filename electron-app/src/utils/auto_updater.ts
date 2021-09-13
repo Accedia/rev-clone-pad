@@ -63,8 +63,8 @@ export class AutoUpdater {
   };
 
   private isUpdateAvailable = (appVersion: string, latestVersion: string) => {
-    const [appMajor, appMinor, appPatch] = appVersion.split('.');
-    const [latestMajor, latestMinor, latestPatch] = latestVersion.split('.');
+    const [appMajor, appMinor, appPatch] = appVersion.split('.').map((v) => parseInt(v));
+    const [latestMajor, latestMinor, latestPatch] = latestVersion.split('.').map((v) => parseInt(v));
 
     if (appMajor < latestMajor) return true;
     if (appMajor === latestMajor && appMinor < latestMinor) return true;
