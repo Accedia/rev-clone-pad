@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Icon } from 'semantic-ui-react';
-import { electron } from '@react-app/utils/electron_remote';
+import { electron, ipcRenderer } from '@react-app/utils/electron_remote';
+import { MESSAGE } from '@electron-app';
 
 interface ButtonProps {
   onClick?: () => void;
@@ -29,13 +30,14 @@ const StopButton: React.FC<ButtonProps> = ({ onClick, disabled }) => (
 );
 
 const ManualButton: React.FC = () => {
-  // TODO: Create manual
-  const openManual = () => electron.shell.openExternal('http://www.fit-portal.com/spa/scrubber');
+  const openManual = () => {
+    ipcRenderer.send(MESSAGE.OPEN_MANUAL);
+  };
 
   return (
-    <Button icon labelPosition="left" onClick={openManual} disabled>
-      <Icon name="file alternate" />
-      Manual
+    <Button icon labelPosition="left" onClick={openManual} color="yellow">
+      <Icon name="question" />
+      Help
     </Button>
   );
 };
@@ -44,7 +46,7 @@ const OpenFitButton: React.FC = () => {
   const openFit = () => electron.shell.openExternal('http://www.fit-portal.com/spa/scrubber');
 
   return (
-    <Button icon labelPosition="left" onClick={openFit}>
+    <Button icon labelPosition="left" onClick={openFit} color="blue">
       <Icon name="external alternate" />
       Open FIT Scrubber
     </Button>

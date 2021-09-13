@@ -12,6 +12,7 @@ export const MESSAGE = {
   LOADER_PROGRESS: 'loader-progress',
   CLOSE_APP: 'close-app',
   WAITING_CCC_UPDATE: 'waiting-ccc-update',
+  OPEN_MANUAL: 'open-manual',
 };
 
 export const APP_STATE = {

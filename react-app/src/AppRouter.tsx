@@ -3,6 +3,7 @@ import { Route, Switch, HashRouter as Router } from 'react-router-dom';
 import BlockOverlay from './pages/BlockOverlay';
 import Controls from './pages/Controls';
 import LoadingPage from './pages/LoadingPage';
+import Manual from './pages/Manual';
 
 const AppRouter: React.FC = () => {
   return (
@@ -18,6 +19,9 @@ const AppRouter: React.FC = () => {
         </Route>
         <Route path="/block-overlay">
           <BlockOverlay />
+        </Route>
+        <Route path="/manual">
+          <Manual />
         </Route>
       </Switch>
     </Router>
