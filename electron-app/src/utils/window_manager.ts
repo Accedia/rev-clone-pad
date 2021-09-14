@@ -14,12 +14,14 @@ class WindowManager {
   mainWindow: MaybeBrowserWindow;
   loadingWindow: MaybeBrowserWindow;
   overlayWindow: MaybeBrowserWindow;
+  manualWindow: MaybeBrowserWindow;
 
   private devUrl = 'http://localhost:3000';
   private prodUrl = path.resolve(__dirname, '../../build/index.html');
   private paths = {
     loading: '/loading',
     blockOverlay: '/block-overlay',
+    manual: '/manual',
   };
 
   constructor() {
@@ -129,6 +131,12 @@ class WindowManager {
 
   public appStateUpdate = (newState: keyof typeof APP_STATE): void => {
     this.mainWindow.webContents.send(MESSAGE.UPDATE_APP_STATE, newState);
+  };
+
+  public openManual = () => {
+    this.manualWindow = new BrowserWindow(WINDOW_CONFIG.manual);
+    this.loadContent(this.manualWindow, this.paths.manual);
+    this.manualWindow.on('ready-to-show', this.manualWindow.show);
   };
 }
 
