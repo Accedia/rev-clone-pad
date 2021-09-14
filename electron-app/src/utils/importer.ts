@@ -51,19 +51,31 @@ class Importer {
     const inputSpeed = getInputSpeed();
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
     this.setConfig(inputSpeedSeconds);
+
     try {
+      // Sends a message to stop the loader for fetching data
       electronWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
 
       if (this.isRunning) {
+        // Start the CCC Waiting loader
         electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
+
+        // Continuously check for "Line Operations" button
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
+
         if (lineOperationCoordinates) {
-          electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
+          // Focus the CCC Table so we can get the window information
+          await this.focusCccTable(lineOperationCoordinates, true);
           const shouldPopulate = await this.checkIsCccOnFocus(electronWindow, {
             orderCustomerName,
             orderNumber,
           });
+
+          // Stop the CCC Waiting loader
+          electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
+
           if (shouldPopulate) {
+            // Start population
             mainWindowManager.overlayWindow.show();
             await snooze(3000);
             await this.focusCccTable(lineOperationCoordinates);
@@ -74,6 +86,7 @@ class Importer {
           }
         }
       }
+
       mainWindowManager.overlayWindow.hide();
       electronWindow.setAlwaysOnTop(false);
     } catch (e) {
@@ -124,10 +137,19 @@ class Importer {
     }
   };
 
-  private focusCccTable = async (lineOperationCoordinates: Point) => {
-    const tableCoordinates = new Point(lineOperationCoordinates.x, lineOperationCoordinates.y + 200);
-    await mouse.setPosition(tableCoordinates);
+  private focusCccTable = async (lineOperationCoordinates: Point, returnToPosition = false) => {
+    const prevPosition = await mouse.getPosition();
+    await this.moveToPosition(lineOperationCoordinates.x, lineOperationCoordinates.y + 200);
     await mouse.leftClick();
+
+    if (returnToPosition) {
+      await this.moveToPosition(prevPosition.x, prevPosition.y);
+    }
+  };
+
+  private moveToPosition = async (x: number, y: number) => {
+    const coordinates = new Point(x, y);
+    await mouse.setPosition(coordinates);
   };
 
   private goToTheFirstCell = async () => {
@@ -201,7 +223,6 @@ class Importer {
     this.stop();
   };
 
-  // TODO why is Omit not working??
   private checkIsCccOnFocus = async (
     electronWindow: BrowserWindow,
     orderData: Omit<ResponseData, 'forgettables' | 'automationId'>
@@ -209,8 +230,15 @@ class Importer {
     const activeWindow = await getActiveWindow();
 
     const title = await activeWindow.title;
+    const includesOrderNumber = title.includes(orderData.orderNumber);
+    const includesCustomerName = title.includes(orderData.orderCustomerName);
+    log.info(`The current window title is ${title}`);
+    log.info(`The current order number is ${orderData.orderNumber}`);
+    log.info(`The current customer name is ${orderData.orderCustomerName}`);
 
-    if (!title.includes(orderData.orderNumber) && !title.includes(orderData.orderCustomerName)) {
+    if (!includesOrderNumber && !includesCustomerName) {
+      log.info(`Number or customer name not present in window's title`);
+
       const dialogOpts: MessageBoxOptions = {
         type: 'warning',
         buttons: ['Yes, continue', 'Abort'],
@@ -220,14 +248,11 @@ class Importer {
         noLink: true,
       };
 
-      let dialogWindow;
-      const result = await dialog.showMessageBox(
-        (dialogWindow = new BrowserWindow({
-          show: false,
-          alwaysOnTop: true,
-        })),
-        dialogOpts
-      );
+      const dialogWindow = new BrowserWindow({
+        show: false,
+        alwaysOnTop: true,
+      });
+      const result = await dialog.showMessageBox(dialogWindow, dialogOpts);
       dialogWindow.destroy();
       if (result.response === 1) {
         electronWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);

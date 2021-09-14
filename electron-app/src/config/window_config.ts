@@ -1,5 +1,6 @@
 import { BrowserWindowConstructorOptions } from 'electron';
 import * as path from 'path';
+import { isDev } from '../utils/is_dev';
 
 type CommonConfigOptions = Partial<BrowserWindowConstructorOptions>;
 
@@ -7,6 +8,7 @@ interface WindowConfig {
   main: BrowserWindowConstructorOptions;
   loading: BrowserWindowConstructorOptions;
   blockOverlay: BrowserWindowConstructorOptions;
+  manual: BrowserWindowConstructorOptions;
 }
 
 const COMMON_CONFIG: CommonConfigOptions = {
@@ -41,5 +43,15 @@ export const WINDOW_CONFIG: WindowConfig = {
     frame: false,
     focusable: false,
     backgroundColor: '#000000',
+  },
+  manual: {
+    ...COMMON_CONFIG,
+    width: 600,
+    height: 800,
+    webPreferences: {
+      ...COMMON_CONFIG.webPreferences,
+      webSecurity: false,
+      devTools: isDev(),
+    },
   },
 };
