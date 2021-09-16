@@ -47,6 +47,7 @@ export const WINDOW_CONFIG: WindowConfig = {
     focusable: false,
     transparent: true,
     fullscreen: true,
+    show: false,
   },
   manual: {
     ...COMMON_CONFIG,
