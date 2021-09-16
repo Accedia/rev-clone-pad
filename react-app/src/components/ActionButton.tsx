@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Icon } from 'semantic-ui-react';
-import { electron, ipcRenderer } from '@react-app/utils/electron_remote';
+import { ipcRenderer } from '@react-app/utils/electron_remote';
 import { MESSAGE } from '@electron-app';
 
 interface ButtonProps {
@@ -42,20 +42,9 @@ const ManualButton: React.FC = () => {
   );
 };
 
-const OpenFitButton: React.FC = () => {
-  const openFit = () => electron.shell.openExternal('http://www.fit-portal.com/spa/scrubber');
-
-  return (
-    <Button icon labelPosition="left" onClick={openFit} color="blue">
-      <Icon name="external alternate" />
-      Open FIT Scrubber
-    </Button>
-  );
-};
 export const ActionButton = {
   Back: BackButton,
   Stop: StopButton,
   Manual: ManualButton,
-  OpenFit: OpenFitButton,
   Finish: FinishButton,
 };

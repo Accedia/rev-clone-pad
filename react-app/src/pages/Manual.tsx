@@ -12,7 +12,7 @@ const Manual: React.FC<ManualProps> = () => {
   useEffect(() => {
     const fetch = async () => {
       const result = await axios.get<{ text: string }>(
-        'http://dev.fit-portal.com/api/fit-ccc-input-automation-text'
+        'http://dev.fit-portal.com/api/force-import-technology-manual'
       );
       setValue(result.data.text);
       setIsLoading(false);
@@ -25,7 +25,7 @@ const Manual: React.FC<ManualProps> = () => {
     <div className="markdown-container">
       <Message info attached="top">
         <Icon name="question" />
-        FIT CCC Input Automation Manual
+        Force Import Technology Manual
       </Message>
       <Segment raised attached className="markdown-preview">
         {isLoading ? <Loader active inline="centered" /> : <Markdown>{value || ''}</Markdown>}

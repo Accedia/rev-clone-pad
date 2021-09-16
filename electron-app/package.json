@@ -1,7 +1,7 @@
 {
-  "name": "fit-ccc-input-automation",
-  "appname": "FIT CCC Input Automation",
-  "productName": "FIT CCC Input Automation",
+  "name": "force-import-technology",
+  "appname": "Force Import Technology",
+  "productName": "Force Import Technology",
   "version": "1.2.13",
   "homepage": "./",
   "main": "./dist/main.js",
@@ -24,7 +24,7 @@
     "make": "npm run build && electron-forge make",
     "publish": "electron-forge publish"
   },
-  "repository": "https://github.com/Accedia/fit-ccc-input-automation",
+  "repository": "https://github.com/Accedia/force-import-technology",
   "author": "Full Impact Technologies",
   "license": "CC0-1.0",
   "devDependencies": {

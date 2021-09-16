@@ -181,12 +181,7 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
           <>
             <Divider horizontal>Actions</Divider>
             <div className="button-group">
-              {!isRunning && !isReady && (
-                <>
-                  <ActionButton.Manual />
-                  <ActionButton.OpenFit />
-                </>
-              )}
+              {!isRunning && !isReady && <ActionButton.Manual />}
               {!isRunning && isReady && (
                 <>
                   <ActionButton.Finish onClick={resetState} />
