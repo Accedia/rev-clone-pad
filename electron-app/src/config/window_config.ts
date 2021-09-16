@@ -38,11 +38,15 @@ export const WINDOW_CONFIG: WindowConfig = {
     backgroundColor: '#ffffff',
   },
   blockOverlay: {
-    ...COMMON_CONFIG,
-    opacity: 0.4,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+    },
     frame: false,
     focusable: false,
-    backgroundColor: '#000000',
+    transparent: true,
+    fullscreen: true,
   },
   manual: {
     ...COMMON_CONFIG,
