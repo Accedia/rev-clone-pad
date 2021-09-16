@@ -6,7 +6,6 @@ import { fetchDataAndStartImporter } from '../main';
 import { WINDOW_CONFIG } from '../config/window_config';
 import { MESSAGE, APP_STATE } from '../constants/messages';
 import { AutoUpdater } from './auto_updater';
-import { getScreenSize } from './screen_size';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 
@@ -108,12 +107,7 @@ class WindowManager {
   };
 
   public createBlockOverlayWindow = (): void => {
-    const { width, height } = getScreenSize();
-    this.overlayWindow = new BrowserWindow({
-      ...WINDOW_CONFIG.blockOverlay,
-      width,
-      height,
-    });
+    this.overlayWindow = new BrowserWindow(WINDOW_CONFIG.blockOverlay);
     this.loadContent(this.overlayWindow, this.paths.blockOverlay);
     this.overlayWindow.on('ready-to-show', () => {
       this.overlayWindow.setIgnoreMouseEvents(true);
