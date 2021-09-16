@@ -19,7 +19,7 @@ module.exports = {
         authToken: process.env.FORGE_TOKEN,
         repository: {
           owner: 'Accedia',
-          name: 'fit-ccc-input-automation',
+          name: 'force-import-technology',
         },
         draft: false,
       },
@@ -31,11 +31,11 @@ module.exports = {
       platforms: ['win32'],
       config: {
         authors: 'Full Impact Technologies',
-        name: 'FitCCCInputAutomation',
-        exe: 'FIT CCC Input Automation.exe',
+        name: 'ForceImportTechnology',
+        exe: 'Force Import Technology.exe',
         iconUrl: iconPath,
         setupIcon: iconPath,
-        setupExe: 'Install FIT CCC Input Automation.exe',
+        setupExe: 'Install Force Import Technology.exe',
         loadingGif: path.resolve(__dirname, './assets/logo_spinning_white.gif'),
         noMsi: true,
       },
