@@ -4,6 +4,7 @@ export interface Forgettable {
   quantity?: string;
   partPrice$?: string;
   extPrice?: string;
+  laborType?: string;
   laborHours?: string;
   paintHours?: string;
   partNum?: string;
