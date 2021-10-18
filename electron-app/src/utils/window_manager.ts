@@ -113,6 +113,7 @@ class WindowManager {
       this.overlayWindow.setIgnoreMouseEvents(true);
       this.overlayWindow.setAlwaysOnTop(true);
     });
+    this.overlayWindow.hide();
   };
 
   public putWindowOnTop = (window: BrowserWindow): void => {
