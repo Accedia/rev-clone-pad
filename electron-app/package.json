@@ -2,7 +2,7 @@
   "name": "force-import-technology",
   "appname": "Force Import Technology",
   "productName": "Force Import Technology",
-  "version": "1.2.17",
+  "version": "1.2.18",
   "homepage": "./",
   "main": "./dist/main.js",
   "description": "Automation for CCC by FIT",
