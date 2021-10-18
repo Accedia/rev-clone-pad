@@ -1,7 +1,17 @@
 import { ResponseData } from './../interfaces/ResponseData';
 import fs from 'fs';
-import { Key, keyboard, mouse, screen, centerOf, Point, Region, getActiveWindow } from '@nut-tree/nut-js';
-import { BrowserWindow, dialog, MessageBoxOptions } from 'electron';
+import {
+  Key,
+  keyboard,
+  mouse,
+  screen,
+  centerOf,
+  Point,
+  Region,
+  getActiveWindow,
+  sleep,
+} from '@nut-tree/nut-js';
+import { BrowserWindow, clipboard } from 'electron';
 import { getInputSpeed, mainWindowManager } from '../main';
 import { MESSAGE } from '../constants/messages';
 import { getInputSpeedInSeconds } from './get_config_values';
@@ -11,6 +21,8 @@ import { times } from './times_do';
 import { getPopulationData } from './get_population_data';
 import log from 'electron-log';
 import path from 'path';
+import { showMessage } from './show_message';
+import { VERIFICATION_PROGRESS_BREAKPOINT } from '../constants/verification_progress_breakpoint';
 
 interface ImageSearchResult {
   coordinates: Region | null;
@@ -79,8 +91,10 @@ class Importer {
             mainWindowManager.overlayWindow.show();
             await snooze(3000);
             await this.focusCccTable(lineOperationCoordinates);
+            await snooze(300);
             await this.goToTheFirstCell();
             await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
+            await this.verifyPopulation(forgettables, electronWindow);
           } else {
             this.stop();
           }
@@ -195,7 +209,7 @@ class Importer {
   ) => {
     const data = getPopulationData(forgettables);
     const numberOfCells = data.length * data[0].length;
-    const percentagePerCell = 100 / numberOfCells;
+    const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfCells;
 
     let currentPercentage = 0;
 
@@ -239,21 +253,15 @@ class Importer {
     if (!includesOrderNumber && !includesCustomerName) {
       log.info(`Number or customer name not present in window's title`);
 
-      const dialogOpts: MessageBoxOptions = {
+      const result = await showMessage({
         type: 'warning',
         buttons: ['Yes, continue', 'Abort'],
         title: 'Warning',
         message: 'CCC estimate may not correspond to the selected RO',
         detail: `The CCC Estimate and the scrubbed estimate (${orderData.orderNumber}) do not match. Do you want to continue?`,
         noLink: true,
-      };
-
-      const dialogWindow = new BrowserWindow({
-        show: false,
-        alwaysOnTop: true,
       });
-      const result = await dialog.showMessageBox(dialogWindow, dialogOpts);
-      dialogWindow.destroy();
+
       if (result.response === 1) {
         electronWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
         return false;
@@ -261,6 +269,45 @@ class Importer {
     }
 
     return true;
+  };
+
+  private verifyPopulation = async (forgettables: Forgettable[], window: BrowserWindow) => {
+    await this.goToTheFirstCell();
+    await sleep(10);
+    await times(8).pressKey(Key.Tab);
+
+    const reversedForgettables = [...forgettables].reverse();
+    const desyncedForgettables: string[] = [];
+
+    let currentPercentage = VERIFICATION_PROGRESS_BREAKPOINT;
+    const percentIncrementation = 20 / reversedForgettables.length;
+
+    for (const forgettable of reversedForgettables) {
+      await keyboard.pressKey(Key.Up);
+      await keyboard.pressKey(Key.LeftControl, Key.C);
+      await keyboard.releaseKey(Key.LeftControl, Key.C);
+      await sleep(500);
+      const description = clipboard.readHTML().replace(/(<([^>]+)>)/gi, '');
+      const matches = description.includes(forgettable.description);
+      if (!matches) {
+        desyncedForgettables.push(description);
+      }
+      currentPercentage += percentIncrementation;
+      window.webContents.send(MESSAGE.PROGRESS_UPDATE, currentPercentage);
+    }
+
+    if (desyncedForgettables.length > 0) {
+      const forgettableList = desyncedForgettables.map((f) => `  - ${f}`).join('\n');
+
+      await showMessage({
+        type: 'warning',
+        buttons: ['OK'],
+        title: 'Warning',
+        message: 'Some lines might not have been imported correctly',
+        detail: `The forgettables \n${forgettableList}did not match the corresponding incoming forgettable from FIT REV. \n Please verify if everything is okay with the estimate.`,
+        noLink: true,
+      });
+    }
   };
 }
 

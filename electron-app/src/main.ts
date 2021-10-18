@@ -15,6 +15,7 @@ import log from 'electron-log';
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
 if (isDev() && isAppDev(app)) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   require('source-map-support').install();
 }
 
