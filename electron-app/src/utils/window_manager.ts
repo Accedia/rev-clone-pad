@@ -6,6 +6,7 @@ import { fetchDataAndStartImporter } from '../main';
 import { WINDOW_CONFIG } from '../config/window_config';
 import { MESSAGE, APP_STATE } from '../constants/messages';
 import { AutoUpdater } from './auto_updater';
+import importer from './importer';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 
@@ -90,6 +91,7 @@ class WindowManager {
       this.createBlockOverlayWindow();
       this.mainWindow.once('ready-to-show', () => {
         this.mainWindow.show();
+        importer.setProgressBrowserWindow(this.mainWindow);
         this.loadingWindow.hide();
         this.loadingWindow.close();
         resolve();
