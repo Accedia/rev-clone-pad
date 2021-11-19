@@ -1,3 +1,4 @@
+import { ImporterStoppedException } from './importer_stopped_exception';
 import { EstimateColumns } from './../constants/estimate_columns';
 import { ResponseData } from './../interfaces/ResponseData';
 import fs from 'fs';
@@ -115,8 +116,12 @@ class Importer {
       mainWindowManager.overlayWindow.hide();
       electronWindow.setAlwaysOnTop(false);
     } catch (e) {
-      log.error('Error populating the data', e);
-      electronWindow.webContents.send(MESSAGE.ERROR, e.message);
+      if (e instanceof ImporterStoppedException) {
+        mainWindowManager.overlayWindow.hide();
+      } else {
+        log.error('Error populating the data', e);
+        electronWindow.webContents.send(MESSAGE.ERROR, e.message);
+      }
     }
   };
 
@@ -188,13 +193,20 @@ class Importer {
   private populateModalData = async (partNum: string, partNumTabIndex: number, lineNote: string) => {
     await mouse.leftClick();
     await snooze(500);
+
+    this.stopCheckPoint();
+
     await keyboard.pressKey(Key.Down);
     await keyboard.pressKey(Key.Enter);
+
+    this.stopCheckPoint();
 
     if (partNum && partNumTabIndex > 0) {
       await times(partNumTabIndex).pressKey(Key.Tab);
       await keyboard.type(partNum);
     }
+
+    this.stopCheckPoint();
 
     await times(2).do(async () => {
       await keyboard.pressKey(Key.LeftControl, Key.Tab);
@@ -203,12 +215,16 @@ class Importer {
 
     await keyboard.pressKey(Key.Tab);
 
+    this.stopCheckPoint();
+
     if (lineNote) {
       await keyboard.type(lineNote);
     }
 
     await times(4).pressKey(Key.Tab);
     await keyboard.pressKey(Key.Enter);
+
+    this.stopCheckPoint();
 
     if (lineNote || partNum) {
       await times(3).pressKey(Key.Tab);
@@ -229,10 +245,7 @@ class Importer {
       const { partNum, partNumTabIndex, lineNote } = forgettable;
 
       for (let column = 0; column <= EstimateColumns.PRICE; column++) {
-        if (!this.isRunning) {
-          return;
-        }
-
+        this.stopCheckPoint();
         const value = rowData[column];
 
         /** type value and go to next cell */
@@ -240,6 +253,7 @@ class Importer {
         await keyboard.pressKey(Key.Tab);
 
         /** Open the line operations modal and populate the required data */
+        this.stopCheckPoint();
         if (column === EstimateColumns.DESCRIPTION) {
           await mouse.setPosition(lineOperationCoordinates);
           await this.populateModalData(partNum, partNumTabIndex, lineNote);
@@ -251,6 +265,7 @@ class Importer {
          *
          * This closes the potential warning message and places the input on the last cell.
          */
+        this.stopCheckPoint();
         if (column === EstimateColumns.PRICE) {
           await keyboard.pressKey(Key.Tab);
           await keyboard.pressKey(Key.Enter);
@@ -265,6 +280,7 @@ class Importer {
        * enter the remaining values
        */
       for (let column = EstimateColumns.PAINT; column >= EstimateColumns.LABOR; column--) {
+        this.stopCheckPoint();
         const value = rowData[column];
         await this.typeValue(value);
         await keyboard.pressKey(Key.Left);
@@ -273,6 +289,7 @@ class Importer {
       }
 
       /** Continue with next line */
+      this.stopCheckPoint();
       await keyboard.pressKey(Key.Down);
       await keyboard.pressKey(Key.Home);
     }
@@ -344,10 +361,19 @@ class Importer {
     }
   };
 
+  private stopCheckPoint = () => {
+    if (!this.isRunning) {
+      throw new ImporterStoppedException();
+    }
+  };
+
   private getLastLineNumber = async () => {
     await this.goToTheFirstCell();
     await times(5).pressKey(Key.Tab);
     await keyboard.pressKey(Key.Up);
+
+    this.stopCheckPoint();
+
     await this.pressCtrlC();
     const copiedText = this.getTextFromClipboard();
 

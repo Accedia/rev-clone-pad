@@ -87,7 +87,7 @@ class Main {
 
   private registerKeyboardShortcuts = () => {
     app.whenReady().then(() => {
-      globalShortcut.register('F10', () => {
+      globalShortcut.register('F7', () => {
         importer.stop();
         this.windowManager.mainWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
       });
@@ -99,7 +99,7 @@ class Main {
   };
 
   public getInputSpeed = (): InputSpeed => {
-    return 'slow';
+    return 'extra-slow';
     // return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
   };
 
