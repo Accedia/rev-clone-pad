@@ -98,7 +98,7 @@ class Main {
   };
 
   public getInputSpeed = (): InputSpeed => {
-    return 'slow';
+    return 'extra-slow';
     // return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
   };
 
