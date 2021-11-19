@@ -87,7 +87,7 @@ class Main {
 
   private registerKeyboardShortcuts = () => {
     app.whenReady().then(() => {
-      globalShortcut.register('F10', () => {
+      globalShortcut.register('F7', () => {
         importer.stop();
         this.windowManager.mainWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
       });
