@@ -99,6 +99,7 @@ class Importer {
 
           if (shouldPopulate) {
             /** Start population */
+            this.progressUpdater.setPercentage(0);
             mainWindowManager.overlayWindow.show();
             await snooze(1000);
             await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
@@ -107,9 +108,9 @@ class Importer {
             await this.goToTheFirstCell();
             await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
             await this.verifyPopulation(forgettables);
-          } else {
-            this.stop();
           }
+
+          this.stop();
         }
       }
 
@@ -293,8 +294,6 @@ class Importer {
       await keyboard.pressKey(Key.Down);
       await keyboard.pressKey(Key.Home);
     }
-
-    this.stop();
   };
 
   private typeValue = async (value: string) => {
