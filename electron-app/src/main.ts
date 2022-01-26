@@ -11,6 +11,7 @@ import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { isAppDev, isDev } from './utils/is_dev';
 import log from 'electron-log';
+import { prepareForgettablesData } from './utils/get_population_data';
 
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
@@ -19,6 +20,7 @@ if (isDev() && isAppDev(app)) {
   require('source-map-support').install();
 }
 
+/** If there is no squirrel quit the app (usually during installation, to prevent 2 running instances) */
 if (require('electron-squirrel-startup')) app.quit();
 
 class Main {
@@ -37,7 +39,7 @@ class Main {
   private registerCustomProtocol = () => {
     app.removeAsDefaultProtocolClient(CUSTOM_PROTOCOL);
 
-    // The extra two parameters are required for windows development version
+    /** The extra two parameters are required for windows development version */
     if (isAppDev(app) && process.platform === 'win32') {
       app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);
     } else {
@@ -86,6 +88,10 @@ class Main {
   };
 
   private registerKeyboardShortcuts = () => {
+    /**
+     * Register keyboards shortcuts
+     * F7 -> Stop the importer (same as stop button)
+     */
     app.whenReady().then(() => {
       globalShortcut.register('F7', () => {
         importer.stop();
@@ -99,18 +105,36 @@ class Main {
   };
 
   public getInputSpeed = (): InputSpeed => {
+    /**
+     * There was an option to choose input speed,
+     * currently it is disabled and set to the slowest one.
+     *
+     * Keeping this in case we need to bring back custom speed selection
+     *
+     * previous value:
+     * return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
+     */
     return 'extra-slow';
-    // return this.store.get(INPUT_SPEED_STORAGE_KEY) as InputSpeed;
   };
 
   public fetchDataAndStartImporter = async (url: string) => {
     try {
+      /** Prepare UI for data-fetching */
       this.updateMainWindowStateToFetching();
+
+      /** Fetch the data. Replace localhost with [::1] because otherwise it does not work */
       url = url.replace('localhost', '[::1]');
       const { data } = await axios.get<ResponseData>(url);
+      const forgettables = prepareForgettablesData(data.forgettables);
+      const importData: ResponseData = { ...data, forgettables };
 
-      await importer.startPopulation(data, this.windowManager.mainWindow);
+      /** Do the population  */
+      await importer.startPopulation(importData, this.windowManager.mainWindow);
 
+      /**
+       * Send back a POST request to the server, to mark the process as finished
+       * and update the REV Force Import view
+       */
       const urlOrigin = url.substring(0, url.indexOf('api'));
       const finishAutomationUrl = `${urlOrigin}/api/finishAutomation/${data.automationId}`;
       await axios.post<ResponseData>(finishAutomationUrl);

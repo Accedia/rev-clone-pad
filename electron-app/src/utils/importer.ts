@@ -52,7 +52,8 @@ class Importer {
     keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 100);
     screen.config.resourceDirectory = this.getAssetsPath();
 
-    // TODO delete. Left only for debug purposes
+    // ! Left only for debug purposes
+    // ? Uncomment if needed, do not deploy to prod
     // screen.config.confidence = 0.84;
     // screen.config.autoHighlight = true;
     // screen.config.highlightDurationMs = 3000;
@@ -108,6 +109,8 @@ class Importer {
             await this.goToTheFirstCell();
             await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
             await this.verifyPopulation(forgettables);
+          } else {
+            electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
           }
 
           this.stop();
@@ -202,6 +205,10 @@ class Importer {
 
     this.stopCheckPoint();
 
+    /**
+     * Part Number field is on different position depending on the operation
+     * partNumTabIndex is set depending on the oper so its always in the correct spot
+     */
     if (partNum && partNumTabIndex > 0) {
       await times(partNumTabIndex).pressKey(Key.Tab);
       await keyboard.type(partNum);
@@ -360,6 +367,11 @@ class Importer {
     }
   };
 
+  /**
+   * Checks if the import process is still running
+   * and if not throws exception to stop the function
+   * execution immediately
+   */
   private stopCheckPoint = () => {
     if (!this.isRunning) {
       throw new ImporterStoppedException();
