@@ -2,7 +2,7 @@ export interface Forgettable {
   oper: string;
   description?: string;
   quantity?: string;
-  partPrice$?: string;
+  partPrice?: string;
   extPrice?: string;
   laborType?: string;
   laborHours?: string;
@@ -10,4 +10,6 @@ export interface Forgettable {
   partNum?: string;
   partNumTabIndex?: number;
   lineNote?: string;
+  type?: 'consumable' | 'specific' | 'general';
+  partType?: string;
 }
