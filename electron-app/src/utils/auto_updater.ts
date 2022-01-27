@@ -143,6 +143,7 @@ export class AutoUpdater {
       });
 
       autoUpdater.on('error', (error: any) => {
+        log.error(error);
         this.sendUpdate('Something went wrong, please restart');
         this.window.webContents.send(MESSAGE.LOADER_ACTION_REQUIRED, 'error');
         this.window.show();
