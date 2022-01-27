@@ -27,6 +27,7 @@ import { showMessage } from './show_message';
 import { VERIFICATION_PROGRESS_BREAKPOINT } from '../constants/verification_progress_breakpoint';
 import { isDev } from './is_dev';
 import ProgressUpdater from './progress_updater';
+import { getPartNumTabIndex, getPartTypeOptionIndex, getPartTypeTabIndex } from './part_type_utils';
 
 interface ImageSearchResult {
   coordinates: Region | null;
@@ -194,7 +195,10 @@ class Importer {
     await keyboard.pressKey(Key.PageDown);
   };
 
-  private populateModalData = async (partNum: string, partNumTabIndex: number, lineNote: string) => {
+  private populateModalData = async (forgettable: Forgettable) => {
+    const { partNum, lineNote, oper, partType } = forgettable;
+
+    /** Prepare for modal */
     await mouse.leftClick();
     await snooze(500);
 
@@ -205,10 +209,21 @@ class Importer {
 
     this.stopCheckPoint();
 
+    /** MODAL IS OPENED AT THIS POINT, AT THE INITIAL POSITION */
+
+    /** Navigate to the part type field, with Tab click amount depending on oper */
+    const partTypeTabIndex = getPartTypeTabIndex(oper);
+    await times(partTypeTabIndex).pressKey(Key.Tab);
+
+    /** Select the appropriate partType from the drop down */
+    const partTypeOptionIndex = getPartTypeOptionIndex(partType);
+    await times(partTypeOptionIndex).pressKey(Key.Up);
+
     /**
      * Part Number field is on different position depending on the operation
      * partNumTabIndex is set depending on the oper so its always in the correct spot
      */
+    const partNumTabIndex = getPartNumTabIndex(oper) - 2;
     if (partNum && partNumTabIndex > 0) {
       await times(partNumTabIndex).pressKey(Key.Tab);
       await keyboard.type(partNum);
@@ -216,6 +231,7 @@ class Importer {
 
     this.stopCheckPoint();
 
+    /** Navigate to the Line notes tab & enter line note */
     await times(2).do(async () => {
       await keyboard.pressKey(Key.LeftControl, Key.Tab);
       await keyboard.releaseKey(Key.LeftControl);
@@ -250,7 +266,6 @@ class Importer {
 
     for (const forgettable of forgettables) {
       const rowData = getPopulationData(forgettable);
-      const { partNum, partNumTabIndex, lineNote } = forgettable;
 
       for (let column = 0; column <= EstimateColumns.PRICE; column++) {
         this.stopCheckPoint();
@@ -264,7 +279,7 @@ class Importer {
         this.stopCheckPoint();
         if (column === EstimateColumns.DESCRIPTION) {
           await mouse.setPosition(lineOperationCoordinates);
-          await this.populateModalData(partNum, partNumTabIndex, lineNote);
+          await this.populateModalData(forgettable);
         }
 
         /**
@@ -376,6 +391,16 @@ class Importer {
     if (!this.isRunning) {
       throw new ImporterStoppedException();
     }
+  };
+
+  /**
+   * ! For DEBUG purposes only:
+   * Stops the execution immediately.
+   */
+  private DEBUG_stopExecution = () => {
+    if (!isDev()) return;
+
+    throw new ImporterStoppedException();
   };
 
   private getLastLineNumber = async () => {

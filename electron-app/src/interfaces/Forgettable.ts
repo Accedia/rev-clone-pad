@@ -8,7 +8,6 @@ export interface Forgettable {
   laborHours?: string;
   paintHours?: string;
   partNum?: string;
-  partNumTabIndex?: number;
   lineNote?: string;
   type?: 'consumable' | 'specific' | 'general';
   partType?: string;
