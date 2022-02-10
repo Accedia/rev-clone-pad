@@ -28,7 +28,7 @@ export const WINDOW_CONFIG: WindowConfig = {
     ...COMMON_CONFIG,
     height: 225,
     width: 400,
-    resizable: true,
+    resizable: false,
   },
   loading: {
     ...COMMON_CONFIG,
