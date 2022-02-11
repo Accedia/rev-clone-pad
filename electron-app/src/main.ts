@@ -11,7 +11,6 @@ import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { isAppDev, isDev } from './utils/is_dev';
 import log from 'electron-log';
-import { prepareForgettablesData } from './utils/get_population_data';
 
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
@@ -106,6 +105,14 @@ class Main {
 
   public getInputSpeed = (): InputSpeed => {
     /**
+     * ! DEV ONLY
+     * increase input speed to waste less time developing
+     */
+    if (isAppDev(app)) {
+      return 'normal';
+    }
+
+    /**
      * There was an option to choose input speed,
      * currently it is disabled and set to the slowest one.
      *
@@ -125,11 +132,9 @@ class Main {
       /** Fetch the data. Replace localhost with [::1] because otherwise it does not work */
       url = url.replace('localhost', '[::1]');
       const { data } = await axios.get<ResponseData>(url);
-      const forgettables = prepareForgettablesData(data.forgettables);
-      const importData: ResponseData = { ...data, forgettables };
 
       /** Do the population  */
-      await importer.startPopulation(importData, this.windowManager.mainWindow);
+      await importer.startPopulation(data, this.windowManager.mainWindow);
 
       /**
        * Send back a POST request to the server, to mark the process as finished
