@@ -11,4 +11,5 @@ export interface Forgettable {
   lineNote?: string;
   type?: 'consumable' | 'specific' | 'general';
   partType?: string;
+  rowData: any[];
 }
