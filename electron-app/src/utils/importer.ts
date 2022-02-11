@@ -20,7 +20,6 @@ import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
 import { Forgettable } from '../interfaces/Forgettable';
 import { times } from './times_do';
-import { getPopulationData } from './get_population_data';
 import log from 'electron-log';
 import path from 'path';
 import { showMessage } from './show_message';
@@ -52,7 +51,7 @@ class Importer {
     /** Delay between different instructions (e.g. pressKey() and consequential pressKey()) */
     keyboard.config.autoDelayMs = inputSpeed ** 2;
     /** Delay between keystrokes when typing a word (e.g. calling keyboard.type(), time between each letter keypress). */
-    keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 50);
+    keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 80);
     /** Path with the assets, where we put images for "Line operation" button image-recognition */
     screen.config.resourceDirectory = this.getAssetsPath();
 
@@ -111,7 +110,7 @@ class Importer {
             await snooze(100);
             await this.saveLastLineNumber();
             await this.goToTheFirstCell();
-            await this.populateTableData(forgettables, electronWindow, lineOperationCoordinates);
+            await this.populateTableData(forgettables, lineOperationCoordinates);
             await this.verifyPopulation(forgettables);
           } else {
             electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
@@ -258,17 +257,13 @@ class Importer {
     }
   };
 
-  private populateTableData = async (
-    forgettables: Forgettable[],
-    popupWindow: BrowserWindow,
-    lineOperationCoordinates: Point
-  ) => {
+  private populateTableData = async (forgettables: Forgettable[], lineOperationCoordinates: Point) => {
     const numberOfCells = forgettables.length * 15;
     const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfCells;
     this.progressUpdater.setStep(percentagePerCell);
 
     for (const forgettable of forgettables) {
-      const rowData = getPopulationData(forgettable);
+      const rowData = forgettable.rowData;
 
       for (let column = 0; column <= EstimateColumns.PRICE; column++) {
         this.stopCheckPoint();

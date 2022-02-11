@@ -44,6 +44,8 @@ export const getPartTypeTabIndex = (oper: string): number => {
       return 1;
     case 'Sect':
       return 5;
+    case 'PDR':
+      return 0;
     default:
       throw new Error('Unknown operation');
   }
