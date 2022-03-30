@@ -193,8 +193,9 @@ class Importer {
   };
 
   private goToTheFirstCell = async () => {
-    await keyboard.pressKey(Key.Home);
-    await keyboard.pressKey(Key.PageDown);
+    await keyboard.pressKey(Key.LeftControl, Key.Left);
+    await keyboard.pressKey(Key.LeftControl, Key.Down);
+    await keyboard.releaseKey(Key.LeftControl);
   };
 
   private populateModalData = async (forgettable: Forgettable) => {

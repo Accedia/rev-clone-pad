@@ -109,7 +109,7 @@ class Main {
      * increase input speed to waste less time developing
      */
     if (isAppDev(app)) {
-      return 'normal';
+      return 'slow';
     }
 
     /**
