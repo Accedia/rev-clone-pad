@@ -202,39 +202,57 @@ class Importer {
     const { partNum, lineNote, oper, partType } = forgettable;
 
     /** Prepare for modal */
+
+    /** Left-click. Mouse should already be in position to click the "Line operations button" */
+    // ---------------------------------------------------
     await mouse.leftClick();
     await snooze(500);
+    // ---------------------------------------------------
 
     this.stopCheckPoint();
 
+    /** Click "Edit-Line" from the dropdown (first item) */
+    // ---------------------------------------------------
     await keyboard.pressKey(Key.Down);
     await keyboard.pressKey(Key.Enter);
+    // ---------------------------------------------------
 
     this.stopCheckPoint();
 
     /** MODAL IS OPENED AT THIS POINT, AT THE INITIAL POSITION */
 
     /** Navigate to the part type field, with Tab click amount depending on oper */
+    // ---------------------------------------------------
     const partTypeTabIndex = getPartTypeTabIndex(oper);
     await times(partTypeTabIndex).pressKey(Key.Tab);
+    // ---------------------------------------------------
+
+    this.stopCheckPoint();
 
     /** Select the appropriate partType from the drop down */
+    // ---------------------------------------------------
     const partTypeOptionIndex = getPartTypeOptionIndex(partType);
     await times(partTypeOptionIndex).pressKey(Key.Up);
+    // ---------------------------------------------------
+
+    this.stopCheckPoint();
 
     /**
      * Part Number field is on different position depending on the operation
      * partNumTabIndex is set depending on the oper so its always in the correct spot
      */
+    // ---------------------------------------------------
     const partNumTabIndex = getPartNumTabIndex(oper) - 2;
     if (partNum && partNumTabIndex > 0) {
       await times(partNumTabIndex).pressKey(Key.Tab);
       await keyboard.type(partNum);
     }
+    // ---------------------------------------------------
 
     this.stopCheckPoint();
 
     /** Navigate to the Line notes tab & enter line note */
+    // ---------------------------------------------------
     await times(2).do(async () => {
       await keyboard.pressKey(Key.LeftControl, Key.Tab);
       await keyboard.releaseKey(Key.LeftControl);
@@ -247,9 +265,19 @@ class Importer {
     if (lineNote) {
       await keyboard.type(lineNote);
     }
+    // ---------------------------------------------------
 
-    await times(4).pressKey(Key.Tab);
+    this.stopCheckPoint();
+
+    /** Navigate to the next tab. Using SHIFT + TAB, because of predefined notes which take
+     *  the forward-tabs and can be of unknown length. So we tab backwards which is always constant.
+     */
+    // ---------------------------------------------------
+    await keyboard.pressKey(Key.LeftShift);
+    await times(3).pressKey(Key.Tab);
+    await keyboard.releaseKey(Key.LeftShift);
     await keyboard.pressKey(Key.Enter);
+    // ---------------------------------------------------
 
     this.stopCheckPoint();
 
