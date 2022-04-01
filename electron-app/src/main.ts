@@ -94,6 +94,7 @@ class Main {
     app.whenReady().then(() => {
       globalShortcut.register('F7', () => {
         importer.stop();
+        log.info('Force Import stopped manually with shortcut.');
         this.windowManager.mainWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
       });
     });
@@ -126,6 +127,8 @@ class Main {
 
   public fetchDataAndStartImporter = async (url: string) => {
     try {
+      log.info(`URL To fetch data received: ${url}`);
+
       /** Prepare UI for data-fetching */
       this.updateMainWindowStateToFetching();
 
@@ -141,10 +144,11 @@ class Main {
        * and update the REV Force Import view
        */
       const urlOrigin = url.substring(0, url.indexOf('api'));
-      const finishAutomationUrl = `${urlOrigin}/api/finishAutomation/${data.automationId}`;
+
+      const finishAutomationUrl = `${urlOrigin}/api/force-import/mark-finished/${data.automationId}`;
       await axios.post<ResponseData>(finishAutomationUrl);
     } catch (e) {
-      log.error('Error retrieving the forgettables', e.message);
+      log.error('Error retrieving the forgettables', JSON.stringify(e));
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
     }
   };
