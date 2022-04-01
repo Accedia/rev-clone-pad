@@ -145,7 +145,7 @@ class Main {
        */
       const urlOrigin = url.substring(0, url.indexOf('api'));
 
-      const finishAutomationUrl = `${urlOrigin}/api/force-import/mark-finished/${data.automationId}`;
+      const finishAutomationUrl = `${urlOrigin}api/force-import/mark-finished/${data.automationId}`;
       await axios.post<ResponseData>(finishAutomationUrl);
     } catch (e) {
       log.error('Error retrieving the forgettables', JSON.stringify(e));
