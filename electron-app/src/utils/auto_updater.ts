@@ -1,3 +1,4 @@
+import { snooze } from './snooze';
 import { MESSAGE } from './../constants/messages';
 import { Endpoints } from '@octokit/types';
 import { app, autoUpdater, dialog, MessageBoxOptions, shell, BrowserWindow } from 'electron';
@@ -8,6 +9,7 @@ import * as stream from 'stream';
 import { promisify } from 'util';
 import { AppState } from '../interfaces/AppState';
 import log from 'electron-log';
+import { FirebaseService, SessionStatus } from './firebase';
 
 type LatestRelease = Endpoints['GET /repos/{owner}/{repo}/releases/latest']['response']['data'];
 
@@ -37,6 +39,8 @@ export class AutoUpdater {
       return false;
     }
 
+    FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATE_NEEDED);
+
     this.sendUpdate('Downloading update');
     this.sendAction('downloading');
 
@@ -53,7 +57,9 @@ export class AutoUpdater {
     this.sendAction('installing');
 
     try {
+      FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATING);
       await this.applyUpdates();
+      FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATE_COMPLETED);
     } catch (e) {
       log.error('Error applying the updates', e);
       app.quit();

@@ -54,6 +54,7 @@
     "electron-log": "^4.4.1",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.0",
+    "firebase": "^9.6.10",
     "rimraf": "^3.0.2",
     "update-electron-app": "^2.0.1"
   },

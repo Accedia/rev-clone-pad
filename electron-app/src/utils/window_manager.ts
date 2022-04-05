@@ -7,6 +7,8 @@ import { WINDOW_CONFIG } from '../config/window_config';
 import { MESSAGE, APP_STATE } from '../constants/messages';
 import { AutoUpdater } from './auto_updater';
 import importer from './importer';
+import { FirebaseService } from './firebase';
+import { extractSessionIdFromUrl } from './extract_sessionid_from_url';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 
@@ -61,6 +63,12 @@ class WindowManager {
     this.loadingWindow = new BrowserWindow(WINDOW_CONFIG.loading);
     this.loadLoadingWindowContent();
     this.loadingWindow.once('show', async () => {
+      const url = getCustomProtocolUrl(process.argv);
+      if (url) {
+        const sessionId = extractSessionIdFromUrl(url);
+        FirebaseService.useCurrentSession.set(sessionId);
+      }
+
       if (!isAppDev(app) && !isDev()) {
         const autoUpdater = new AutoUpdater(this.loadingWindow);
         await autoUpdater.checkAndDownloadUpdates();
@@ -97,6 +105,7 @@ class WindowManager {
         resolve();
       });
       this.mainWindow.on('close', () => {
+        importer.stop();
         this.overlayWindow.close();
         app.quit();
       });
