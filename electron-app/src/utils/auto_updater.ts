@@ -59,7 +59,6 @@ export class AutoUpdater {
 
     try {
       await this.applyUpdates();
-      FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATE_COMPLETED);
     } catch (e) {
       log.error('Error applying the updates', e);
       app.quit();
@@ -174,6 +173,10 @@ export class AutoUpdater {
         this.sendUpdate('Restarting to apply updates');
         this.sendAction('complete');
         shell.beep();
+
+        setTimeout(() => {
+          FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATE_COMPLETED);
+        }, 1500);
 
         setTimeout(() => {
           autoUpdater.quitAndInstall();
