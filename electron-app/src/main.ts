@@ -11,6 +11,7 @@ import { InputSpeed } from './interfaces/InputSpeed';
 import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { isAppDev, isDev } from './utils/is_dev';
 import log from 'electron-log';
+import { FirebaseService, SessionStatus } from './utils/firebase';
 
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
@@ -135,6 +136,8 @@ class Main {
       /** Fetch the data. Replace localhost with [::1] because otherwise it does not work */
       url = url.replace('localhost', '[::1]');
       const { data } = await axios.get<ResponseData>(url);
+
+      await FirebaseService.setSessionStatus(data.automationId, SessionStatus.APP_STARTED);
 
       /** Do the population  */
       await importer.startPopulation(data, this.windowManager.mainWindow);

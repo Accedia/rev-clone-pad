@@ -1,3 +1,4 @@
+import { snooze } from './snooze';
 import { MESSAGE } from './../constants/messages';
 import { Endpoints } from '@octokit/types';
 import { app, autoUpdater, dialog, MessageBoxOptions, shell, BrowserWindow } from 'electron';
@@ -8,6 +9,7 @@ import * as stream from 'stream';
 import { promisify } from 'util';
 import { AppState } from '../interfaces/AppState';
 import log from 'electron-log';
+import { FirebaseService, SessionStatus } from './firebase';
 
 type LatestRelease = Endpoints['GET /repos/{owner}/{repo}/releases/latest']['response']['data'];
 
@@ -37,13 +39,16 @@ export class AutoUpdater {
       return false;
     }
 
+    FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATE_NEEDED);
+
     this.sendUpdate('Downloading update');
     this.sendAction('downloading');
 
     const releases = assets.find((asset) => asset.type === null);
     const nupkg = assets.find((asset) => asset.type === 'nupkg');
 
-    this.progressUpdates(nupkg.name, nupkg.size);
+    this.checkAndShowDownloadProgress(nupkg.name, nupkg.size);
+    FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATING);
 
     await Promise.all([
       this.download(releases.name, releases.download_url),
@@ -54,6 +59,7 @@ export class AutoUpdater {
 
     try {
       await this.applyUpdates();
+      FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATE_COMPLETED);
     } catch (e) {
       log.error('Error applying the updates', e);
       app.quit();
@@ -102,7 +108,7 @@ export class AutoUpdater {
     return nameParts[nameParts.length - 1];
   };
 
-  private progressUpdates = (name: string, size: number) => {
+  private checkAndShowDownloadProgress = (name: string, size: number) => {
     const timeout = setInterval(() => {
       const filePath = `${this.tempDir}/${name}`;
       const stats = fs.statSync(filePath);
