@@ -1,3 +1,4 @@
+import { FirebaseService, SessionStatus } from './firebase';
 import { ImporterStoppedException } from './importer_stopped_exception';
 import { EstimateColumns } from './../constants/estimate_columns';
 import { ResponseData } from './../interfaces/ResponseData';
@@ -63,11 +64,33 @@ class Importer {
     // screen.config.highlightOpacity = 0.8;
   };
 
+  public startSession = (sessionId: string) => {
+    FirebaseService.useCurrentSession.set(sessionId);
+    FirebaseService.subscribe(sessionId, ({ status }) => {
+      if (status === SessionStatus.STOPPED) {
+        this.stop();
+        mainWindowManager.mainWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
+      }
+    });
+  };
+
   public start = () => {
     this._isRunning = true;
   };
 
   public stop = () => {
+    FirebaseService.useCurrentSession.setStatus(SessionStatus.STOPPED);
+    FirebaseService.unsubscribe();
+    FirebaseService.useCurrentSession.remove();
+    FirebaseService.useCurrentSession.unset();
+    this._isRunning = false;
+  };
+
+  public complete = () => {
+    FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
+    FirebaseService.unsubscribe();
+    FirebaseService.useCurrentSession.remove();
+    FirebaseService.useCurrentSession.unset();
     this._isRunning = false;
   };
 
@@ -76,8 +99,9 @@ class Importer {
   };
 
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
-    const { forgettables } = data;
+    const { forgettables, automationId } = data;
 
+    this.startSession(automationId);
     this.start();
     const inputSpeed = getInputSpeed();
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
@@ -90,6 +114,7 @@ class Importer {
       if (this.isRunning) {
         /** Start the CCC Waiting loader */
         electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
+        await FirebaseService.useCurrentSession.setStatus(SessionStatus.SEARCHING_CCC);
 
         /** Continuously check for "Line Operations" button */
         const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
@@ -103,6 +128,7 @@ class Importer {
 
           if (shouldPopulate) {
             /** Start population */
+            await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
             this.progressUpdater.setPercentage(0);
             mainWindowManager.overlayWindow.show();
             await snooze(1000);
@@ -111,12 +137,14 @@ class Importer {
             await this.saveLastLineNumber();
             await this.goToTheFirstCell();
             await this.populateTableData(forgettables, lineOperationCoordinates);
+            await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
             await this.verifyPopulation(forgettables);
           } else {
             electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
           }
 
-          this.stop();
+          await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
+          this.complete();
         }
       }
 

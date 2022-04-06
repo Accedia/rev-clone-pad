@@ -25,7 +25,7 @@ const FinishButton: React.FC<ButtonProps> = ({ onClick, disabled }) => (
 const StopButton: React.FC<ButtonProps> = ({ onClick, disabled }) => (
   <Button icon labelPosition="left" color="red" onClick={onClick} disabled={disabled}>
     <Icon name="stop" />
-    Stop (F7)
+    Abort (F7)
   </Button>
 );
 
