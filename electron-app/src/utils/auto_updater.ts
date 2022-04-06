@@ -47,7 +47,8 @@ export class AutoUpdater {
     const releases = assets.find((asset) => asset.type === null);
     const nupkg = assets.find((asset) => asset.type === 'nupkg');
 
-    this.progressUpdates(nupkg.name, nupkg.size);
+    this.checkAndShowDownloadProgress(nupkg.name, nupkg.size);
+    FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATING);
 
     await Promise.all([
       this.download(releases.name, releases.download_url),
@@ -57,7 +58,6 @@ export class AutoUpdater {
     this.sendAction('installing');
 
     try {
-      FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATING);
       await this.applyUpdates();
       FirebaseService.useCurrentSession.setStatus(SessionStatus.UPDATE_COMPLETED);
     } catch (e) {
@@ -108,7 +108,7 @@ export class AutoUpdater {
     return nameParts[nameParts.length - 1];
   };
 
-  private progressUpdates = (name: string, size: number) => {
+  private checkAndShowDownloadProgress = (name: string, size: number) => {
     const timeout = setInterval(() => {
       const filePath = `${this.tempDir}/${name}`;
       const stats = fs.statSync(filePath);
