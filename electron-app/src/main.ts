@@ -141,15 +141,6 @@ class Main {
 
       /** Do the population  */
       await importer.startPopulation(data, this.windowManager.mainWindow);
-
-      /**
-       * Send back a POST request to the server, to mark the process as finished
-       * and update the REV Force Import view
-       */
-      const urlOrigin = url.substring(0, url.indexOf('api'));
-
-      const finishAutomationUrl = `${urlOrigin}api/force-import/mark-finished/${data.automationId}`;
-      await axios.post<ResponseData>(finishAutomationUrl);
     } catch (e) {
       log.error('Error retrieving the forgettables', JSON.stringify(e));
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);
