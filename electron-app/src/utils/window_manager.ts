@@ -96,14 +96,14 @@ class WindowManager {
   public createMainWindow = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       this.mainWindow = new BrowserWindow(WINDOW_CONFIG.main);
-      // this.createBlockOverlayWindow();
-      // this.mainWindow.once('ready-to-show', () => {
-      //   this.mainWindow.show();
-      //   importer.setProgressBrowserWindow(this.mainWindow);
-      //   this.loadingWindow.hide();
-      //   this.loadingWindow.close();
-      //   resolve();
-      // });
+      this.createBlockOverlayWindow();
+      this.mainWindow.once('ready-to-show', () => {
+        this.mainWindow.show();
+        importer.setProgressBrowserWindow(this.mainWindow);
+        this.loadingWindow.hide();
+        this.loadingWindow.close();
+        resolve();
+      });
       this.mainWindow.on('close', () => {
         importer.stop();
         this.overlayWindow.close();

@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useEffect } from 'react';
 import { MESSAGE, AppState } from '@electron-app';
-import { Button, Icon, Progress, Segment } from 'semantic-ui-react';
+import { Button, Icon, Progress } from 'semantic-ui-react';
 import { ipcRenderer } from '@react-app/utils/electron_remote';
 import Dots from '../components/Dots';
 
@@ -10,7 +10,7 @@ import '../styles/app.scss';
 const LoadingPage: React.FC = () => {
   const [status, setStatus] = React.useState('Loading');
   const [progress, setProgress] = React.useState(0);
-  const [appState, setAppState] = React.useState<AppState>('downloading');
+  const [appState, setAppState] = React.useState<AppState>('default');
 
   useEffect(() => {
     ipcRenderer.on(MESSAGE.LOADER_CHECK_UPDATE_STATUS, (event: any, updateMessage: string) => {
