@@ -1,5 +1,4 @@
 .fit-loader-logo {
-  margin-bottom: 20px;
 }
 
 .error-loading .fit-loader-logo,
@@ -15,6 +14,7 @@
   align-items: center;
   width: 250px;
   transition: 0.4s;
+  padding: 1rem;
 
   &.error-loading {
     background: red;
@@ -47,5 +47,13 @@
   .progress-bar {
     width: 80%;
     margin-top: 10px !important;
+  }
+
+  .notification-segment {
+    position: absolute;
+    bottom: 0;
+    padding: 1rem;
+    display: flex;
+    gap: 0.5rem;
   }
 }
