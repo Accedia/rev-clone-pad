@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useEffect } from 'react';
 import { MESSAGE, AppState } from '@electron-app';
-import { Button, Progress } from 'semantic-ui-react';
+import { Button, Icon, Progress } from 'semantic-ui-react';
 import { ipcRenderer } from '@react-app/utils/electron_remote';
 import Dots from '../components/Dots';
 
@@ -52,8 +52,15 @@ const LoadingPage: React.FC = () => {
         {status}
         <Dots />
       </p>
+
       {appState === 'downloading' && (
         <Progress percent={progress} size="tiny" color="blue" className="progress-bar" />
+      )}
+      {['downloading', 'installing'].includes(appState) && (
+        <div className="notification-segment">
+          <Icon color="orange" name="warning circle" /> App will restart when its ready. This might take
+          several minutes.
+        </div>
       )}
       {appState === 'error' && <Button content="Close" className="action-button" onClick={close} />}
     </div>
