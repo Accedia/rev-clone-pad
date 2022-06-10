@@ -52,7 +52,7 @@ class Importer {
     /** Delay between different instructions (e.g. pressKey() and consequential pressKey()) */
     keyboard.config.autoDelayMs = inputSpeed ** 2;
     /** Delay between keystrokes when typing a word (e.g. calling keyboard.type(), time between each letter keypress). */
-    keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 80);
+    keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 50);
     /** Path with the assets, where we put images for "Line operation" button image-recognition */
     screen.config.resourceDirectory = this.getAssetsPath();
 
