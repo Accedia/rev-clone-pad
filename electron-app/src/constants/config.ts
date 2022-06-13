@@ -2,7 +2,7 @@ export const CUSTOM_PROTOCOL = 'ccc';
 
 export const INPUT_SPEED_CONFIG = {
   'extra-slow': {
-    value: 7,
+    value: 10,
     title: 'Turtle',
   },
   slow: {
