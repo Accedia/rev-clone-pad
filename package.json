@@ -1,8 +1,9 @@
 {
-  "name": "rev-clone-pad-v2",
-  "productName": "rev-clone-pad-v2",
-  "version": "1.0.0",
-  "description": "My Electron application description",
+  "name": "rev-clone-pad",
+  "appname": "REV Clone Pad",
+  "productName": "REV Clone Pad",
+  "version": "1.5.4",
+  "description": "Forgettable clone helper for REV users",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
@@ -18,57 +19,7 @@
   },
   "license": "MIT",
   "config": {
-    "forge": {
-      "packagerConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "rev_clone_pad_v2"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ],
-      "plugins": [
-        [
-          "@electron-forge/plugin-webpack",
-          {
-            "mainConfig": "./webpack.main.config.js",
-            "renderer": {
-              "config": "./webpack.renderer.config.js",
-              "entryPoints": [
-                {
-                  "html": "./src/ui/main/index.html",
-                  "js": "./src/ui/main/index.tsx",
-                  "name": "main",
-                  "preload": {
-                    "js": "./src/preload.ts"
-                  }
-                },
-                {
-                  "html": "./src/ui/loading/index.html",
-                  "js": "./src/ui/loading/index.tsx",
-                  "name": "loading"
-                }
-              ]
-            }
-          }
-        ]
-      ]
-    }
+    "forge": "./forge.config.js"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.65",
@@ -77,6 +28,7 @@
     "@electron-forge/maker-squirrel": "^6.0.0-beta.65",
     "@electron-forge/maker-zip": "^6.0.0-beta.65",
     "@electron-forge/plugin-webpack": "^6.0.0-beta.65",
+    "@electron-forge/publisher-github": "^6.0.0-beta.65",
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
     "@typescript-eslint/eslint-plugin": "^5.33.1",
