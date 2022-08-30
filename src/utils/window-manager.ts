@@ -1,10 +1,14 @@
 import { BrowserWindow } from 'electron';
-import path from 'path';
+import {
+  LOADING_SCREEN_CONFIG,
+  MAIN_SCREEN_CONFIG,
+  withPreload,
+} from '../shared/config/screen-config';
 
 declare const MAIN_WEBPACK_ENTRY: string;
 declare const MAIN_PRELOAD_WEBPACK_ENTRY: string;
 declare const LOADING_WEBPACK_ENTRY: string;
-// declare const LOADING_PRELOAD_WEBPACK_ENTRY: string;
+declare const LOADING_PRELOAD_WEBPACK_ENTRY: string;
 
 class WindowManager {
   loadingWindow: BrowserWindow | null;
@@ -16,39 +20,21 @@ class WindowManager {
   }
 
   public async showLoadingWindow(): Promise<void> {
-    this.loadingWindow = new BrowserWindow({
-      title: 'REV Clone Pad',
-      icon: path.resolve(__dirname, '../../assets/icon-white-bg.ico'),
-      autoHideMenuBar: true,
-      height: 400,
-      width: 400,
-      webPreferences: {
-        nodeIntegration: true,
-        //preload: LOADING_PRELOAD_WEBPACK_ENTRY,
-      },
-    });
-
+    const screenConfig = withPreload(LOADING_SCREEN_CONFIG, LOADING_PRELOAD_WEBPACK_ENTRY);
+    this.loadingWindow = new BrowserWindow(screenConfig);
     await this.loadingWindow.loadURL(LOADING_WEBPACK_ENTRY);
-    setTimeout(() => this.showMainWindow(), 2000);
+    // TODO: Auto-update logic
+    // setTimeout(() => this.showMainWindow(), 2000);
   }
 
   public async showMainWindow(): Promise<void> {
     if (this.loadingWindow) {
       this.loadingWindow.close();
+      this.loadingWindow = null;
     }
 
-    this.mainWindow = new BrowserWindow({
-      title: 'REV Clone Pad',
-      icon: path.resolve(__dirname, '../../assets/icon-white-bg.ico'),
-      autoHideMenuBar: true,
-      height: 400,
-      width: 400,
-      webPreferences: {
-        nodeIntegration: true,
-        preload: MAIN_PRELOAD_WEBPACK_ENTRY,
-      },
-    });
-
+    const screenConfig = withPreload(MAIN_SCREEN_CONFIG, MAIN_PRELOAD_WEBPACK_ENTRY);
+    this.mainWindow = new BrowserWindow(screenConfig);
     await this.mainWindow.loadURL(MAIN_WEBPACK_ENTRY);
   }
 }
