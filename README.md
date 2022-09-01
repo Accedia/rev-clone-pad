@@ -9,10 +9,6 @@
 
 The app handles forgettable data, cloned from within REV Portal. It populates a modal with the received data, and allows copying of values, based on the forgettable operation. The copied values can then be pasted into CCC One.
 
-## Usage
-
-Navigate to `./electron-app` folder.
-
 ### Install
 
 - Run `npm install` in the project root.
