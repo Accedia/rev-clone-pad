@@ -1,9 +1,6 @@
-import { BrowserWindow } from 'electron';
-import {
-  LOADING_SCREEN_CONFIG,
-  MAIN_SCREEN_CONFIG,
-  withPreload,
-} from '../shared/config/screen-config';
+import { app, BrowserWindow } from 'electron';
+import AutoUpdater from './auto-updater';
+import { LOADING_SCREEN_CONFIG, MAIN_SCREEN_CONFIG, withPreload } from '../shared/config/screen-config';
 
 declare const MAIN_WEBPACK_ENTRY: string;
 declare const MAIN_PRELOAD_WEBPACK_ENTRY: string;
@@ -23,19 +20,33 @@ class WindowManager {
     const screenConfig = withPreload(LOADING_SCREEN_CONFIG, LOADING_PRELOAD_WEBPACK_ENTRY);
     this.loadingWindow = new BrowserWindow(screenConfig);
     await this.loadingWindow.loadURL(LOADING_WEBPACK_ENTRY);
-    // TODO: Auto-update logic
-    // setTimeout(() => this.showMainWindow(), 2000);
+
+    this.loadingWindow.once('ready-to-show', async () => {
+      this.showAndFocus(this.loadingWindow);
+
+      if (app.isPackaged) {
+        const autoUpdater = new AutoUpdater(this.loadingWindow);
+        await autoUpdater.checkForUpdates();
+      }
+
+      this.loadingWindow.close();
+      this.showMainWindow();
+    });
   }
 
   public async showMainWindow(): Promise<void> {
-    if (this.loadingWindow) {
-      this.loadingWindow.close();
-      this.loadingWindow = null;
-    }
-
     const screenConfig = withPreload(MAIN_SCREEN_CONFIG, MAIN_PRELOAD_WEBPACK_ENTRY);
     this.mainWindow = new BrowserWindow(screenConfig);
     await this.mainWindow.loadURL(MAIN_WEBPACK_ENTRY);
+
+    this.mainWindow.once('ready-to-show', async () => {
+      this.showAndFocus(this.mainWindow);
+    });
+  }
+
+  private showAndFocus(window: BrowserWindow): void {
+    window.show();
+    window.focus();
   }
 }
 

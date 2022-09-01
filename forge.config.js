@@ -1,7 +1,6 @@
 /* eslint-disable */
 const path = require('path');
 const packageJson = require('./package.json');
-
 const iconPath = path.resolve(__dirname, './assets/icon-white-bg.ico');
 
 module.exports = {
@@ -13,7 +12,6 @@ module.exports = {
     icon: iconPath,
     overwrite: true,
   },
-  packagerConfig: {},
   publishers: [
     {
       name: '@electron-forge/publisher-github',
@@ -61,7 +59,10 @@ module.exports = {
             {
               html: "./src/ui/loading/index.html",
               js: "./src/ui/loading/index.tsx",
-              name: "loading"
+              name: "loading",
+              preload: {
+                js: "./src/preload.ts"
+              }
             }
           ]
         }

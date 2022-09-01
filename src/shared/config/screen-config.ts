@@ -5,25 +5,23 @@ const BASE_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   title: 'REV Clone Pad',
   icon: path.resolve(__dirname, '../../assets/icon-white-bg.ico'),
   autoHideMenuBar: true,
+  show: false,
   resizable: false,
+  webPreferences: {
+    nodeIntegration: true,
+  },
 };
 
 export const LOADING_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   ...BASE_SCREEN_CONFIG,
   height: 175,
   width: 350,
-  webPreferences: {
-    nodeIntegration: true,
-  },
 };
 
 export const MAIN_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   ...BASE_SCREEN_CONFIG,
   height: 500,
   width: 500,
-  webPreferences: {
-    nodeIntegration: true,
-  },
 };
 
 export const withPreload = (

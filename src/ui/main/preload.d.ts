@@ -1,15 +1,15 @@
-import { Message } from '../../shared/enums';
+import { Channel } from '../../shared/enums';
 
 declare global {
   interface Window {
     electron: {
       ipcRenderer: {
-        sendMessage<T>(message: Message, ...args: T[]): void;
+        sendMessage<T>(channel: Channel, ...args: T[]): void;
         on<T>(
-          message: Message,
+          channel: Channel,
           func: (...args: T[]) => void
         ): (() => void) | undefined;
-        once<T>(message: Message, func: (...args: T[]) => void): void;
+        once<T>(channel: Channel, func: (...args: T[]) => void): void;
       };
     };
   }
