@@ -1,12 +1,12 @@
 import { app, BrowserWindow } from 'electron';
 import AutoUpdater from './auto-updater';
-import { Channel } from '../shared/enums';
+import AutoUpdater2 from './auto-updater-2';
 import {
   LOADING_SCREEN_CONFIG,
   MAIN_SCREEN_CONFIG,
   withPreload,
 } from '../shared/config/screen-config';
-import AutoUpdater2 from './auto-updater-2';
+import { Channel } from '../shared/enums';
 
 declare const MAIN_WEBPACK_ENTRY: string;
 declare const MAIN_PRELOAD_WEBPACK_ENTRY: string;
@@ -72,6 +72,20 @@ class WindowManager {
         this.autoUpdater.downloadAndInstallUpdates(this.loadingWindow);
       }
     });
+  }
+  
+  public sendForgettableData(json: string): void {
+    const forgettable = JSON.parse(json);
+    this.mainWindow.webContents.send(Channel.ForgettableCloned, forgettable);
+  }
+
+  public focusMainWindow(): void {
+    if (!this.mainWindow) return;
+    if (this.mainWindow.isMinimized()) {
+      this.mainWindow.restore();
+    }
+
+    this.mainWindow.focus();
   }
 
   private showAndFocus(window: BrowserWindow): void {
