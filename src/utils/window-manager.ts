@@ -1,8 +1,7 @@
 import { app, BrowserWindow } from 'electron';
-import AutoUpdater from './auto-updater';
 import AutoUpdater2 from './auto-updater-2';
 import {
-  LOADING_SCREEN_CONFIG,
+  UPDATE_SCREEN_CONFIG,
   MAIN_SCREEN_CONFIG,
   withPreload,
 } from '../shared/config/screen-config';
@@ -10,37 +9,37 @@ import { Channel } from '../shared/enums';
 
 declare const MAIN_WEBPACK_ENTRY: string;
 declare const MAIN_PRELOAD_WEBPACK_ENTRY: string;
-declare const LOADING_WEBPACK_ENTRY: string;
-declare const LOADING_PRELOAD_WEBPACK_ENTRY: string;
+declare const UPDATE_WEBPACK_ENTRY: string;
+declare const UPDATE_PRELOAD_WEBPACK_ENTRY: string;
 
 class WindowManager {
   private autoUpdater: AutoUpdater2;
-  loadingWindow: BrowserWindow | null;
+  updateWindow: BrowserWindow | null;
   mainWindow: BrowserWindow | null;
 
   constructor() {
     this.autoUpdater = new AutoUpdater2();
-    this.loadingWindow = null;
+    this.updateWindow = null;
     this.mainWindow = null;
   }
 
-  public async showLoadingWindow(): Promise<void> {
-    const screenConfig = withPreload(LOADING_SCREEN_CONFIG, LOADING_PRELOAD_WEBPACK_ENTRY);
-    this.loadingWindow = new BrowserWindow(screenConfig);
-    await this.loadingWindow.loadURL(LOADING_WEBPACK_ENTRY);
+  // public async showLoadingWindow(): Promise<void> {
+  //   const screenConfig = withPreload(UPDATE_SCREEN_CONFIG, UPDATE_PRELOAD_WEBPACK_ENTRY);
+  //   this.updateWindow = new BrowserWindow(screenConfig);
+  //   await this.updateWindow.loadURL(UPDATE_WEBPACK_ENTRY);
 
-    this.loadingWindow.once('ready-to-show', async () => {
-      this.showAndFocus(this.loadingWindow);
+  //   this.updateWindow.once('ready-to-show', async () => {
+  //     this.showAndFocus(this.updateWindow);
 
-      if (app.isPackaged) {
-        const autoUpdater = new AutoUpdater(this.loadingWindow);
-        await autoUpdater.checkForUpdates();
-      }
+  //     if (app.isPackaged) {
+  //       const autoUpdater = new AutoUpdater(this.updateWindow);
+  //       await autoUpdater.checkForUpdates();
+  //     }
 
-      this.loadingWindow.close();
-      this.showMainWindow();
-    });
-  }
+  //     this.updateWindow.close();
+  //     this.showMainWindow();
+  //   });
+  // }
 
   public async showMainWindow(): Promise<void> {
     const screenConfig = withPreload(MAIN_SCREEN_CONFIG, MAIN_PRELOAD_WEBPACK_ENTRY);
@@ -59,17 +58,16 @@ class WindowManager {
     if (this.mainWindow) {
       this.mainWindow.close();
     }
+    
+    const screenConfig = withPreload(UPDATE_SCREEN_CONFIG, UPDATE_PRELOAD_WEBPACK_ENTRY);
+    this.updateWindow = new BrowserWindow(screenConfig);
+    await this.updateWindow.loadURL(UPDATE_WEBPACK_ENTRY);
 
-    // TODO: Change naming and props
-    const screenConfig = withPreload(LOADING_SCREEN_CONFIG, LOADING_PRELOAD_WEBPACK_ENTRY);
-    this.loadingWindow = new BrowserWindow(screenConfig);
-    await this.loadingWindow.loadURL(LOADING_WEBPACK_ENTRY);
-
-    this.loadingWindow.once('ready-to-show', async () => {
-      this.showAndFocus(this.loadingWindow);
+    this.updateWindow.once('ready-to-show', async () => {
+      this.showAndFocus(this.updateWindow);
       
       if (app.isPackaged) {
-        this.autoUpdater.downloadAndInstallUpdates(this.loadingWindow);
+        this.autoUpdater.downloadAndInstallUpdates(this.updateWindow);
       }
     });
   }
