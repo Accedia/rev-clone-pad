@@ -1,8 +1,19 @@
 import React from 'react';
-import styles from './App.module.scss';
+import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
+import { MantineProvider } from '@mantine/core';
+import CloneScreen from './screens/CloneScreen';
 
 const App: React.FC = () => {
-  return <div className={styles.asd}>This is a completely different window</div>;
+  return (
+    <MantineProvider withNormalizeCSS>
+      <Router>
+        <Routes>
+          <Route path="/" element={<CloneScreen />} />
+          <Route path="/help" element={<CloneScreen />} />
+        </Routes>
+      </Router>
+    </MantineProvider>
+  );
 };
 
 export default App;
