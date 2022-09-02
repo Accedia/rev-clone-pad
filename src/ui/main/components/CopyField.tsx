@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ActionIcon, createStyles, Textarea, TextInput, Tooltip } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { IconCopy, IconCheck } from '@tabler/icons';
@@ -32,8 +32,12 @@ const useStyles = (copied: boolean) => {
 };
 
 const CopyField: React.FC<CopyFieldProps> = ({ value, label, disabled, textArea = false }) => {
-  const { copy, copied } = useClipboard({ timeout: 1000 * 60 * 60 * 24 });
+  const { copy, copied, reset } = useClipboard({ timeout: 1000 * 60 * 60 * 24 });
   const { classes } = useStyles(copied);
+
+  useEffect(() => {
+    if (!value) reset();
+  }, [value])
 
   const Component = React.useMemo(() => (textArea ? Textarea : TextInput), [textArea]);
 
