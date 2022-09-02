@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Center, createStyles, Loader, Text } from '@mantine/core';
+import { Box, Button, Center, createStyles, Group, Loader, Modal, Text } from '@mantine/core';
 import useIpcRenderer from '../../shared/useIpcRenderer';
 import { Channel, UpdateStatus, UPDATE_STATUS_MESSAGES } from '../../../shared/enums';
 
@@ -18,12 +18,19 @@ const useStyles = createStyles(() => ({
     fontSize: '11px',
     textTransform: 'uppercase',
   },
+  modal: {
+    padding: '8px !important',
+    display: 'flex',
+    flexDirection: 'column',
+    maxWidth: '231px',
+  },
 }));
 
 const StatusBar: React.FC = () => {
   const { classes } = useStyles();
   const renderer = useIpcRenderer();
   const [version, setVersion] = useState<string>('');
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.UpdatesAvailable);
 
   useEffect(() => {
@@ -31,8 +38,15 @@ const StatusBar: React.FC = () => {
     renderer.on<UpdateStatus>(Channel.UpdateStatusChanged, (status) => setStatus(status));
   }, []);
 
-  const onUpdateClicked = () => {
-    // TODO: Confirmation modal
+  const onModalClose = (): void => {
+    setModalOpen(false);
+  };
+
+  const onUpdateClicked = (): void => {
+    setModalOpen(true);
+  };
+
+  const onUpdateAccepted = (): void => {
     renderer.sendMessage(Channel.UpdateAccepted);
   };
 
@@ -62,6 +76,29 @@ const StatusBar: React.FC = () => {
         </Center>
         {statusAction}
       </Box>
+      <Modal
+        classNames={{ modal: classes.modal }}
+        opened={modalOpen}
+        onClose={onModalClose}
+        withCloseButton={false}
+        size="xs"
+        centered
+      >
+        <Box>
+          <Text weight="bold" size="sm" mb={20}>
+            If you have cloned a forgettable, you need to do it again after the update is complete,
+            as all clone data will be lost.
+          </Text>
+          <Group position="apart">
+            <Button size="xs" color="red" onClick={onModalClose}>
+              CANCEL
+            </Button>
+            <Button size="xs" onClick={onUpdateAccepted}>
+              CONTINUE
+            </Button>
+          </Group>
+        </Box>
+      </Modal>
     </>
   );
 };
