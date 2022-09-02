@@ -57,9 +57,9 @@ module.exports = {
               }
             },
             {
-              html: "./src/ui/loading/index.html",
-              js: "./src/ui/loading/index.tsx",
-              name: "loading",
+              html: "./src/ui/update/index.html",
+              js: "./src/ui/update/index.tsx",
+              name: "update",
               preload: {
                 js: "./src/preload.ts"
               }

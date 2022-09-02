@@ -36,7 +36,7 @@ const useStyles = createStyles((theme) => ({
   },
   alertWrapper: {
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   alertMessage: {
     fontSize: '13px',
@@ -48,14 +48,14 @@ const useStyles = createStyles((theme) => ({
   green: {
     color: theme.colors.green[6],
   },
-}))
+}));
 
 const ForgettableInfoBar: React.FC<ForgettableInfoBarProps> = ({ forgettable }) => {
   const { classes, cx } = useStyles();
 
   const warning = useMemo((): string => {
     if (!forgettable) {
-      return 'No forgettable loaded in REV Clone Pad!'
+      return 'No forgettable loaded in REV Clone Pad!';
     }
 
     const systems = forgettable?.unsupportedSystems || [];
@@ -67,12 +67,20 @@ const ForgettableInfoBar: React.FC<ForgettableInfoBarProps> = ({ forgettable }) 
       <Box className={classes.info}>
         <Text className={classes.infoText}>Cloned item: </Text>
         <Space className={classes.space} />
-        <Badge color="teal" variant="filled" radius="sm" mr="sm">
-          Operation: {forgettable?.operation || OperationType.NONE}
-        </Badge>
-        <Badge color="teal" variant="filled" radius="sm">
-          Group: {forgettable?.groupName || 'N/A'}
-        </Badge>
+        {forgettable ? (
+          <>
+            <Badge color="teal" variant="filled" radius="sm" mr="sm">
+              Operation: {forgettable?.operation || OperationType.NONE}
+            </Badge>
+            <Badge color="teal" variant="filled" radius="sm">
+              Group: {forgettable?.groupName.replace(/\(.+\)/, '') || 'N/A'}
+            </Badge>
+          </>
+        ) : (
+          <Badge color="red" variant="filled" radius="sm" mr="sm">
+            N/A
+          </Badge>
+        )}
       </Box>
       <Alert
         color={warning ? 'red' : 'green'}

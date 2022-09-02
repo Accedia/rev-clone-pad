@@ -7,12 +7,13 @@ const BASE_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   autoHideMenuBar: true,
   show: false,
   resizable: false,
+  alwaysOnTop: true,
   webPreferences: {
     nodeIntegration: true,
   },
 };
 
-export const LOADING_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
+export const UPDATE_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   ...BASE_SCREEN_CONFIG,
   height: 71,
   width: 250,
