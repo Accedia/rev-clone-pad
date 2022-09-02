@@ -1,4 +1,5 @@
-import { app } from 'electron';
+import { app, ipcMain } from 'electron';
+import { Channel } from './shared/enums';
 import WindowManager from './utils/window-manager';
 
 if (require('electron-squirrel-startup')) {
@@ -7,16 +8,19 @@ if (require('electron-squirrel-startup')) {
 
 class Main {
   windowManager: WindowManager;
-
+  
   constructor() {
-    this.windowManager = new WindowManager();
     app.on('ready', () => {
-      this.windowManager.showLoadingWindow();
+      this.windowManager = new WindowManager();
+      this.windowManager.showMainWindow();
     });
+    
     this.registerListeners();
   }
 
   private registerListeners(): void {
+    ipcMain.on(Channel.AppClosed, () => app.quit());
+    ipcMain.on(Channel.UpdateAccepted, () => this.windowManager.showUpdateWindow());
     app.on('window-all-closed', () => {
       if (process.platform !== 'darwin') {
         app.quit();
