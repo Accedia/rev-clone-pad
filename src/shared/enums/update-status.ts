@@ -1,5 +1,7 @@
 export enum UpdateStatus {
   Checking = 'checking',
+  NoUpdates = 'no_updates',
+  UpdatesAvailable = 'updates_available',
   Downloading = 'downloading',
   Installing = 'installing',
   Complete = 'complete',
@@ -8,8 +10,20 @@ export enum UpdateStatus {
 
 export const UPDATE_STATUS_MESSAGES: Record<UpdateStatus, string> = {
   [UpdateStatus.Checking]: 'Checking for updates...',
+  [UpdateStatus.NoUpdates]: 'Up to date.',
+  [UpdateStatus.UpdatesAvailable]: 'Updates are available!',
   [UpdateStatus.Downloading]: 'Downloading latest update...',
   [UpdateStatus.Installing]: 'Installing latest update...',
-  [UpdateStatus.Complete]: 'Update installed successfully! Restarting...',
-  [UpdateStatus.Error]: 'Oops! Something went wrong while installing latest update.'
+  [UpdateStatus.Complete]: 'Success! App will now restart...',
+  [UpdateStatus.Error]: 'Oops! Something went wrong...'
+}
+
+export const UPDATE_STATUS_COLOR: Record<UpdateStatus, string> = {
+  [UpdateStatus.Checking]: 'blue',
+  [UpdateStatus.NoUpdates]: 'blue',
+  [UpdateStatus.UpdatesAvailable]: 'blue',
+  [UpdateStatus.Downloading]: 'blue',
+  [UpdateStatus.Installing]: 'teal',
+  [UpdateStatus.Complete]: 'teal',
+  [UpdateStatus.Error]: 'red'
 }

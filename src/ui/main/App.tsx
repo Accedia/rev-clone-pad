@@ -1,8 +1,13 @@
 import React from 'react';
-import styles from './App.module.scss';
+import { MantineProvider } from '@mantine/core';
+import CloneScreen from './screens/CloneScreen';
 
 const App: React.FC = () => {
-  return <div className={styles.asd}>This is a completely different window</div>;
+  return (
+    <MantineProvider withNormalizeCSS>
+      <CloneScreen />
+    </MantineProvider>
+  );
 };
 
 export default App;

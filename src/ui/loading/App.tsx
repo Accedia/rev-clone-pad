@@ -1,46 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { createStyles, Box, MantineProvider, Loader, Text } from '@mantine/core';
-import { Progress } from './components';
+import { createStyles, Box, MantineProvider, Text } from '@mantine/core';
+import Indicator from './components/Indicator';
 import useIpcRenderer from '../shared/useIpcRenderer';
 import { Channel, UpdateStatus, UPDATE_STATUS_MESSAGES } from '../../shared/enums';
 
 const useStyles = createStyles(() => ({
   root: {
     display: 'flex',
-    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loaderContainer: {
-    padding: 8,
+    padding: '8px'
   },
 }));
 
 const App: React.FC = () => {
   const { classes } = useStyles();
   const renderer = useIpcRenderer();
-  const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.Checking);
   const [progress, setProgress] = useState<number>(0);
+  const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.Downloading);
 
   useEffect(() => {
-    renderer.on<UpdateStatus>(Channel.UpdateStatusChanged, (status) => {
-      console.log(status);
-      setStatus(status)
-    });
+    renderer.on<UpdateStatus>(Channel.UpdateStatusChanged, (status) => setStatus(status));
     renderer.on<number>(Channel.DownloadPercentChanged, (value) => setProgress(value));
   }, []);
 
   return (
     <MantineProvider withNormalizeCSS>
       <Box className={classes.root}>
-        {status === UpdateStatus.Checking ? (
-          <Box className={classes.loaderContainer}>
-            <Loader size={80} />
-          </Box>
-        ) : (
-          <Progress value={progress} />
-        )}
-        <Text size="md">{UPDATE_STATUS_MESSAGES[status]}</Text>
+        <Indicator status={status} value={progress} />
+        <Text size="xs">{UPDATE_STATUS_MESSAGES[status]}</Text>
       </Box>
     </MantineProvider>
   );
