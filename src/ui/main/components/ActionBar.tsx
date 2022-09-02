@@ -59,7 +59,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ setForgettable }) => {
         </Group>
       </Group>
       <Modal opened={modalOpen} onClose={onModalClose} withCloseButton={false} centered>
-        Im the modal fuck you
+        I will be the help modal when I get implemented.
       </Modal>
     </>
   );
