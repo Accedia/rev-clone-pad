@@ -11,8 +11,9 @@ class Main {
   constructor() {
     app.on('ready', () => {
       this.windowManager = new WindowManager();
-      this.windowManager.showLoadingWindow();
+      this.windowManager.showMainWindow();
     });
+    
     this.registerListeners();
   }
 

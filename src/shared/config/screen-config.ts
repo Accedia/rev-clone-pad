@@ -20,7 +20,7 @@ export const LOADING_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
 
 export const MAIN_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   ...BASE_SCREEN_CONFIG,
-  height: 500,
+  height: 607,
   width: 500,
 };
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, createStyles, SimpleGrid, Text } from '@mantine/core';
+import { Box, createStyles, SimpleGrid, Text } from '@mantine/core';
 import { useDisabledByOperation } from '../hooks';
-import { CopyField, ForgettableInfoBar, StatusBar } from '../components';
+import { ActionBar, CopyField, ForgettableInfoBar, StatusBar } from '../components';
 import useIpcRenderer from '../../shared/useIpcRenderer';
 import { Forgettable } from '../../../shared/models';
 import { Channel, LaborType, PartType } from '../../../shared/enums';
@@ -28,12 +28,6 @@ const useStyles = createStyles((theme) => ({
     fontSize: '13px',
     fontWeight: 'bold',
     textTransform: 'uppercase',
-  },
-  actions: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
-    flexGrow: 1,
   },
   alignEnd: {
     alignSelf: 'flex-end',
@@ -108,11 +102,7 @@ const CloneScreen: React.FC = () => {
           disabled={isDisabled('lineNote')}
           textArea
         />
-        <Box className={classes.actions}>
-          <Button mt="sm" size="xs" onClick={() => console.log('Hello')}>
-            DONE
-          </Button>
-        </Box>
+        <ActionBar />
       </Box>
     </Box>
   );

@@ -6,6 +6,7 @@ import {
   MAIN_SCREEN_CONFIG,
   withPreload,
 } from '../shared/config/screen-config';
+import AutoUpdater2 from './auto-updater-2';
 
 declare const MAIN_WEBPACK_ENTRY: string;
 declare const MAIN_PRELOAD_WEBPACK_ENTRY: string;
@@ -47,6 +48,9 @@ class WindowManager {
     this.mainWindow.once('ready-to-show', async () => {
       this.mainWindow.webContents.send(Channel.VersionReceived, app.getVersion());
       this.showAndFocus(this.mainWindow);
+
+      const autoUpdater = new AutoUpdater2(this.mainWindow);
+      await autoUpdater.checkForUpdates();
     });
   }
 
