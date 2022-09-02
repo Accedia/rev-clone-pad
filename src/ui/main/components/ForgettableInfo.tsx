@@ -54,6 +54,10 @@ const ForgettableInfoBar: React.FC<ForgettableInfoBarProps> = ({ forgettable }) 
   const { classes, cx } = useStyles();
 
   const warning = useMemo((): string => {
+    if (!forgettable) {
+      return 'No forgettable loaded in REV Clone Pad!'
+    }
+
     const systems = forgettable?.unsupportedSystems || [];
     return systems.length ? `Do not use in systems: [${systems.join(', ')}]` : '';
   }, [forgettable?.unsupportedSystems]);

@@ -6,7 +6,7 @@ const BASE_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   icon: path.resolve(__dirname, '../../assets/icon-white-bg.ico'),
   autoHideMenuBar: true,
   show: false,
-  resizable: true,
+  resizable: false,
   webPreferences: {
     nodeIntegration: true,
   },
@@ -20,7 +20,7 @@ export const LOADING_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
 
 export const MAIN_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   ...BASE_SCREEN_CONFIG,
-  height: 607,
+  height: 599,
   width: 500,
 };
 

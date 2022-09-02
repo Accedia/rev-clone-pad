@@ -9,6 +9,8 @@ const useStyles = createStyles(() => ({
     justifyContent: 'space-between',
     backgroundColor: '#ffffdd',
     padding: '5px 10px',
+    height: '30px',
+    boxSizing: 'border-box'
   },
   button: {
     padding: '5px',
@@ -21,11 +23,12 @@ const useStyles = createStyles(() => ({
 const StatusBar: React.FC = () => {
   const { classes } = useStyles();
   const renderer = useIpcRenderer();
-  const [version, setVersion] = useState<string>('2.0.1');
-  const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.NoUpdates);
+  const [version, setVersion] = useState<string>('');
+  const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.Checking);
 
   useEffect(() => {
     renderer.on<string>(Channel.VersionReceived, (version) => setVersion(version));
+    renderer.on<UpdateStatus>(Channel.UpdateStatusChanged, (status) => setStatus(status));
   }, []);
 
   const onUpdateClicked = () => {
@@ -45,18 +48,20 @@ const StatusBar: React.FC = () => {
       default:
         return null;
     }
-  }, []);
+  }, [status]);
 
   return (
-    <Box className={classes.root}>
-      <Center>
-        <Text size="xs" mr={5}>
-          <b>REV Clone Pad v{version}</b>
-        </Text>
-        <Text size="xs">{UPDATE_STATUS_MESSAGES[status]}</Text>
-      </Center>
-      {statusAction}
-    </Box>
+    <>
+      <Box className={classes.root}>
+        <Center>
+          <Text size="xs" mr={5}>
+            <b>REV Clone Pad v{version}</b>
+          </Text>
+          <Text size="xs">{UPDATE_STATUS_MESSAGES[status]}</Text>
+        </Center>
+        {statusAction}
+      </Box>
+    </>
   );
 };
 
