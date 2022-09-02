@@ -10,7 +10,7 @@ const useStyles = createStyles(() => ({
     backgroundColor: '#ffffdd',
     padding: '5px 10px',
     height: '30px',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
   },
   button: {
     padding: '5px',
@@ -24,15 +24,16 @@ const StatusBar: React.FC = () => {
   const { classes } = useStyles();
   const renderer = useIpcRenderer();
   const [version, setVersion] = useState<string>('');
-  const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.Checking);
+  const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.UpdatesAvailable);
 
   useEffect(() => {
-    renderer.on<string>(Channel.VersionReceived, (version) => setVersion(version));
+    renderer.on<string>(Channel.VersionUpdated, (version) => setVersion(version));
     renderer.on<UpdateStatus>(Channel.UpdateStatusChanged, (status) => setStatus(status));
   }, []);
 
   const onUpdateClicked = () => {
-    console.log('Cool');
+    // TODO: Confirmation modal
+    renderer.sendMessage(Channel.UpdateAccepted);
   };
 
   const statusAction = useMemo((): JSX.Element | null => {

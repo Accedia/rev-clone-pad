@@ -1,6 +1,8 @@
 export enum Channel {
-  UpdateStatusChanged = 'update_status_changed',
+  AppClosed = 'app_closed',
   DownloadPercentChanged = 'download_percent_changed',
   ForgettableCloned = 'forgettable_cloned',
-  VersionReceived = 'version_received',
+  UpdateAccepted = 'update_accepted',
+  UpdateStatusChanged = 'update_status_changed',
+  VersionUpdated = 'version_received',
 }

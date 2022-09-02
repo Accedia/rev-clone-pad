@@ -102,7 +102,7 @@ const CloneScreen: React.FC = () => {
           disabled={isDisabled('lineNote')}
           textArea
         />
-        <ActionBar />
+        <ActionBar setForgettable={setForgettable} />
       </Box>
     </Box>
   );

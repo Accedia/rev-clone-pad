@@ -14,10 +14,12 @@ declare const LOADING_WEBPACK_ENTRY: string;
 declare const LOADING_PRELOAD_WEBPACK_ENTRY: string;
 
 class WindowManager {
+  private autoUpdater: AutoUpdater2;
   loadingWindow: BrowserWindow | null;
   mainWindow: BrowserWindow | null;
 
   constructor() {
+    this.autoUpdater = new AutoUpdater2();
     this.loadingWindow = null;
     this.mainWindow = null;
   }
@@ -46,11 +48,29 @@ class WindowManager {
     await this.mainWindow.loadURL(MAIN_WEBPACK_ENTRY);
 
     this.mainWindow.once('ready-to-show', async () => {
-      this.mainWindow.webContents.send(Channel.VersionReceived, app.getVersion());
+      this.mainWindow.webContents.send(Channel.VersionUpdated, app.getVersion());
       this.showAndFocus(this.mainWindow);
+      
+      await this.autoUpdater.checkForUpdates(this.mainWindow);
+    });
+  }
 
-      const autoUpdater = new AutoUpdater2(this.mainWindow);
-      await autoUpdater.checkForUpdates();
+  public async showUpdateWindow(): Promise<void> {
+    if (this.mainWindow) {
+      this.mainWindow.close();
+    }
+
+    // TODO: Change naming and props
+    const screenConfig = withPreload(LOADING_SCREEN_CONFIG, LOADING_PRELOAD_WEBPACK_ENTRY);
+    this.loadingWindow = new BrowserWindow(screenConfig);
+    await this.loadingWindow.loadURL(LOADING_WEBPACK_ENTRY);
+
+    this.loadingWindow.once('ready-to-show', async () => {
+      this.showAndFocus(this.loadingWindow);
+      
+      if (app.isPackaged) {
+        this.autoUpdater.downloadAndInstallUpdates(this.loadingWindow);
+      }
     });
   }
 

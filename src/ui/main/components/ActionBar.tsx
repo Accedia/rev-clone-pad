@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { IconHelp } from '@tabler/icons';
 import { Button, createStyles, Group, Modal } from '@mantine/core';
+import useIpcRenderer from '../../shared/useIpcRenderer';
+import { Channel } from '../../../shared/enums';
+import { Forgettable } from '../../../shared/models';
+
+interface ActionBarProps {
+  setForgettable: Dispatch<SetStateAction<Forgettable>>;
+}
 
 const useStyles = createStyles(() => ({
   icon: {
@@ -8,8 +15,9 @@ const useStyles = createStyles(() => ({
   },
 }));
 
-const ActionBar: React.FC = () => {
+const ActionBar: React.FC<ActionBarProps> = ({ setForgettable }) => {
   const { classes } = useStyles();
+  const renderer = useIpcRenderer();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   const onModalOpen = (): void => {
@@ -19,6 +27,14 @@ const ActionBar: React.FC = () => {
   const onModalClose = (): void => {
     setModalOpen(false);
   };
+
+  const onForgettableClear = (): void => {
+    setForgettable(null);
+  }
+
+  const onApplicationClosed = (): void => {
+    renderer.sendMessage(Channel.AppClosed);
+  }
 
   return (
     <>
@@ -33,9 +49,14 @@ const ActionBar: React.FC = () => {
         >
           HELP
         </Button>
-        <Button size="xs" onClick={() => console.log('Hello')}>
-          DONE
-        </Button>
+        <Group spacing="xs">
+          <Button size="xs" variant='outline' onClick={onForgettableClear}>
+            CLEAR
+          </Button>
+          <Button size="xs" onClick={onApplicationClosed}>
+            CLOSE
+          </Button>
+        </Group>
       </Group>
       <Modal opened={modalOpen} onClose={onModalClose} withCloseButton={false} centered>
         Im the modal fuck you

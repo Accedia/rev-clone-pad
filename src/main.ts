@@ -1,4 +1,5 @@
-import { app } from 'electron';
+import { app, ipcMain } from 'electron';
+import { Channel } from './shared/enums';
 import WindowManager from './utils/window-manager';
 
 if (require('electron-squirrel-startup')) {
@@ -18,6 +19,8 @@ class Main {
   }
 
   private registerListeners(): void {
+    ipcMain.on(Channel.AppClosed, () => app.quit());
+    ipcMain.on(Channel.UpdateAccepted, () => this.windowManager.showUpdateWindow());
     app.on('window-all-closed', () => {
       if (process.platform !== 'darwin') {
         app.quit();
