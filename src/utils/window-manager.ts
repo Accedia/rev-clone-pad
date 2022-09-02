@@ -1,6 +1,11 @@
 import { app, BrowserWindow } from 'electron';
 import AutoUpdater from './auto-updater';
-import { LOADING_SCREEN_CONFIG, MAIN_SCREEN_CONFIG, withPreload } from '../shared/config/screen-config';
+import { Channel } from '../shared/enums';
+import {
+  LOADING_SCREEN_CONFIG,
+  MAIN_SCREEN_CONFIG,
+  withPreload,
+} from '../shared/config/screen-config';
 
 declare const MAIN_WEBPACK_ENTRY: string;
 declare const MAIN_PRELOAD_WEBPACK_ENTRY: string;
@@ -40,6 +45,7 @@ class WindowManager {
     await this.mainWindow.loadURL(MAIN_WEBPACK_ENTRY);
 
     this.mainWindow.once('ready-to-show', async () => {
+      this.mainWindow.webContents.send(Channel.VersionReceived, app.getVersion());
       this.showAndFocus(this.mainWindow);
     });
   }

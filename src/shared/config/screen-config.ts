@@ -6,7 +6,7 @@ const BASE_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   icon: path.resolve(__dirname, '../../assets/icon-white-bg.ico'),
   autoHideMenuBar: true,
   show: false,
-  resizable: false,
+  resizable: true,
   webPreferences: {
     nodeIntegration: true,
   },

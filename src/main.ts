@@ -7,10 +7,10 @@ if (require('electron-squirrel-startup')) {
 
 class Main {
   windowManager: WindowManager;
-
+  
   constructor() {
-    this.windowManager = new WindowManager();
     app.on('ready', () => {
+      this.windowManager = new WindowManager();
       this.windowManager.showLoadingWindow();
     });
     this.registerListeners();
