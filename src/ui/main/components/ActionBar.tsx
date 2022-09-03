@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { IconHelp } from '@tabler/icons';
 import { Button, createStyles, Group, Modal } from '@mantine/core';
-import useIpcRenderer from '../../shared/useIpcRenderer';
+import useIpcRenderer from '../../useIpcRenderer';
 import { Channel } from '../../../shared/enums';
 import { Forgettable } from '../../../shared/models';
 
