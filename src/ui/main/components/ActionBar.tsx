@@ -30,11 +30,11 @@ const ActionBar: React.FC<ActionBarProps> = ({ setForgettable }) => {
 
   const onForgettableClear = (): void => {
     setForgettable(null);
-  }
+  };
 
   const onApplicationClosed = (): void => {
     renderer.sendMessage(Channel.AppClosed);
-  }
+  };
 
   return (
     <>
@@ -50,10 +50,10 @@ const ActionBar: React.FC<ActionBarProps> = ({ setForgettable }) => {
           HELP
         </Button>
         <Group spacing="xs">
-          <Button size="xs" variant='outline' onClick={onForgettableClear}>
+          <Button size="xs" variant="outline" onClick={onForgettableClear}>
             CLEAR
           </Button>
-          <Button size="xs" onClick={onApplicationClosed}>
+          <Button size="xs" color="red" onClick={onApplicationClosed}>
             CLOSE
           </Button>
         </Group>
