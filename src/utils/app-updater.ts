@@ -10,7 +10,8 @@ import { sleep } from './sleep';
 import { createDir, getFileExtension } from './fs-helper';
 import { Channel, UpdateStatus } from '../shared/enums';
 
-type LatestReleaseResponse = Endpoints['GET /repos/{owner}/{repo}/releases/latest']['response']['data'];
+type LatestReleaseResponse =
+  Endpoints['GET /repos/{owner}/{repo}/releases/latest']['response']['data'];
 
 type Asset = {
   url: string;
@@ -24,31 +25,37 @@ type LatestRelease = {
   assets: Asset[];
 };
 
-class AutoUpdater {
-  public tempDirPath: string;
-  public currentVersion: string;
-  public latestVersion: string;
+class AppUpdater {
+  private tempDirPath: string;
+  private latestAssets: Asset[];
+  private activeWindow: BrowserWindow;
 
-  constructor(private window: BrowserWindow) {}
-
-  public async checkForUpdates(): Promise<void> {
-    this.sendUpdateStatus(UpdateStatus.Checking);
+  public async checkForUpdates(window: BrowserWindow): Promise<void> {
+    this.activeWindow = window;
     const { version, assets } = await this.getLatestRelease();
     const shouldUpdate = this.isUpdateAvailable(app.getVersion(), version);
-    if (!shouldUpdate) {
-      return;
-    }
 
+    if (shouldUpdate) {
+      this.latestAssets = assets;
+      this.sendUpdateStatus(UpdateStatus.UpdatesAvailable);
+    } else {
+      this.latestAssets = [];
+      this.sendUpdateStatus(UpdateStatus.NoUpdates);
+    }
+  }
+
+  public async downloadAndInstallUpdates(window: BrowserWindow): Promise<void> {
+    this.activeWindow = window;
     this.tempDirPath = path.join(app.getPath('temp'), 'NTWRK');
     createDir(this.tempDirPath);
 
     this.sendUpdateStatus(UpdateStatus.Downloading);
-    await this.downloadAssets(assets);
-    
+    await this.downloadAssets(this.latestAssets);
+
     try {
       await this.installUpdates();
     } catch (e) {
-      log.error("Error applying the updates", e);
+      log.error('Error applying the updates', e);
       this.handleError(e);
       app.quit();
     }
@@ -90,13 +97,13 @@ class AutoUpdater {
       autoUpdater.on('error', (error: Error) => reject(error));
       autoUpdater.on('update-available', () => {
         this.sendUpdateStatus(UpdateStatus.Installing);
-      })
+      });
       autoUpdater.on('update-downloaded', async () => {
         this.sendUpdateStatus(UpdateStatus.Complete);
         await sleep(2000);
         autoUpdater.quitAndInstall();
       });
-      
+
       autoUpdater.setFeedURL({ url: this.tempDirPath });
       autoUpdater.checkForUpdates();
     });
@@ -107,7 +114,7 @@ class AutoUpdater {
     const filePath = `${this.tempDirPath}/${name}`;
     const writer = fs.createWriteStream(filePath, { flags: 'w+' });
     const { data, headers } = await axios.get(url, { responseType: 'stream' });
-    
+
     if (showProgress) {
       let loaded = 0;
       const total = parseFloat(headers['content-length']);
@@ -116,7 +123,7 @@ class AutoUpdater {
         loaded += Buffer.byteLength(chunk);
         const percentCompleted = Math.floor((loaded / total) * 100);
         this.sendProgressPercent(percentCompleted);
-      })
+      });
     }
 
     data.pipe(writer);
@@ -125,8 +132,8 @@ class AutoUpdater {
 
   private handleError(error: Error): void {
     this.sendUpdateStatus(UpdateStatus.Error);
-    this.window.show();
-    
+    this.activeWindow.show();
+
     const dialogOpts: MessageBoxOptions = {
       type: 'error',
       buttons: ['Close'],
@@ -140,7 +147,9 @@ class AutoUpdater {
 
   private isUpdateAvailable(currentVersion: string, latestVersion: string): boolean {
     const [appMajor, appMinor, appPatch] = currentVersion.split('.').map((v) => parseInt(v));
-    const [latestMajor, latestMinor, latestPatch] = latestVersion.split('.').map((v) => parseInt(v));
+    const [latestMajor, latestMinor, latestPatch] = latestVersion
+      .split('.')
+      .map((v) => parseInt(v));
 
     if (appMajor < latestMajor) return true;
     if (appMajor === latestMajor && appMinor < latestMinor) return true;
@@ -149,12 +158,12 @@ class AutoUpdater {
   }
 
   private sendUpdateStatus(status: UpdateStatus): void {
-    this.window.webContents.send(Channel.UpdateStatusChanged, status);
+    this.activeWindow.webContents.send(Channel.UpdateStatusChanged, status);
   }
 
   private sendProgressPercent(value: number): void {
-    this.window.webContents.send(Channel.DownloadPercentChanged, value);
+    this.activeWindow.webContents.send(Channel.DownloadPercentChanged, value);
   }
 }
 
-export default AutoUpdater;
+export default AppUpdater;
