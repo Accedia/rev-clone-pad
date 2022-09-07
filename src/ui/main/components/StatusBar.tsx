@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { CSSProperties, useEffect, useMemo, useState } from 'react';
 import { Box, Button, Center, createStyles, Group, Loader, Modal, Text } from '@mantine/core';
 import useIpcRenderer from '../../useIpcRenderer';
 import { Channel, UpdateStatus, UPDATE_STATUS_MESSAGES } from '../../../shared/enums';
+
+type FontWeight = CSSProperties['fontWeight'];
 
 const useStyles = createStyles(() => ({
   root: {
@@ -50,6 +52,10 @@ const StatusBar: React.FC = () => {
     renderer.sendMessage(Channel.UpdateAccepted);
   };
 
+  const messageWeight = useMemo((): FontWeight => {
+    return status === UpdateStatus.NoUpdates ? 'normal' : 'bold';
+  }, [status]);
+
   const statusAction = useMemo((): JSX.Element | null => {
     switch (status) {
       case UpdateStatus.Checking:
@@ -69,10 +75,12 @@ const StatusBar: React.FC = () => {
     <>
       <Box className={classes.root}>
         <Center>
-          <Text size="xs" mr={5}>
-            <b>REV Clone Pad v{version}</b>
+          <Text size="xs" weight={messageWeight} mr={5}>
+            REV Clone Pad v{version}
           </Text>
-          <Text size="xs">{UPDATE_STATUS_MESSAGES[status]}</Text>
+          <Text size="xs" weight={messageWeight}>
+            {UPDATE_STATUS_MESSAGES[status]}
+          </Text>
         </Center>
         {statusAction}
       </Box>

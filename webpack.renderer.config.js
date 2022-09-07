@@ -6,6 +6,17 @@ rules.push({
   use: [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'sass-loader' }],
 });
 
+rules.push({
+  test: /\.(png|jpg|svg|jpeg|gif)$/i,
+  use: [{
+    loader: 'file-loader',
+    options: {
+      name: 'assets/[name].[ext]',
+      publicPath: '../.'
+    }
+  }],
+});
+
 module.exports = {
   module: {
     rules,

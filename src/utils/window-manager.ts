@@ -1,5 +1,5 @@
 import { app, BrowserWindow } from 'electron';
-import AutoUpdater2 from './auto-updater-2';
+import AppUpdater from './app-updater';
 import {
   UPDATE_SCREEN_CONFIG,
   MAIN_SCREEN_CONFIG,
@@ -13,33 +13,15 @@ declare const UPDATE_WEBPACK_ENTRY: string;
 declare const UPDATE_PRELOAD_WEBPACK_ENTRY: string;
 
 class WindowManager {
-  private autoUpdater: AutoUpdater2;
+  private appUpdater: AppUpdater;
   updateWindow: BrowserWindow | null;
   mainWindow: BrowserWindow | null;
 
   constructor() {
-    this.autoUpdater = new AutoUpdater2();
+    this.appUpdater = new AppUpdater();
     this.updateWindow = null;
     this.mainWindow = null;
   }
-
-  // public async showLoadingWindow(): Promise<void> {
-  //   const screenConfig = withPreload(UPDATE_SCREEN_CONFIG, UPDATE_PRELOAD_WEBPACK_ENTRY);
-  //   this.updateWindow = new BrowserWindow(screenConfig);
-  //   await this.updateWindow.loadURL(UPDATE_WEBPACK_ENTRY);
-
-  //   this.updateWindow.once('ready-to-show', async () => {
-  //     this.showAndFocus(this.updateWindow);
-
-  //     if (app.isPackaged) {
-  //       const autoUpdater = new AutoUpdater(this.updateWindow);
-  //       await autoUpdater.checkForUpdates();
-  //     }
-
-  //     this.updateWindow.close();
-  //     this.showMainWindow();
-  //   });
-  // }
 
   public async showMainWindow(): Promise<void> {
     const screenConfig = withPreload(MAIN_SCREEN_CONFIG, MAIN_PRELOAD_WEBPACK_ENTRY);
@@ -50,7 +32,7 @@ class WindowManager {
       this.mainWindow.webContents.send(Channel.VersionUpdated, app.getVersion());
       this.showAndFocus(this.mainWindow);
       
-      await this.autoUpdater.checkForUpdates(this.mainWindow);
+      await this.appUpdater.checkForUpdates(this.mainWindow);
     });
   }
 
@@ -67,7 +49,7 @@ class WindowManager {
       this.showAndFocus(this.updateWindow);
       
       if (app.isPackaged) {
-        this.autoUpdater.downloadAndInstallUpdates(this.updateWindow);
+        this.appUpdater.downloadAndInstallUpdates(this.updateWindow);
       }
     });
   }
