@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Button, Center, createStyles, Group, Loader, Modal, Text } from '@mantine/core';
-import useIpcRenderer from '../../shared/useIpcRenderer';
+import useIpcRenderer from '../../useIpcRenderer';
 import { Channel, UpdateStatus, UPDATE_STATUS_MESSAGES } from '../../../shared/enums';
 
 const useStyles = createStyles(() => ({

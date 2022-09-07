@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, createStyles, SimpleGrid, Text } from '@mantine/core';
 import { useDisabledByOperation } from '../hooks';
 import { ActionBar, CopyField, ForgettableInfoBar, StatusBar } from '../components';
-import useIpcRenderer from '../../shared/useIpcRenderer';
+import useIpcRenderer from '../../useIpcRenderer';
 import { Forgettable } from '../../../shared/models';
 import { Channel, LaborType, PartType } from '../../../shared/enums';
 
