@@ -1,14 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { Channel } from './shared/enums';
 
-export type IpcRenderer = {
-  sendMessage<T>(channel: Channel, ...args: T[]): void;
-  on<T>(
-    channel: Channel,
-    func: (...args: T[]) => void
-  ): (() => void) | undefined;
-  once<T>(channel: Channel, func: (...args: T[]) => void): void;
-};
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

@@ -1,7 +1,8 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
+import { Button, createStyles, Group } from '@mantine/core';
 import { IconHelp } from '@tabler/icons';
-import { Button, createStyles, Group, Modal } from '@mantine/core';
-import useIpcRenderer from '../../shared/useIpcRenderer';
+import HelpModal from './HelpModal';
+import useIpcRenderer from '../../useIpcRenderer';
 import { Channel } from '../../../shared/enums';
 import { Forgettable } from '../../../shared/models';
 
@@ -30,11 +31,11 @@ const ActionBar: React.FC<ActionBarProps> = ({ setForgettable }) => {
 
   const onForgettableClear = (): void => {
     setForgettable(null);
-  }
+  };
 
   const onApplicationClosed = (): void => {
     renderer.sendMessage(Channel.AppClosed);
-  }
+  };
 
   return (
     <>
@@ -50,7 +51,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ setForgettable }) => {
           HELP
         </Button>
         <Group spacing="xs">
-          <Button size="xs" variant='outline' onClick={onForgettableClear}>
+          <Button size="xs" variant="outline" onClick={onForgettableClear}>
             CLEAR
           </Button>
           <Button size="xs" onClick={onApplicationClosed}>
@@ -58,9 +59,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ setForgettable }) => {
           </Button>
         </Group>
       </Group>
-      <Modal opened={modalOpen} onClose={onModalClose} withCloseButton={false} centered>
-        I will be the help modal when I get implemented.
-      </Modal>
+      <HelpModal opened={modalOpen} onClose={onModalClose} />
     </>
   );
 };

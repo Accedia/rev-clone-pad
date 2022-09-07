@@ -2,7 +2,7 @@
   "name": "rev-clone-pad",
   "appname": "REV Clone Pad",
   "productName": "REV Clone Pad",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "My Electron application description",
   "main": ".webpack/main",
   "scripts": {
@@ -35,6 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^5.33.1",
     "@typescript-eslint/parser": "^5.33.1",
     "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.1",
     "electron": "20.0.3",
     "eslint": "^8.22.0",

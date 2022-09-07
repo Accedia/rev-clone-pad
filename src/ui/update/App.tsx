@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createStyles, Box, MantineProvider, Text } from '@mantine/core';
 import Indicator from './components/Indicator';
-import useIpcRenderer from '../shared/useIpcRenderer';
+import useIpcRenderer from '../useIpcRenderer';
 import { Channel, UpdateStatus, UPDATE_STATUS_MESSAGES } from '../../shared/enums';
 
 const useStyles = createStyles(() => ({
