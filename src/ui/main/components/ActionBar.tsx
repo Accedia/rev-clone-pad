@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
+import { Button, createStyles, Group } from '@mantine/core';
 import { IconHelp } from '@tabler/icons';
-import { Button, createStyles, Group, Modal } from '@mantine/core';
+import HelpModal from './HelpModal';
 import useIpcRenderer from '../../useIpcRenderer';
 import { Channel } from '../../../shared/enums';
 import { Forgettable } from '../../../shared/models';
@@ -53,14 +54,12 @@ const ActionBar: React.FC<ActionBarProps> = ({ setForgettable }) => {
           <Button size="xs" variant="outline" onClick={onForgettableClear}>
             CLEAR
           </Button>
-          <Button size="xs" color="red" onClick={onApplicationClosed}>
+          <Button size="xs" onClick={onApplicationClosed}>
             CLOSE
           </Button>
         </Group>
       </Group>
-      <Modal opened={modalOpen} onClose={onModalClose} withCloseButton={false} centered>
-        I will be the help modal when I get implemented.
-      </Modal>
+      <HelpModal opened={modalOpen} onClose={onModalClose} />
     </>
   );
 };
