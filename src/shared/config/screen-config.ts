@@ -15,14 +15,14 @@ const BASE_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
 
 export const UPDATE_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   ...BASE_SCREEN_CONFIG,
-  height: 71,
+  height: 75,
   width: 250,
   titleBarStyle: 'hidden',
 };
 
 export const MAIN_SCREEN_CONFIG: BrowserWindowConstructorOptions = {
   ...BASE_SCREEN_CONFIG,
-  height: 599,
+  height: 600,
   width: 500,
 };
 
