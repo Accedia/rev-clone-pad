@@ -27,7 +27,7 @@ const StatusBar: React.FC = () => {
   const { classes } = useStyles();
   const renderer = useIpcRenderer();
   const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.UpdatesAvailable);
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [modalOpen, setModalOpen] = useState<boolean>(true);
   const [version, setVersion] = useState<string>('');
 
   useEffect(() => {
