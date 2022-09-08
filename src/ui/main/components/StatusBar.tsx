@@ -1,7 +1,8 @@
 import React, { CSSProperties, useEffect, useMemo, useState } from 'react';
-import { Box, Button, Center, createStyles, Group, Loader, Modal, Text } from '@mantine/core';
+import { Box, Button, Center, createStyles, Loader, Text } from '@mantine/core';
 import useIpcRenderer from '../../useIpcRenderer';
 import { Channel, UpdateStatus, UPDATE_STATUS_MESSAGES } from '../../../shared/enums';
+import ConfirmationModal from './ConfirmationModal';
 
 type FontWeight = CSSProperties['fontWeight'];
 
@@ -20,20 +21,14 @@ const useStyles = createStyles(() => ({
     fontSize: '11px',
     textTransform: 'uppercase',
   },
-  modal: {
-    padding: '8px !important',
-    display: 'flex',
-    flexDirection: 'column',
-    maxWidth: '231px',
-  },
 }));
 
 const StatusBar: React.FC = () => {
   const { classes } = useStyles();
   const renderer = useIpcRenderer();
-  const [version, setVersion] = useState<string>('');
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [status, setStatus] = useState<UpdateStatus>(UpdateStatus.UpdatesAvailable);
+  const [modalOpen, setModalOpen] = useState<boolean>(true);
+  const [version, setVersion] = useState<string>('');
 
   useEffect(() => {
     renderer.on<string>(Channel.VersionUpdated, (version) => setVersion(version));
@@ -46,10 +41,6 @@ const StatusBar: React.FC = () => {
 
   const onUpdateClicked = (): void => {
     setModalOpen(true);
-  };
-
-  const onUpdateAccepted = (): void => {
-    renderer.sendMessage(Channel.UpdateAccepted);
   };
 
   const messageWeight = useMemo((): FontWeight => {
@@ -84,29 +75,7 @@ const StatusBar: React.FC = () => {
         </Center>
         {statusAction}
       </Box>
-      <Modal
-        classNames={{ modal: classes.modal }}
-        opened={modalOpen}
-        onClose={onModalClose}
-        withCloseButton={false}
-        size="xs"
-        centered
-      >
-        <Box>
-          <Text weight="bold" size="sm" mb={20}>
-            If you have cloned a forgettable, you need to do it again after the update is complete,
-            as all clone data will be lost.
-          </Text>
-          <Group position="apart">
-            <Button size="xs" color="red" onClick={onModalClose}>
-              CANCEL
-            </Button>
-            <Button size="xs" onClick={onUpdateAccepted}>
-              CONTINUE
-            </Button>
-          </Group>
-        </Box>
-      </Modal>
+      <ConfirmationModal opened={modalOpen} onClose={onModalClose} />
     </>
   );
 };
