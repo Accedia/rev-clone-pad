@@ -18,7 +18,8 @@ const useStyles = createStyles((theme) => ({
     marginBottom: theme.spacing.sm,
   },
   image: {
-    marginTop: 6,
+    marginTop: 8,
+    marginBottom: 4,
   },
 }));
 
@@ -37,7 +38,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ opened, onClose }) => {
         In order to populate the clipboard fields, you first need to clone a forgettable inside REV
         Clone Pad.
       </Text>
-      <List size="sm" mb="xs" spacing={6}>
+      <List size={13} spacing={4} mb="xs">
         <List.Item>
           In Portal, navigate to <b>Estimatics → Select Estimate</b>
         </List.Item>
