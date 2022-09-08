@@ -37,6 +37,11 @@ const useStyles = createStyles((theme) => ({
   icon: {
     marginRight: 6,
   },
+  cancelBtn: {
+    '&:hover': {
+      backgroundColor: 'white',
+    },
+  },
 }));
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ opened, onClose }) => {
@@ -67,8 +72,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ opened, onClose }
         <Group className={classes.actions} spacing="xs" position="right">
           <Button
             size="xs"
-            color="red"
+            variant="outline"
             uppercase
+            className={classes.cancelBtn}
             classNames={{ leftIcon: classes.icon }}
             leftIcon={<IconX size={15} />}
             onClick={onClose}
@@ -77,7 +83,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ opened, onClose }
           </Button>
           <Button
             size="xs"
-            color="green"
             uppercase
             classNames={{ leftIcon: classes.icon }}
             leftIcon={<IconCheck size={15} />}
