@@ -15,7 +15,7 @@ export const UPDATE_STATUS_MESSAGES: Record<UpdateStatus, string> = {
   [UpdateStatus.Downloading]: 'Downloading latest update...',
   [UpdateStatus.Installing]: 'Installing latest update...',
   [UpdateStatus.Complete]: 'Success! App will now restart...',
-  [UpdateStatus.Error]: 'Oops! Something went wrong...'
+  [UpdateStatus.Error]: 'Oops! An error occured while updating. Please contact FIT!'
 }
 
 export const UPDATE_STATUS_COLOR: Record<UpdateStatus, string> = {
