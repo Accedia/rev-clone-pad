@@ -5,4 +5,6 @@ export interface ResponseData {
   orderNumber: string;
   orderCustomerName: string;
   automationId: string;
+  automationIdToFinishRPA?: string;
+  dataSource?: string;
 }

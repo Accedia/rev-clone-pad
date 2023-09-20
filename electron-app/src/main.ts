@@ -12,6 +12,7 @@ import { getCustomProtocolUrl } from './utils/get_custom_protocol_url';
 import { isAppDev, isDev } from './utils/is_dev';
 import log from 'electron-log';
 import { FirebaseService, SessionStatus } from './utils/firebase';
+import mitchell_importer from './utils/mitchell_importer';
 
 const INPUT_SPEED_STORAGE_KEY = 'inputSpeed';
 
@@ -128,19 +129,28 @@ class Main {
 
   public fetchDataAndStartImporter = async (url: string) => {
     try {
+      log.info('BLAAAAAAAAAAAAAAAAAAAAH');
       log.info(`URL To fetch data received: ${url}`);
 
       /** Prepare UI for data-fetching */
       this.updateMainWindowStateToFetching();
+      log.info('AAAAAAAAAAAAAAAAAAa');
 
       /** Fetch the data. Replace localhost with [::1] because otherwise it does not work */
       url = url.replace('localhost', '[::1]');
       const { data } = await axios.get<ResponseData>(url);
 
+      log.info('sessionId to feeeeeeeeeetch', data);
+
       await FirebaseService.setSessionStatus(data.automationId, SessionStatus.APP_STARTED);
 
-      /** Do the population  */
-      await importer.startPopulation(data, this.windowManager.mainWindow);
+      /** Do the population (CCC || Mitchell) */
+      if (data.dataSource === 'Mitchell') {
+        // await importer.startMitchellPopulation(data, this.windowManager.mainWindow);
+        await mitchell_importer.showMsg();
+      } else if (data.dataSource === 'CCC') {
+        await importer.startPopulation(data, this.windowManager.mainWindow);
+      }
     } catch (e) {
       log.error('Error retrieving the forgettables', JSON.stringify(e));
       this.windowManager.mainWindow.webContents.send(MESSAGE.ERROR, `Error: ${e.message}`);

@@ -28,6 +28,8 @@ import { VERIFICATION_PROGRESS_BREAKPOINT } from '../constants/verification_prog
 import { isDev } from './is_dev';
 import ProgressUpdater from './progress_updater';
 import { getPartNumTabIndex, getPartTypeOptionIndex, getPartTypeTabIndex } from './part_type_utils';
+import axios from 'axios';
+import Mitchell_Importer from './mitchell_importer';
 
 interface ImageSearchResult {
   coordinates: Region | null;
@@ -39,7 +41,7 @@ interface FocusCCCTableOptions {
   yOffset?: number;
 }
 
-class Importer {
+export class Importer {
   private _isRunning = false;
   private _lastLineNumber: number;
   private progressUpdater = new ProgressUpdater();
@@ -86,7 +88,8 @@ class Importer {
     this._isRunning = false;
   };
 
-  public complete = () => {
+  public complete = async (automationIdToFinishRPA: string) => {
+    this.finishImport(automationIdToFinishRPA);
     FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
     FirebaseService.unsubscribe();
     FirebaseService.useCurrentSession.remove();
@@ -99,7 +102,7 @@ class Importer {
   };
 
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
-    const { forgettables, automationId } = data;
+    const { forgettables, automationId, automationIdToFinishRPA } = data;
 
     this.startSession(automationId);
     this.start();
@@ -144,7 +147,7 @@ class Importer {
           }
 
           await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
-          this.complete();
+          this.complete(automationIdToFinishRPA);
         }
       }
 
@@ -200,6 +203,14 @@ class Importer {
     } else {
       result.errors.forEach((error) => log.warn('Error finding the Line Operation button', error));
     }
+  };
+
+  private finishImport = async (automationIdToFinishRPA: string) => {
+    //TODO: export url to be able to be accessable for dev and prod
+    let urlToFinishRPA = `http://localhost:4002/api/finishAutomation/${automationIdToFinishRPA}`;
+    urlToFinishRPA = urlToFinishRPA.replace('localhost', '[::1]');
+    log.info('automation url', urlToFinishRPA);
+    await axios.post(urlToFinishRPA);
   };
 
   private focusCccTable = async (
@@ -514,6 +525,76 @@ class Importer {
       orderCustomerName,
       orderNumber,
     });
+  };
+
+  /////////////////////////////////////////////////
+  ///MITCHEL IMPORTER FUNCTIONS
+  ////////////////////////////////////////////////
+
+  public startMitchellPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
+    const { forgettables, automationId, automationIdToFinishRPA } = data;
+
+    this.startSession(automationId);
+    this.start();
+    const inputSpeed = getInputSpeed();
+    const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
+    this.setConfig(inputSpeedSeconds);
+
+    try {
+      /** Sends a message to stop the loader for fetching data */
+      electronWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
+
+      if (this.isRunning) {
+        /** Start the CCC Waiting loader */
+        electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
+        await FirebaseService.useCurrentSession.setStatus(SessionStatus.SEARCHING_CCC);
+
+        /** Continuously check for "Line Operations" button */
+        const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
+
+        if (lineOperationCoordinates) {
+          /** Check if the CCC window's title corresponds to the selected RO */
+          const shouldPopulate = await this.getShouldPopulate(lineOperationCoordinates, data, electronWindow);
+
+          /** Stop the CCC Waiting loader */
+          electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
+
+          if (shouldPopulate) {
+            /** Start population */
+            await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
+            this.progressUpdater.setPercentage(0);
+            mainWindowManager.overlayWindow.show();
+            await snooze(1000);
+            await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
+            await snooze(100);
+            await this.saveLastLineNumber();
+            await this.goToTheFirstCell();
+            await this.populateTableData(forgettables, lineOperationCoordinates);
+            await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
+            await this.verifyPopulation(forgettables);
+          } else {
+            electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
+          }
+
+          await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
+          this.complete(automationIdToFinishRPA);
+        }
+      }
+
+      mainWindowManager.overlayWindow.hide();
+      electronWindow.setAlwaysOnTop(false);
+    } catch (e) {
+      if (e instanceof ImporterStoppedException) {
+        mainWindowManager.overlayWindow.hide();
+      } else {
+        log.error('Error populating the data', e);
+        electronWindow.webContents.send(MESSAGE.ERROR, e.message);
+      }
+    }
+  };
+
+  public show = () => {
+    log.info('helooooooooooooooo');
   };
 }
 
