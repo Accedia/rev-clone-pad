@@ -29,9 +29,8 @@ import { isDev } from './is_dev';
 import ProgressUpdater from './progress_updater';
 import { getPartNumTabIndex, getPartTypeOptionIndex, getPartTypeTabIndex } from './part_type_utils';
 import axios from 'axios';
-import Mitchell_Importer from './mitchell_importer';
 
-interface ImageSearchResult {
+export interface ImageSearchResult {
   coordinates: Region | null;
   errors: string[];
 }
@@ -44,7 +43,7 @@ interface FocusCCCTableOptions {
 export class Importer {
   private _isRunning = false;
   private _lastLineNumber: number;
-  private progressUpdater = new ProgressUpdater();
+  public progressUpdater = new ProgressUpdater();
 
   get isRunning(): boolean {
     return this._isRunning;
@@ -87,6 +86,10 @@ export class Importer {
     FirebaseService.useCurrentSession.unset();
     this._isRunning = false;
   };
+
+  public saySomething = (): void => {
+    console.log('saying something from importer but calling this from mithcell importer')
+  }
 
   public complete = async (automationIdToFinishRPA: string) => {
     this.finishImport(automationIdToFinishRPA);
@@ -525,76 +528,6 @@ export class Importer {
       orderCustomerName,
       orderNumber,
     });
-  };
-
-  /////////////////////////////////////////////////
-  ///MITCHEL IMPORTER FUNCTIONS
-  ////////////////////////////////////////////////
-
-  public startMitchellPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
-    const { forgettables, automationId, automationIdToFinishRPA } = data;
-
-    this.startSession(automationId);
-    this.start();
-    const inputSpeed = getInputSpeed();
-    const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
-    this.setConfig(inputSpeedSeconds);
-
-    try {
-      /** Sends a message to stop the loader for fetching data */
-      electronWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
-
-      if (this.isRunning) {
-        /** Start the CCC Waiting loader */
-        electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
-        await FirebaseService.useCurrentSession.setStatus(SessionStatus.SEARCHING_CCC);
-
-        /** Continuously check for "Line Operations" button */
-        const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
-
-        if (lineOperationCoordinates) {
-          /** Check if the CCC window's title corresponds to the selected RO */
-          const shouldPopulate = await this.getShouldPopulate(lineOperationCoordinates, data, electronWindow);
-
-          /** Stop the CCC Waiting loader */
-          electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
-
-          if (shouldPopulate) {
-            /** Start population */
-            await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
-            this.progressUpdater.setPercentage(0);
-            mainWindowManager.overlayWindow.show();
-            await snooze(1000);
-            await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
-            await snooze(100);
-            await this.saveLastLineNumber();
-            await this.goToTheFirstCell();
-            await this.populateTableData(forgettables, lineOperationCoordinates);
-            await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
-            await this.verifyPopulation(forgettables);
-          } else {
-            electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
-          }
-
-          await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
-          this.complete(automationIdToFinishRPA);
-        }
-      }
-
-      mainWindowManager.overlayWindow.hide();
-      electronWindow.setAlwaysOnTop(false);
-    } catch (e) {
-      if (e instanceof ImporterStoppedException) {
-        mainWindowManager.overlayWindow.hide();
-      } else {
-        log.error('Error populating the data', e);
-        electronWindow.webContents.send(MESSAGE.ERROR, e.message);
-      }
-    }
-  };
-
-  public show = () => {
-    log.info('helooooooooooooooo');
   };
 }
 

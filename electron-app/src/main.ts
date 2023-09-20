@@ -147,7 +147,7 @@ class Main {
       /** Do the population (CCC || Mitchell) */
       if (data.dataSource === 'Mitchell') {
         // await importer.startMitchellPopulation(data, this.windowManager.mainWindow);
-        await mitchell_importer.showMsg();
+        await mitchell_importer.importMitchell()
       } else if (data.dataSource === 'CCC') {
         await importer.startPopulation(data, this.windowManager.mainWindow);
       }
