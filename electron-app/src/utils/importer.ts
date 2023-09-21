@@ -35,7 +35,7 @@ export interface ImageSearchResult {
   errors: string[];
 }
 
-interface FocusCCCTableOptions {
+export interface FocusTableOptions {
   returnToPosition?: boolean;
   yOffset?: number;
 }
@@ -59,7 +59,7 @@ export class Importer {
 
     // ! Left only for debug purposes
     // ? Uncomment if needed, do not deploy to prod
-    // screen.config.confidence = 0.84;
+    screen.config.confidence = 0.84;
     // screen.config.autoHighlight = true;
     // screen.config.highlightDurationMs = 3000;
     // screen.config.highlightOpacity = 0.8;
@@ -86,10 +86,6 @@ export class Importer {
     FirebaseService.useCurrentSession.unset();
     this._isRunning = false;
   };
-
-  public saySomething = (): void => {
-    console.log('saying something from importer but calling this from mithcell importer')
-  }
 
   public complete = async (automationIdToFinishRPA: string) => {
     this.finishImport(automationIdToFinishRPA);
@@ -130,24 +126,24 @@ export class Importer {
           const shouldPopulate = await this.getShouldPopulate(lineOperationCoordinates, data, electronWindow);
 
           /** Stop the CCC Waiting loader */
-          electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
+          // electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
 
-          if (shouldPopulate) {
-            /** Start population */
-            await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
-            this.progressUpdater.setPercentage(0);
-            mainWindowManager.overlayWindow.show();
-            await snooze(1000);
-            await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
-            await snooze(100);
-            await this.saveLastLineNumber();
-            await this.goToTheFirstCell();
-            await this.populateTableData(forgettables, lineOperationCoordinates);
-            await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
-            await this.verifyPopulation(forgettables);
-          } else {
-            electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
-          }
+          // if (shouldPopulate) {
+          //   /** Start population */
+          //   await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
+          //   this.progressUpdater.setPercentage(0);
+          //   mainWindowManager.overlayWindow.show();
+          //   await snooze(1000);
+          //   await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
+          //   await snooze(100);
+          //   await this.saveLastLineNumber();
+          //   await this.goToTheFirstCell();
+          //   await this.populateTableData(forgettables, lineOperationCoordinates);
+          //   await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
+          //   await this.verifyPopulation(forgettables);
+          // } else {
+          //   electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
+          // }
 
           await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
           this.complete(automationIdToFinishRPA);
@@ -218,7 +214,7 @@ export class Importer {
 
   private focusCccTable = async (
     lineOperationCoordinates: Point,
-    { returnToPosition = false, yOffset = 200 }: FocusCCCTableOptions
+    { returnToPosition = false, yOffset = 200 }: FocusTableOptions
   ) => {
     const prevPosition = await mouse.getPosition();
     await this.moveToPosition(lineOperationCoordinates.x, lineOperationCoordinates.y + yOffset);
@@ -229,7 +225,7 @@ export class Importer {
     }
   };
 
-  private moveToPosition = async (x: number, y: number) => {
+  public moveToPosition = async (x: number, y: number) => {
     const coordinates = new Point(x, y);
     await mouse.setPosition(coordinates);
   };
@@ -398,8 +394,11 @@ export class Importer {
     orderData: Omit<ResponseData, 'forgettables' | 'automationId'>
   ): Promise<boolean> => {
     const activeWindow = await getActiveWindow();
+    console.log('activeWindow', activeWindow);
 
     const title = await activeWindow.title;
+    console.log('title', title);
+
     const includesOrderNumber = title.includes(orderData.orderNumber);
     const includesCustomerName = title.includes(orderData.orderCustomerName);
 
@@ -518,7 +517,7 @@ export class Importer {
     data: ResponseData,
     electronWindow: BrowserWindow
   ): Promise<boolean> => {
-    if (isDev()) return true;
+    // if (isDev()) return true;
 
     const { orderCustomerName, orderNumber } = data;
 

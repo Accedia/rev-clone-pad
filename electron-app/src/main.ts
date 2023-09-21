@@ -129,18 +129,14 @@ class Main {
 
   public fetchDataAndStartImporter = async (url: string) => {
     try {
-      log.info('BLAAAAAAAAAAAAAAAAAAAAH');
       log.info(`URL To fetch data received: ${url}`);
 
       /** Prepare UI for data-fetching */
       this.updateMainWindowStateToFetching();
-      log.info('AAAAAAAAAAAAAAAAAAa');
 
       /** Fetch the data. Replace localhost with [::1] because otherwise it does not work */
       url = url.replace('localhost', '[::1]');
       const { data } = await axios.get<ResponseData>(url);
-
-      log.info('sessionId to feeeeeeeeeetch', data);
 
       await FirebaseService.setSessionStatus(data.automationId, SessionStatus.APP_STARTED);
 
