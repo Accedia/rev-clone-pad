@@ -9,21 +9,13 @@ import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
 import log from 'electron-log';
 import fs from 'fs';
-import {
-  screen,
-  centerOf,
-  Point,
-  mouse,
-  getActiveWindow,
-  sleep,
-} from '@nut-tree/nut-js';
+import { screen, centerOf, Point, mouse, getActiveWindow, sleep } from '@nut-tree/nut-js';
 import path from 'path';
 import { isDev } from './is_dev';
 
-
 export class Mitchell_Importer extends Importer {
   constructor() {
-    super()
+    super();
   }
 
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
@@ -45,41 +37,35 @@ export class Mitchell_Importer extends Importer {
         await FirebaseService.useCurrentSession.setStatus(SessionStatus.SEARCHING_CCC);
 
         /** Continuously check for "Line Operations" button */
-        const manualLineCoordinates = await this.getManualLineCoordinates(electronWindow)
-        console.log('manualLineCoordinates', manualLineCoordinates)
+        const manualLineCoordinates = await this.getManualLineCoordinates(electronWindow);
         // const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
 
         if (manualLineCoordinates) {
-          console.log('hereeeeeeeeeeeee')
-          /** Check if the Mitchell window's title corresponds to the selected RO */
-          // const shouldPopulate = await this.getShouldPopulateData(manualLineCoordinates, data, electronWindow);
-          // console.log('should', shouldPopulate);
+          const shouldPopulate = await this.getShouldPopulateData(
+            manualLineCoordinates,
+            data,
+            electronWindow
+          );
 
-          const titleCoordinates = await this.getTitleCoordinates();
+          //   /** Stop the CCC Waiting loader */
+          //   electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
 
-          console.log('titleCoordinates', titleCoordinates)
-          await importer.moveToPosition(5, titleCoordinates.y -200);
-
-
-        //   /** Stop the CCC Waiting loader */
-        //   electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
-
-        //   if (shouldPopulate) {
-        //     /** Start population */
-        //     await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
-        //     this.progressUpdater.setPercentage(0);
-        //     mainWindowManager.overlayWindow.show();
-        //     await snooze(1000);
-        //     await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
-        //     await snooze(100);
-        //     await this.saveLastLineNumber();
-        //     await this.goToTheFirstCell();
-        //     await this.populateTableData(forgettables, lineOperationCoordinates);
-        //     await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
-        //     await this.verifyPopulation(forgettables);
-        //   } else {
-        //     electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
-          }
+          //   if (shouldPopulate) {
+          //     /** Start population */
+          //     await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
+          //     this.progressUpdater.setPercentage(0);
+          //     mainWindowManager.overlayWindow.show();
+          //     await snooze(1000);
+          //     await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
+          //     await snooze(100);
+          //     await this.saveLastLineNumber();
+          //     await this.goToTheFirstCell();
+          //     await this.populateTableData(forgettables, lineOperationCoordinates);
+          //     await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
+          //     await this.verifyPopulation(forgettables);
+          //   } else {
+          //     electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
+        }
 
         await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
         this.complete(automationIdToFinishRPA);
@@ -114,37 +100,6 @@ export class Mitchell_Importer extends Importer {
     }
   };
 
-  private getTitleCoordinates = async (): Promise<Point> => {
-    const images = fs.readdirSync(path.resolve(__dirname, '../../assets/atitle'));
-    console.log('images', images)
-    const result: ImageSearchResult = {
-      coordinates: null,
-      errors: [],
-    };
-
-    const confidenceThreshold = 0.95;
-
-    for (let i = 0; i < images.length; i++) {
-      const name = images[i];
-      try {
-        const coordinates = await screen.find(name);
-        result.coordinates = coordinates;
-        console.log('result', result)
-        break;
-      } catch (err) {
-        result.errors.push(err);
-      }
-    }
-
-    console.log(result);
-
-    if (result.coordinates) {
-      return await centerOf(result.coordinates);
-    } else {
-      result.errors.forEach((error) => log.warn('Error finding the Manual Line button', error));
-    }
-  };
-
   private checkForManualLineCoordinates = async (): Promise<Point> => {
     const images = fs.readdirSync(this.getPathForAssets());
     const result: ImageSearchResult = {
@@ -165,8 +120,6 @@ export class Mitchell_Importer extends Importer {
       }
     }
 
-    console.log(result);
-
     if (result.coordinates) {
       return await centerOf(result.coordinates);
     } else {
@@ -181,70 +134,26 @@ export class Mitchell_Importer extends Importer {
   ): Promise<boolean> => {
     // if (isDev()) return true;
 
-    const { orderCustomerName, orderNumber } = data;
-
-    console.log('orderCustomerName', orderCustomerName);
-    console.log('orderNumber', orderNumber);
-
-    await this.focusMitchellTable(manualLineCoordinates, { returnToPosition: true });
-
-    return this.checkIsMitchellOnFocus(electronWindow, {
-      orderCustomerName,
-      orderNumber,
-    });
-    return true;
+    try {
+      await this.focusMitchellTable(manualLineCoordinates, { returnToPosition: true });
+      return true;
+    } catch (error) {
+      log.error(error);
+    }
   };
-  
 
   private focusMitchellTable = async (
     manualLineCoordinates: Point,
-    { returnToPosition = false, yOffset = 200 }: FocusTableOptions
+    { returnToPosition = false, yOffset = 500 }: FocusTableOptions
   ) => {
     const prevPosition = await mouse.getPosition();
     await importer.moveToPosition(manualLineCoordinates.x, manualLineCoordinates.y + yOffset);
     await mouse.leftClick();
 
-    if (returnToPosition) {
-      await importer.moveToPosition(prevPosition.x, prevPosition.y);
-    }
-  };
-
-  private checkIsMitchellOnFocus = async (
-    electronWindow: BrowserWindow,
-    orderData: Omit<ResponseData, 'forgettables' | 'automationId'>
-  ): Promise<boolean> => {
-    await sleep(4000)
-    const activeWindow = await getActiveWindow();
-console.log('activeWindow', activeWindow);
-    const title = await activeWindow.title;
-    const region = await activeWindow.region;
-    console.log('title', title);
-    console.log('region', region);
-
-    // const includesOrderNumber = title.includes(orderData.orderNumber);
-    // const includesCustomerName = title.includes(orderData.orderCustomerName);
-
-    // if (!includesOrderNumber && !includesCustomerName) {
-    //   log.info(`Number or customer name not present in window's title`);
-
-    //   const result = await showMessage({
-    //     type: 'warning',
-    //     buttons: ['Yes, continue', 'Abort'],
-    //     title: 'Warning',
-    //     message: 'CCC estimate may not correspond to the selected RO',
-    //     detail: `The CCC Estimate and the scrubbed estimate (${orderData.orderNumber}) do not match. Do you want to continue?`,
-    //     noLink: true,
-    //   });
-
-    //   if (result.response === 1) {
-    //     electronWindow.webContents.send(MESSAGE.STOP_IMPORTER_SHORTCUT);
-    //     return false;
-    //   }
+    // if (returnToPosition) {
+    //   await importer.moveToPosition(prevPosition.x, prevPosition.y);
     // }
-
-    return true;
   };
-
 }
 
 export default new Mitchell_Importer();
