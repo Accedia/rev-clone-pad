@@ -9,7 +9,7 @@ import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
 import log from 'electron-log';
 import fs from 'fs';
-import { screen, centerOf, Point, mouse, getActiveWindow, sleep } from '@nut-tree/nut-js';
+import { screen, centerOf, Point, mouse, getActiveWindow, sleep, randomPointIn } from '@nut-tree/nut-js';
 import path from 'path';
 import { isDev } from './is_dev';
 
@@ -121,7 +121,7 @@ export class Mitchell_Importer extends Importer {
     }
 
     if (result.coordinates) {
-      return await centerOf(result.coordinates);
+      return await randomPointIn(result.coordinates);
     } else {
       result.errors.forEach((error) => log.warn('Error finding the Manual Line button', error));
     }
