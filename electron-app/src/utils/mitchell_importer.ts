@@ -144,10 +144,10 @@ export class Mitchell_Importer extends Importer {
 
   private focusMitchellTable = async (
     manualLineCoordinates: Point,
-    { returnToPosition = false, yOffset = 500 }: FocusTableOptions
+    { returnToPosition = false, yOffset = 200 }: FocusTableOptions
   ) => {
     const prevPosition = await mouse.getPosition();
-    await importer.moveToPosition(manualLineCoordinates.x, manualLineCoordinates.y + yOffset);
+    await importer.moveToPosition(manualLineCoordinates.x, manualLineCoordinates.y - 50);
     await mouse.leftClick();
 
     // if (returnToPosition) {
