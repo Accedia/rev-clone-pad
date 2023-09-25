@@ -9,7 +9,7 @@ import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
 import log from 'electron-log';
 import fs from 'fs';
-import { screen, centerOf, Point, mouse, getActiveWindow, sleep, randomPointIn } from '@nut-tree/nut-js';
+import { screen, centerOf, keyboard, Point, mouse, getActiveWindow, sleep, randomPointIn } from '@nut-tree/nut-js';
 import path from 'path';
 import { isDev } from './is_dev';
 
@@ -18,6 +18,22 @@ export class Mitchell_Importer extends Importer {
     super();
   }
 
+  public setMitchellConfig = (inputSpeed: number): void => {
+    /** Delay between different instructions (e.g. pressKey() and consequential pressKey()) */
+    keyboard.config.autoDelayMs = inputSpeed ** 2;
+    /** Delay between keystrokes when typing a word (e.g. calling keyboard.type(), time between each letter keypress). */
+    keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 50);
+    /** Path with the assets, where we put images for "Line operation" button image-recognition */
+    screen.config.resourceDirectory = this.getMitchellPathForAssets()
+
+    // ! Left only for debug purposes
+    // ? Uncomment if needed, do not deploy to prod
+    // screen.config.confidence = 0.84;
+    // screen.config.autoHighlight = true;
+    // screen.config.highlightDurationMs = 3000;
+    // screen.config.highlightOpacity = 0.8;
+  };
+
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
     const { forgettables, automationId, automationIdToFinishRPA } = data;
 
@@ -25,7 +41,7 @@ export class Mitchell_Importer extends Importer {
     this.start();
     const inputSpeed = getInputSpeed();
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
-    this.setConfig(inputSpeedSeconds);
+    this.setMitchellConfig(inputSpeedSeconds)
 
     try {
       /** Sends a message to stop the loader for fetching data */
@@ -84,7 +100,7 @@ export class Mitchell_Importer extends Importer {
     }
   };
 
-  private getPathForAssets = () => {
+  private getMitchellPathForAssets = () => {
     return path.resolve(__dirname, '../../assets/manual-lines');
   };
 
@@ -101,7 +117,7 @@ export class Mitchell_Importer extends Importer {
   };
 
   private checkForManualLineCoordinates = async (): Promise<Point> => {
-    const images = fs.readdirSync(this.getPathForAssets());
+    const images = fs.readdirSync(this.getMitchellPathForAssets());
     const result: ImageSearchResult = {
       coordinates: null,
       errors: [],
@@ -121,7 +137,7 @@ export class Mitchell_Importer extends Importer {
     }
 
     if (result.coordinates) {
-      return await randomPointIn(result.coordinates);
+      return await centerOf(result.coordinates);
     } else {
       result.errors.forEach((error) => log.warn('Error finding the Manual Line button', error));
     }
@@ -147,7 +163,7 @@ export class Mitchell_Importer extends Importer {
     { returnToPosition = false, yOffset = 200 }: FocusTableOptions
   ) => {
     const prevPosition = await mouse.getPosition();
-    await importer.moveToPosition(manualLineCoordinates.x, manualLineCoordinates.y - 50);
+    await importer.moveToPosition(manualLineCoordinates.x, manualLineCoordinates.y);
     await mouse.leftClick();
 
     // if (returnToPosition) {
