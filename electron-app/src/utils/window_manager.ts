@@ -9,6 +9,7 @@ import { AutoUpdater } from './auto_updater';
 import importer from './importer';
 import { FirebaseService } from './firebase';
 import { extractSessionIdFromUrl } from './extract_sessionid_from_url';
+import mitchell_importer from './mitchell_importer';
 
 type MaybeBrowserWindow = BrowserWindow | null;
 
@@ -100,6 +101,8 @@ class WindowManager {
       this.mainWindow.once('ready-to-show', () => {
         this.mainWindow.show();
         importer.setProgressBrowserWindow(this.mainWindow);
+        //We set also for the mitchell importer a browser window
+        mitchell_importer.setProgressBrowserWindow(this.mainWindow);
         this.loadingWindow.hide();
         this.loadingWindow.close();
         resolve();

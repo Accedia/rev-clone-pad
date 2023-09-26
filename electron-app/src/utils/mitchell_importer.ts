@@ -9,9 +9,12 @@ import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
 import log from 'electron-log';
 import fs from 'fs';
-import { screen, centerOf, keyboard, Point, mouse, getActiveWindow, sleep, randomPointIn } from '@nut-tree/nut-js';
+import { screen, centerOf, keyboard, Point, mouse, getActiveWindow, sleep, randomPointIn, Key } from '@nut-tree/nut-js';
 import path from 'path';
 import { isDev } from './is_dev';
+import { Forgettable } from '../interfaces/Forgettable';
+import { times } from './times_do';
+
 
 export class Mitchell_Importer extends Importer {
   constructor() {
@@ -23,7 +26,7 @@ export class Mitchell_Importer extends Importer {
     keyboard.config.autoDelayMs = inputSpeed ** 2;
     /** Delay between keystrokes when typing a word (e.g. calling keyboard.type(), time between each letter keypress). */
     keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 50);
-    /** Path with the assets, where we put images for "Line operation" button image-recognition */
+    /** Path with the assets, where we put images for "Manual Line" button image-recognition */
     screen.config.resourceDirectory = this.getMitchellPathForAssets()
 
     // ! Left only for debug purposes
@@ -36,7 +39,6 @@ export class Mitchell_Importer extends Importer {
 
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
     const { forgettables, automationId, automationIdToFinishRPA } = data;
-
     this.startSession(automationId);
     this.start();
     const inputSpeed = getInputSpeed();
@@ -49,7 +51,8 @@ export class Mitchell_Importer extends Importer {
 
       if (this.isRunning) {
         /** Start the CCC Waiting loader */
-        electronWindow.webContents.send(MESSAGE.WAITING_MITCHELL_UPDATE, true);
+        //TODO - update message to MITCHELL
+        electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
         await FirebaseService.useCurrentSession.setStatus(SessionStatus.SEARCHING_CCC);
 
         /** Continuously check for "Line Operations" button */
@@ -64,28 +67,29 @@ export class Mitchell_Importer extends Importer {
           );
 
           //   /** Stop the CCC Waiting loader */
-          //   electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
+          //TODO - update message to MITCHELL
+          electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
 
-          //   if (shouldPopulate) {
-          //     /** Start population */
-          //     await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
-          //     this.progressUpdater.setPercentage(0);
-          //     mainWindowManager.overlayWindow.show();
-          //     await snooze(1000);
-          //     await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
-          //     await snooze(100);
-          //     await this.saveLastLineNumber();
-          //     await this.goToTheFirstCell();
-          //     await this.populateTableData(forgettables, lineOperationCoordinates);
-          //     await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
-          //     await this.verifyPopulation(forgettables);
-          //   } else {
-          //     electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
+          if (shouldPopulate) {
+            /** Start population */
+            await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
+            this.progressUpdater.setPercentage(0);
+            mainWindowManager.overlayWindow.show();
+            await snooze(1000);
+            // await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
+            await snooze(100);
+            // await this.saveLastLineNumber();
+            // await this.goToTheFirstCell();
+            await this.populateMitchellTableData(forgettables, manualLineCoordinates);
+            await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
+            // await this.verifyPopulation(forgettables);
+          } else {
+            electronWindow.webContents.send(MESSAGE.RESET_CONTROLS_STATE, false);
+          }
+
+          await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
+          this.complete(automationIdToFinishRPA);
         }
-
-        await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
-        this.complete(automationIdToFinishRPA);
-        // }
       }
 
       mainWindowManager.overlayWindow.hide();
@@ -170,6 +174,41 @@ export class Mitchell_Importer extends Importer {
     //   await importer.moveToPosition(prevPosition.x, prevPosition.y);
     // }
   };
+
+  private populateMitchellTableData = async (forgettables: Forgettable[], lineOperationCoordinates: Point) => {
+    //We already are at description input field selected once we call this function
+    for (const forgettable of forgettables) {
+      const { description, partNum, quantity, partPrice } = forgettable
+      //Maybe totalPrice is quantity*partPrice , but remember only consumables have price so make an if check
+      //Type Description and Go to Operation
+      await this.typeMitchellValue(description);
+      // await keyboard.pressKey(Key.Tab); // skip Operation stay default
+      // await keyboard.pressKey(Key.Tab); // skip Type - stay default Body
+      // await keyboard.pressKey(Key.Tab) // skip Total Units - stay default (0)
+      await times(5).pressKey(Key.Tab)
+      //twice down arrow
+      // enter once
+      // await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
+      // await keyboard.pressKey(Key.Enter); // Select it 
+      await this.typeMitchellValue(partNum); // Type Part Number
+      // console.log('write part number')
+      // await keyboard.pressKey(Key.Tab); // Go to Quantity
+      // console.log('go to quantity')
+      // await this.typeMitchellValue(quantity); // Type Quantity
+      // console.log('typ4e 2qunaitty')
+      // await times(2).pressKey(Key.Tab) // Skipping Total Price for now , later add if it is consumable - part Price * quantity else skip it (let it be 0)
+      // console.log('skip 2 times tgo go tax');
+      // await keyboard.pressKey(Key.Space) //Uncheck Tax
+      // console.log('tax unchecked')
+    }
+  }
+
+  public typeMitchellValue = async (value: string) => {
+    if (value) {
+      await keyboard.type(value);
+    }
+  };
+
 }
 
 export default new Mitchell_Importer();
