@@ -12,7 +12,7 @@ import fs from 'fs';
 import { screen, centerOf, keyboard, Point, mouse, getActiveWindow, sleep, randomPointIn, Key } from '@nut-tree/nut-js';
 import path from 'path';
 import { isDev } from './is_dev';
-import { Forgettable } from '../interfaces/Forgettable';
+import { Forgettable, MitchellForgettable } from '../interfaces/Forgettable';
 import { times } from './times_do';
 
 
@@ -175,31 +175,31 @@ export class Mitchell_Importer extends Importer {
     // }
   };
 
-  private populateMitchellTableData = async (forgettables: Forgettable[], lineOperationCoordinates: Point) => {
+  private populateMitchellTableData = async (forgettables: MitchellForgettable[], lineOperationCoordinates: Point) => {
     //We already are at description input field selected once we call this function
     for (const forgettable of forgettables) {
-      const { description, partNum, quantity, partPrice } = forgettable
+      const { description, partNumber, quantity, partPrice } = forgettable;
       //Maybe totalPrice is quantity*partPrice , but remember only consumables have price so make an if check
       //Type Description and Go to Operation
       await this.typeMitchellValue(description);
-      // await keyboard.pressKey(Key.Tab); // skip Operation stay default
-      // await keyboard.pressKey(Key.Tab); // skip Type - stay default Body
-      // await keyboard.pressKey(Key.Tab) // skip Total Units - stay default (0)
-      await times(5).pressKey(Key.Tab)
-      //twice down arrow
-      // enter once
-      // await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
-      // await keyboard.pressKey(Key.Enter); // Select it 
-      await this.typeMitchellValue(partNum); // Type Part Number
-      // console.log('write part number')
-      // await keyboard.pressKey(Key.Tab); // Go to Quantity
-      // console.log('go to quantity')
-      // await this.typeMitchellValue(quantity); // Type Quantity
-      // console.log('typ4e 2qunaitty')
-      // await times(2).pressKey(Key.Tab) // Skipping Total Price for now , later add if it is consumable - part Price * quantity else skip it (let it be 0)
-      // console.log('skip 2 times tgo go tax');
-      // await keyboard.pressKey(Key.Space) //Uncheck Tax
-      // console.log('tax unchecked')
+      await times(4).pressKey(Key.Tab); // skip Operation stay default, skip Type - stay default Body, skip Total Units - stay default (0)
+      await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
+      await keyboard.pressKey(Key.Enter); // Select it 
+      await times(7).pressKey(Key.Tab); // focus again on the Part number
+      await this.typeMitchellValue(partNumber); // Type Part Number
+      await keyboard.pressKey(Key.Tab); // Go to Quantity
+      await keyboard.type(quantity.toString()); // Type Quantity
+      await keyboard.pressKey(Key.Tab); // Go to price
+
+      await this.typeMitchellValue(partPrice); // type totalPrice;
+      await keyboard.pressKey(Key.Tab); // go to checkbox Tax
+      await keyboard.pressKey(Key.Space) // Uncheck Tax
+      await keyboard.releaseKey(Key.Space) // Uncheck Tax
+
+      await times(3).pressKey(Key.Tab); // go to 'Add line' button
+      await keyboard.pressKey(Key.Enter);
+      await snooze(2000); // wait until modal is closed
+      await mouse.leftClick(); // open the modal again for the next line
     }
   }
 
