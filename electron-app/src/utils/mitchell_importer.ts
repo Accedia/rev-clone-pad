@@ -177,8 +177,10 @@ export class Mitchell_Importer extends Importer {
 
   private populateMitchellTableData = async (forgettables: MitchellForgettable[], lineOperationCoordinates: Point) => {
     //We already are at description input field selected once we call this function
-    for (const forgettable of forgettables) {
-      const { description, partNumber, quantity, partPrice } = forgettable;
+    const forgettablesLength = forgettables.length;
+    // for (const forgettable of forgettables) {
+    for(let i = 0; i < forgettables.length; i++) {
+      const { description, partNumber, quantity, partPrice } = forgettables[i];
       //Maybe totalPrice is quantity*partPrice , but remember only consumables have price so make an if check
       //Type Description and Go to Operation
       await this.typeMitchellValue(description);
@@ -197,10 +199,18 @@ export class Mitchell_Importer extends Importer {
       await keyboard.releaseKey(Key.Space) // Uncheck Tax
 
       await times(3).pressKey(Key.Tab); // go to 'Add line' button
+      await snooze(3000);
       await keyboard.pressKey(Key.Enter);
+      await keyboard.releaseKey(Key.Enter) // Uncheck Tax
       await snooze(2000); // wait until modal is closed
-      await mouse.leftClick(); // open the modal again for the next line
-    }
+
+      if(i < forgettablesLength - 1 ) {
+        await mouse.leftClick(); // open the modal again for the next line
+      }
+    // }
+    
+  }
+
   }
 
   public typeMitchellValue = async (value: string) => {
