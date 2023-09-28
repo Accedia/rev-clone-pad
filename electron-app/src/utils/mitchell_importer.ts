@@ -9,12 +9,19 @@ import { getInputSpeedInSeconds } from './get_config_values';
 import { snooze } from './snooze';
 import log from 'electron-log';
 import fs from 'fs';
-import { screen, centerOf, keyboard, Point, mouse, getActiveWindow, sleep, randomPointIn, Key } from '@nut-tree/nut-js';
+import {
+  screen,
+  centerOf,
+  keyboard,
+  Point,
+  mouse,
+  Key,
+} from '@nut-tree/nut-js';
 import path from 'path';
 import { isDev } from './is_dev';
-import { Forgettable, MitchellForgettable } from '../interfaces/Forgettable';
+import { MitchellForgettable } from '../interfaces/Forgettable';
 import { times } from './times_do';
-
+import { VERIFICATION_PROGRESS_BREAKPOINT } from '../constants/verification_progress_breakpoint';
 
 export class Mitchell_Importer extends Importer {
   constructor() {
@@ -27,7 +34,9 @@ export class Mitchell_Importer extends Importer {
     /** Delay between keystrokes when typing a word (e.g. calling keyboard.type(), time between each letter keypress). */
     keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 50);
     /** Path with the assets, where we put images for "Manual Line" button image-recognition */
-    screen.config.resourceDirectory = isLookingForCommitButton ? this.getMitchellPathForCommitButton() : this.getMitchellPathForAssets()
+    screen.config.resourceDirectory = isLookingForCommitButton
+      ? this.getMitchellPathForCommitButton()
+      : this.getMitchellPathForAssets();
 
     // ! Left only for debug purposes
     // ? Uncomment if needed, do not deploy to prod
@@ -37,15 +46,13 @@ export class Mitchell_Importer extends Importer {
     // screen.config.highlightOpacity = 0.8;
   };
 
-
-
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
     const { forgettables, automationId, automationIdToFinishRPA } = data;
     this.startSession(automationId);
     this.start();
     const inputSpeed = getInputSpeed();
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
-    this.setMitchellConfig(inputSpeedSeconds, false)
+    this.setMitchellConfig(inputSpeedSeconds, false);
 
     try {
       /** Sends a message to stop the loader for fetching data */
@@ -72,25 +79,22 @@ export class Mitchell_Importer extends Importer {
           //TODO - update message to MITCHELL
           electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
 
-          if (shouldPopulate) {
+          if (shouldPopulate) {   
             /** Start population */
             await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
             this.progressUpdater.setPercentage(0);
             mainWindowManager.overlayWindow.show();
             await snooze(1000);
-            // await this.focusCccTable(lineOperationCoordinates, { yOffset: 250 });
-            await snooze(100);
-            // await this.saveLastLineNumber();
-            // await this.goToTheFirstCell();
             await this.populateMitchellTableData(forgettables, manualLineCoordinates);
             this.setMitchellConfig(inputSpeedSeconds, true);
-            console.log('screen config', screen.config.resourceDirectory)
             const commitButtonCoordinates = await this.getCommitButtonCoordinates(electronWindow);
-      await mouse.setPosition(commitButtonCoordinates);
-      await mouse.leftClick();
-      await snooze(4000);
-      await times(6).pressKey(Key.Tab);
-        await keyboard.pressKey(Key.Enter);
+            await mouse.setPosition(commitButtonCoordinates);
+            await mouse.leftClick();
+            await snooze(4000);
+            await times(6).pressKey(Key.Tab);
+            await keyboard.pressKey(Key.Enter);
+            this.progressUpdater.setPercentage(100);
+
             await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
             // await this.verifyPopulation(forgettables);
           } else {
@@ -180,19 +184,19 @@ export class Mitchell_Importer extends Importer {
       errors: [],
     };
 
-    console.log('images', images)
+    console.log('images', images);
 
     const confidenceThreshold = 0.85;
 
-      const name = images[0];
-      console.log('name', name)
-      try {
-        const coordinates = await screen.find(name, { confidence: confidenceThreshold });
-        console.log('coordinates', coordinates)
-        result.coordinates = coordinates;
-      } catch (err) {
-        result.errors.push(err);
-      }
+    const name = images[0];
+    console.log('name', name);
+    try {
+      const coordinates = await screen.find(name, { confidence: confidenceThreshold });
+      console.log('coordinates', coordinates);
+      result.coordinates = coordinates;
+    } catch (err) {
+      result.errors.push(err);
+    }
 
     if (result.coordinates) {
       return await centerOf(result.coordinates);
@@ -229,49 +233,64 @@ export class Mitchell_Importer extends Importer {
     // }
   };
 
-  private populateMitchellTableData = async (forgettables: MitchellForgettable[], lineOperationCoordinates: Point) => {
+  private populateMitchellTableData = async (
+    forgettables: MitchellForgettable[],
+    lineOperationCoordinates: Point
+  ) => {
     //We already are at description input field selected once we call this function
     const forgettablesLength = forgettables.length;
+    const numberOfInputs = forgettables.length * 10;
+    const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfInputs;
+    this.progressUpdater.setStep(percentagePerCell);
     // for (const forgettable of forgettables) {
-    for(let i = 0; i < forgettables.length; i++) {
+    for (let i = 0; i < forgettables.length; i++) {
       const { description, partNumber, quantity, partPrice } = forgettables[i];
       //Maybe totalPrice is quantity*partPrice , but remember only consumables have price so make an if check
       //Type Description and Go to Operation
       await this.typeMitchellValue(description);
+      this.progressUpdater.update();
+
       await times(4).pressKey(Key.Tab); // skip Operation stay default, skip Type - stay default Body, skip Total Units - stay default (0)
       await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
-      await keyboard.pressKey(Key.Enter); // Select it 
+      await keyboard.pressKey(Key.Enter); // Select it
       await times(7).pressKey(Key.Tab); // focus again on the Part number
       await this.typeMitchellValue(partNumber); // Type Part Number
+      this.progressUpdater.update();
+
       await keyboard.pressKey(Key.Tab); // Go to Quantity
       await keyboard.type(quantity.toString()); // Type Quantity
+      this.progressUpdater.update();
+
       await keyboard.pressKey(Key.Tab); // Go to price
 
       await this.typeMitchellValue(partPrice); // type totalPrice;
+      this.progressUpdater.update();
+
       await keyboard.pressKey(Key.Tab); // go to checkbox Tax
-      await keyboard.pressKey(Key.Space) // Uncheck Tax
-      await keyboard.releaseKey(Key.Space) // Uncheck Tax
+      await keyboard.pressKey(Key.Space); // Uncheck Tax
+      await keyboard.releaseKey(Key.Space); // Uncheck Tax
+      this.progressUpdater.update();
 
       await times(3).pressKey(Key.Tab); // go to 'Add line' button
       await keyboard.pressKey(Key.Enter);
-      await keyboard.releaseKey(Key.Enter) // Uncheck Tax
+      await keyboard.releaseKey(Key.Enter); // Uncheck Tax
+
+      this.progressUpdater.update();
+
       await snooze(2000); // wait until modal is closed
 
-      if(i < forgettablesLength - 1 ) {
+      if (i < forgettablesLength - 1) {
         await mouse.leftClick(); // open the modal again for the next line
       }
-    // }
-
-  }
-
-  }
+      // }
+    }
+  };
 
   public typeMitchellValue = async (value: string) => {
     if (value) {
       await keyboard.type(value);
     }
   };
-
 }
 
 export default new Mitchell_Importer();
