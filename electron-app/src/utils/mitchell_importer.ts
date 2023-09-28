@@ -40,7 +40,9 @@ export class Mitchell_Importer extends Importer {
 
     // ! Left only for debug purposes
     // ? Uncomment if needed, do not deploy to prod
-    // screen.config.confidence = 0.84;
+    if (isLookingForCommitButton) {
+      screen.config.confidence = 0.85;
+    }
     // screen.config.autoHighlight = true;
     // screen.config.highlightDurationMs = 3000;
     // screen.config.highlightOpacity = 0.8;
@@ -79,7 +81,7 @@ export class Mitchell_Importer extends Importer {
           //TODO - update message to MITCHELL
           electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
 
-          if (shouldPopulate) {   
+          if (shouldPopulate) {
             /** Start population */
             await FirebaseService.useCurrentSession.setStatus(SessionStatus.POPULATING);
             this.progressUpdater.setPercentage(0);
@@ -87,14 +89,19 @@ export class Mitchell_Importer extends Importer {
             await snooze(1000);
             await this.populateMitchellTableData(forgettables, manualLineCoordinates);
             this.setMitchellConfig(inputSpeedSeconds, true);
+            await snooze(3000);
             const commitButtonCoordinates = await this.getCommitButtonCoordinates(electronWindow);
             await mouse.setPosition(commitButtonCoordinates);
             await mouse.leftClick();
+            this.progressUpdater.update();
             await snooze(4000);
-            await times(6).pressKey(Key.Tab);
+            await times(3).pressKey(Key.Tab);
+            this.progressUpdater.update();
+            await times(3).pressKey(Key.Tab);
+            this.progressUpdater.update();
             await keyboard.pressKey(Key.Enter);
+            await keyboard.releaseKey(Key.Enter);
             this.progressUpdater.setPercentage(100);
-
             await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
             // await this.verifyPopulation(forgettables);
           } else {
@@ -183,19 +190,18 @@ export class Mitchell_Importer extends Importer {
       coordinates: null,
       errors: [],
     };
-
-    console.log('images', images);
-
-    const confidenceThreshold = 0.85;
-
-    const name = images[0];
-    console.log('name', name);
-    try {
-      const coordinates = await screen.find(name, { confidence: confidenceThreshold });
-      console.log('coordinates', coordinates);
-      result.coordinates = coordinates;
-    } catch (err) {
-      result.errors.push(err);
+    console.log('all images', images);
+    for (let i = 0; i < images.length; i++) {
+      const name = images[i];
+      console.log('name', name);
+      try {
+        const coordinates = await screen.find(name);
+        console.log('screen config', screen.config);
+        result.coordinates = coordinates;
+        break;
+      } catch (err) {
+        result.errors.push(err);
+      }
     }
 
     if (result.coordinates) {
@@ -239,7 +245,7 @@ export class Mitchell_Importer extends Importer {
   ) => {
     //We already are at description input field selected once we call this function
     const forgettablesLength = forgettables.length;
-    const numberOfInputs = forgettables.length * 10;
+    const numberOfInputs = forgettables.length * 8;
     const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfInputs;
     this.progressUpdater.setStep(percentagePerCell);
     // for (const forgettable of forgettables) {
@@ -272,8 +278,8 @@ export class Mitchell_Importer extends Importer {
       this.progressUpdater.update();
 
       await times(3).pressKey(Key.Tab); // go to 'Add line' button
-      await keyboard.pressKey(Key.Enter);
-      await keyboard.releaseKey(Key.Enter); // Uncheck Tax
+      await keyboard.pressKey(Key.Enter); // press Add Line with Enter
+      await keyboard.releaseKey(Key.Enter);
 
       this.progressUpdater.update();
 
