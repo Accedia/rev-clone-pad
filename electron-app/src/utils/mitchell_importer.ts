@@ -21,13 +21,13 @@ export class Mitchell_Importer extends Importer {
     super();
   }
 
-  public setMitchellConfig = (inputSpeed: number): void => {
+  public setMitchellConfig = (inputSpeed: number, isLookingForCommitButton?: boolean): void => {
     /** Delay between different instructions (e.g. pressKey() and consequential pressKey()) */
     keyboard.config.autoDelayMs = inputSpeed ** 2;
     /** Delay between keystrokes when typing a word (e.g. calling keyboard.type(), time between each letter keypress). */
     keyboard['nativeAdapter'].keyboard.setKeyboardDelay(inputSpeed * 50);
     /** Path with the assets, where we put images for "Manual Line" button image-recognition */
-    screen.config.resourceDirectory = this.getMitchellPathForAssets()
+    screen.config.resourceDirectory = isLookingForCommitButton ? this.getMitchellPathForCommitButton() : this.getMitchellPathForAssets()
 
     // ! Left only for debug purposes
     // ? Uncomment if needed, do not deploy to prod
@@ -37,13 +37,15 @@ export class Mitchell_Importer extends Importer {
     // screen.config.highlightOpacity = 0.8;
   };
 
+
+
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
     const { forgettables, automationId, automationIdToFinishRPA } = data;
     this.startSession(automationId);
     this.start();
     const inputSpeed = getInputSpeed();
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
-    this.setMitchellConfig(inputSpeedSeconds)
+    this.setMitchellConfig(inputSpeedSeconds, false)
 
     try {
       /** Sends a message to stop the loader for fetching data */
@@ -81,6 +83,14 @@ export class Mitchell_Importer extends Importer {
             // await this.saveLastLineNumber();
             // await this.goToTheFirstCell();
             await this.populateMitchellTableData(forgettables, manualLineCoordinates);
+            this.setMitchellConfig(inputSpeedSeconds, true);
+            console.log('screen config', screen.config.resourceDirectory)
+            const commitButtonCoordinates = await this.getCommitButtonCoordinates(electronWindow);
+      await mouse.setPosition(commitButtonCoordinates);
+      await mouse.leftClick();
+      await snooze(4000);
+      await times(6).pressKey(Key.Tab);
+        await keyboard.pressKey(Key.Enter);
             await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
             // await this.verifyPopulation(forgettables);
           } else {
@@ -108,15 +118,31 @@ export class Mitchell_Importer extends Importer {
     return path.resolve(__dirname, '../../assets/manual-lines');
   };
 
-  private getManualLineCoordinates = async (electronWindow: BrowserWindow): Promise<Point> => {
-    const lineOperationCoordinates = await this.checkForManualLineCoordinates();
+  private getMitchellPathForCommitButton = () => {
+    return path.resolve(__dirname, '../../assets/commit-button');
+  };
 
-    if (lineOperationCoordinates) {
-      return lineOperationCoordinates;
+  private getManualLineCoordinates = async (electronWindow: BrowserWindow): Promise<Point> => {
+    const manualLineCoordinates = await this.checkForManualLineCoordinates();
+
+    if (manualLineCoordinates) {
+      return manualLineCoordinates;
     } else if (this.isRunning) {
       snooze(1000);
       log.warn('Still searching for Mitchell on the main screen. Retrying...');
       return this.getManualLineCoordinates(electronWindow);
+    }
+  };
+
+  private getCommitButtonCoordinates = async (electronWindow: BrowserWindow): Promise<Point> => {
+    const commitButtonCoordinates = await this.checkForCommitButtonCoordinates();
+
+    if (commitButtonCoordinates) {
+      return commitButtonCoordinates;
+    } else if (this.isRunning) {
+      snooze(1000);
+      log.warn('Still searching for Mitchell on the main screen. Retrying...');
+      return this.getCommitButtonCoordinates(electronWindow);
     }
   };
 
@@ -139,6 +165,34 @@ export class Mitchell_Importer extends Importer {
         result.errors.push(err);
       }
     }
+
+    if (result.coordinates) {
+      return await centerOf(result.coordinates);
+    } else {
+      result.errors.forEach((error) => log.warn('Error finding the Manual Line button', error));
+    }
+  };
+
+  private checkForCommitButtonCoordinates = async (): Promise<Point> => {
+    const images = fs.readdirSync(path.resolve(__dirname, '../../assets/commit-button'));
+    const result: ImageSearchResult = {
+      coordinates: null,
+      errors: [],
+    };
+
+    console.log('images', images)
+
+    const confidenceThreshold = 0.85;
+
+      const name = images[0];
+      console.log('name', name)
+      try {
+        const coordinates = await screen.find(name, { confidence: confidenceThreshold });
+        console.log('coordinates', coordinates)
+        result.coordinates = coordinates;
+      } catch (err) {
+        result.errors.push(err);
+      }
 
     if (result.coordinates) {
       return await centerOf(result.coordinates);
@@ -199,7 +253,6 @@ export class Mitchell_Importer extends Importer {
       await keyboard.releaseKey(Key.Space) // Uncheck Tax
 
       await times(3).pressKey(Key.Tab); // go to 'Add line' button
-      await snooze(3000);
       await keyboard.pressKey(Key.Enter);
       await keyboard.releaseKey(Key.Enter) // Uncheck Tax
       await snooze(2000); // wait until modal is closed
@@ -208,7 +261,7 @@ export class Mitchell_Importer extends Importer {
         await mouse.leftClick(); // open the modal again for the next line
       }
     // }
-    
+
   }
 
   }
