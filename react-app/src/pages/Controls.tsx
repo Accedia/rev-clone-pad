@@ -114,7 +114,7 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
   React.useEffect(() => {
     ipcRenderer.on(MESSAGE.RESET_CONTROLS_STATE, resetState);
 
-    return () => {
+    return () => {          
       ipcRenderer.removeListener(MESSAGE.RESET_CONTROLS_STATE, resetState);
     };
   }, []);
@@ -131,10 +131,10 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
       });
     };
 
-    ipcRenderer.on(MESSAGE.WAITING_CCC_UPDATE, handler);
+    ipcRenderer.on(MESSAGE.WAITING_MITCHELL_UPDATE, handler);
 
     return () => {
-      ipcRenderer.removeListener(MESSAGE.WAITING_CCC_UPDATE, handler);
+      ipcRenderer.removeListener(MESSAGE.WAITING_MITCHELL_UPDATE, handler);
     };
   }, []);
 
@@ -151,9 +151,9 @@ const Controls: React.FC<ControlsProps> = ({ onBack }) => {
             <Icon name="circle notched" loading />
             <Message.Content>
               <Message.Header>
-                Detecting CCC Estimate window <Dots compact />
+                Detecting Mitchell Estimate window <Dots compact />
               </Message.Header>
-              Waiting for you to open CCC and put it on your main screen
+              Waiting for you to open Mitchell and put it on your main screen
             </Message.Content>
           </Message>
         </div>

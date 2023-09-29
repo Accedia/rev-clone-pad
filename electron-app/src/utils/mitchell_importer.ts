@@ -23,6 +23,10 @@ import { MitchellForgettable } from '../interfaces/Forgettable';
 import { times } from './times_do';
 import { VERIFICATION_PROGRESS_BREAKPOINT } from '../constants/verification_progress_breakpoint';
 
+enum MitchellButtons {
+  commitButton = 'COMMIT',
+  manualLineButton = "Manual Line"
+}
 export class Mitchell_Importer extends Importer {
   constructor() {
     super();
@@ -48,7 +52,7 @@ export class Mitchell_Importer extends Importer {
     // screen.config.highlightOpacity = 0.8;
   };
 
-  public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow) => {
+  public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow): Promise<void> => {
     const { forgettables, automationId, automationIdToFinishRPA } = data;
     this.startSession(automationId);
     this.start();
@@ -63,12 +67,11 @@ export class Mitchell_Importer extends Importer {
       if (this.isRunning) {
         /** Start the CCC Waiting loader */
         //TODO - update message to MITCHELL
-        electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, true);
+        electronWindow.webContents.send(MESSAGE.WAITING_MITCHELL_UPDATE, true);
         await FirebaseService.useCurrentSession.setStatus(SessionStatus.SEARCHING_CCC);
 
-        /** Continuously check for "Line Operations" button */
-        const manualLineCoordinates = await this.getManualLineCoordinates(electronWindow);
-        // const lineOperationCoordinates = await this.getLineOperationCoordinates(electronWindow);
+        /** Continuously check for "Manual Line" button */
+        const manualLineCoordinates = await this.getButtonCoordinates(electronWindow, MitchellButtons.manualLineButton);
 
         if (manualLineCoordinates) {
           const shouldPopulate = await this.getShouldPopulateData(
@@ -79,7 +82,7 @@ export class Mitchell_Importer extends Importer {
 
           //   /** Stop the CCC Waiting loader */
           //TODO - update message to MITCHELL
-          electronWindow.webContents.send(MESSAGE.WAITING_CCC_UPDATE, false);
+          electronWindow.webContents.send(MESSAGE.WAITING_MITCHELL_UPDATE, false);
 
           if (shouldPopulate) {
             /** Start population */
@@ -87,21 +90,17 @@ export class Mitchell_Importer extends Importer {
             this.progressUpdater.setPercentage(0);
             mainWindowManager.overlayWindow.show();
             await snooze(1000);
-            await this.populateMitchellTableData(forgettables, manualLineCoordinates);
+            await this.populateMitchellTableData(forgettables);
             this.setMitchellConfig(inputSpeedSeconds, true);
             await snooze(3000);
-            const commitButtonCoordinates = await this.getCommitButtonCoordinates(electronWindow);
-            await mouse.setPosition(commitButtonCoordinates);
-            await mouse.leftClick();
-            this.progressUpdater.update();
-            await snooze(4000);
-            await times(3).pressKey(Key.Tab);
-            this.progressUpdater.update();
-            await times(3).pressKey(Key.Tab);
-            this.progressUpdater.update();
-            await keyboard.pressKey(Key.Enter);
-            await keyboard.releaseKey(Key.Enter);
-            this.progressUpdater.setPercentage(100);
+            const commitButtonCoordinates = await this.getButtonCoordinates(electronWindow, MitchellButtons.commitButton);
+
+            if(commitButtonCoordinates){
+              await this.commitMitchellData(commitButtonCoordinates);
+            } else {
+              log.error("Can't find the Commit Button.")
+            }
+            
             await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
             // await this.verifyPopulation(forgettables);
           } else {
@@ -110,7 +109,7 @@ export class Mitchell_Importer extends Importer {
 
           await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
           this.complete(automationIdToFinishRPA);
-        }
+        } 
       }
 
       mainWindowManager.overlayWindow.hide();
@@ -133,71 +132,33 @@ export class Mitchell_Importer extends Importer {
     return path.resolve(__dirname, '../../assets/commit-button');
   };
 
-  private getManualLineCoordinates = async (electronWindow: BrowserWindow): Promise<Point> => {
-    const manualLineCoordinates = await this.checkForManualLineCoordinates();
+  private getButtonCoordinates = async (electronWindow: BrowserWindow, typeButton: MitchellButtons): Promise<Point> => {
+    const buttonCoordinates = typeButton === MitchellButtons.manualLineButton ? await this.checkForButtonCoordinates(MitchellButtons.manualLineButton) : await this.checkForButtonCoordinates(MitchellButtons.commitButton);
 
-    if (manualLineCoordinates) {
-      return manualLineCoordinates;
+    if (buttonCoordinates) {
+      return buttonCoordinates;
     } else if (this.isRunning) {
       snooze(1000);
       log.warn('Still searching for Mitchell on the main screen. Retrying...');
-      return this.getManualLineCoordinates(electronWindow);
+      // electronWindow.webContents.send(MESSAGE.SEARCHING_BUTTON)
+      return this.getButtonCoordinates(electronWindow, typeButton);
     }
   };
 
-  private getCommitButtonCoordinates = async (electronWindow: BrowserWindow): Promise<Point> => {
-    const commitButtonCoordinates = await this.checkForCommitButtonCoordinates();
-
-    if (commitButtonCoordinates) {
-      return commitButtonCoordinates;
-    } else if (this.isRunning) {
-      snooze(1000);
-      log.warn('Still searching for Mitchell on the main screen. Retrying...');
-      return this.getCommitButtonCoordinates(electronWindow);
-    }
-  };
-
-  private checkForManualLineCoordinates = async (): Promise<Point> => {
-    const images = fs.readdirSync(this.getMitchellPathForAssets());
+  private checkForButtonCoordinates = async (typeButton: MitchellButtons): Promise<Point> => {
+    const images = typeButton === MitchellButtons.manualLineButton ? fs.readdirSync(this.getMitchellPathForAssets()) : fs.readdirSync(this.getMitchellPathForCommitButton()) ;
     const result: ImageSearchResult = {
       coordinates: null,
       errors: [],
     };
 
-    const confidenceThreshold = 0.95;
-
     for (let i = 0; i < images.length; i++) {
       const name = images[i];
-      try {
-        const coordinates = await screen.find(name, { confidence: confidenceThreshold });
-        result.coordinates = coordinates;
-        break;
-      } catch (err) {
-        result.errors.push(err);
-      }
-    }
-
-    if (result.coordinates) {
-      return await centerOf(result.coordinates);
-    } else {
-      result.errors.forEach((error) => log.warn('Error finding the Manual Line button', error));
-    }
-  };
-
-  private checkForCommitButtonCoordinates = async (): Promise<Point> => {
-    const images = fs.readdirSync(path.resolve(__dirname, '../../assets/commit-button'));
-    const result: ImageSearchResult = {
-      coordinates: null,
-      errors: [],
-    };
-    console.log('all images', images);
-    for (let i = 0; i < images.length; i++) {
-      const name = images[i];
-      console.log('name', name);
+      console.log(screen.config.resourceDirectory)
       try {
         const coordinates = await screen.find(name);
-        console.log('screen config', screen.config);
         result.coordinates = coordinates;
+        console.log('coord', coordinates)
         break;
       } catch (err) {
         result.errors.push(err);
@@ -207,9 +168,33 @@ export class Mitchell_Importer extends Importer {
     if (result.coordinates) {
       return await centerOf(result.coordinates);
     } else {
-      result.errors.forEach((error) => log.warn('Error finding the Manual Line button', error));
+      result.errors.forEach((error) => typeButton === MitchellButtons.manualLineButton ? log.warn('Error finding the Manual Line button', error) : log.warn('Error finding the Commit button', error)) ;
     }
   };
+
+  // private checkForCommitButtonCoordinates = async (): Promise<Point> => {
+  //   const images = fs.readdirSync(path.resolve(__dirname, '../../assets/commit-button'));
+  //   const result: ImageSearchResult = {
+  //     coordinates: null,
+  //     errors: [],
+  //   };
+  //   for (let i = 0; i < images.length; i++) {
+  //     const name = images[i];
+  //     try {
+  //       const coordinates = await screen.find(name);
+  //       result.coordinates = coordinates;
+  //       break;
+  //     } catch (err) {
+  //       result.errors.push(err);
+  //     }
+  //   }
+
+  //   if (result.coordinates) {
+  //     return await centerOf(result.coordinates);
+  //   } else {
+  //     result.errors.forEach((error) => log.warn('Error finding the Manual Line button', error));
+  //   }
+  // };
 
   private getShouldPopulateData = async (
     manualLineCoordinates: Point,
@@ -241,43 +226,40 @@ export class Mitchell_Importer extends Importer {
 
   private populateMitchellTableData = async (
     forgettables: MitchellForgettable[],
-    lineOperationCoordinates: Point
   ) => {
     //We already are at description input field selected once we call this function
     const forgettablesLength = forgettables.length;
     const numberOfInputs = forgettables.length * 8;
     const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfInputs;
     this.progressUpdater.setStep(percentagePerCell);
-    // for (const forgettable of forgettables) {
     for (let i = 0; i < forgettables.length; i++) {
       const { description, partNumber, quantity, partPrice } = forgettables[i];
-      //Maybe totalPrice is quantity*partPrice , but remember only consumables have price so make an if check
       //Type Description and Go to Operation
       await this.typeMitchellValue(description);
       this.progressUpdater.update();
 
-      await times(4).pressKey(Key.Tab); // skip Operation stay default, skip Type - stay default Body, skip Total Units - stay default (0)
+      await this.pressTabButton(4); // skip Operation stay default, skip Type - stay default Body, skip Total Units - stay default (0)
       await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
       await keyboard.pressKey(Key.Enter); // Select it
-      await times(7).pressKey(Key.Tab); // focus again on the Part number
+      await this.pressTabButton(7); // focus again on the Part number
       await this.typeMitchellValue(partNumber); // Type Part Number
       this.progressUpdater.update();
 
-      await keyboard.pressKey(Key.Tab); // Go to Quantity
+      await this.pressTabButton(1); // Go to Quantity
       await keyboard.type(quantity.toString()); // Type Quantity
       this.progressUpdater.update();
 
-      await keyboard.pressKey(Key.Tab); // Go to price
+      await this.pressTabButton(1); // Go to price
 
       await this.typeMitchellValue(partPrice); // type totalPrice;
       this.progressUpdater.update();
 
-      await keyboard.pressKey(Key.Tab); // go to checkbox Tax
+      await this.pressTabButton(1); // go to checkbox Tax
       await keyboard.pressKey(Key.Space); // Uncheck Tax
       await keyboard.releaseKey(Key.Space); // Uncheck Tax
       this.progressUpdater.update();
 
-      await times(3).pressKey(Key.Tab); // go to 'Add line' button
+      await this.pressTabButton(3); // go to 'Add line' button
       await keyboard.pressKey(Key.Enter); // press Add Line with Enter
       await keyboard.releaseKey(Key.Enter);
 
@@ -292,11 +274,29 @@ export class Mitchell_Importer extends Importer {
     }
   };
 
-  public typeMitchellValue = async (value: string) => {
+  public typeMitchellValue = async (value: string): Promise<void> => {
     if (value) {
       await keyboard.type(value);
     }
   };
+
+  private pressTabButton = async (count: number) => {
+    await times(count).pressKey(Key.Tab);
+  }
+
+  private commitMitchellData = async (commitButtonCoordinates: Point) => {
+    await mouse.setPosition(commitButtonCoordinates);
+    await mouse.leftClick();
+    this.progressUpdater.update();
+    await snooze(4000);
+    await this.pressTabButton(3);
+    this.progressUpdater.update();
+    await this.pressTabButton(3);
+    this.progressUpdater.update();
+    await keyboard.pressKey(Key.Enter);
+    await keyboard.releaseKey(Key.Enter);
+    this.progressUpdater.setPercentage(100);
+  }
 }
 
 export default new Mitchell_Importer();
