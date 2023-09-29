@@ -151,17 +151,34 @@ export class Mitchell_Importer extends Importer {
       coordinates: null,
       errors: [],
     };
-
-    for (let i = 0; i < images.length; i++) {
-      const name = images[i];
+    let isFound = false;
+    let index = 0;
+    let foundImage = false;
+    
+    do {
+      const name = images[index];
       try {
         const coordinates = await screen.find(name);
         result.coordinates = coordinates;
-        break;
+        isFound = true;
+        foundImage = true;
       } catch (err) {
         result.errors.push(err);
       }
-    }
+    
+      if (!foundImage && index === images.length - 1) {
+        // Reset the index if no image was found in the current iteration
+        index = 0;
+      } else {
+        // Increment the index or reset it if it reaches the end of the array
+        if (index < images.length - 1) {
+          index++;
+        } else {
+          index = 0;
+        }
+        foundImage = false; // Reset foundImage flag for the next iteration
+      }
+    } while (!isFound);
 
     if (result.coordinates) {
       return await centerOf(result.coordinates);
@@ -226,7 +243,6 @@ export class Mitchell_Importer extends Importer {
     forgettables: MitchellForgettable[],
   ) => {
     //We already are at description input field selected once we call this function
-    const forgettablesLength = forgettables.length;
     const numberOfInputs = forgettables.length * 8;
     const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfInputs;
     this.progressUpdater.setStep(percentagePerCell);
@@ -265,7 +281,7 @@ export class Mitchell_Importer extends Importer {
 
       await snooze(2000); // wait until modal is closed
 
-      if (i < forgettablesLength - 1) {
+      if (i < forgettables.length - 1) {
         await mouse.leftClick(); // open the modal again for the next line
       }
       // }
