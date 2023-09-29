@@ -92,7 +92,7 @@ export class Mitchell_Importer extends Importer {
             await snooze(1000);
             await this.populateMitchellTableData(forgettables);
             this.setMitchellConfig(inputSpeedSeconds, true);
-            await snooze(3000);
+            await snooze(5000);
             const commitButtonCoordinates = await this.getButtonCoordinates(electronWindow, MitchellButtons.commitButton);
 
             if(commitButtonCoordinates){
@@ -154,11 +154,9 @@ export class Mitchell_Importer extends Importer {
 
     for (let i = 0; i < images.length; i++) {
       const name = images[i];
-      console.log(screen.config.resourceDirectory)
       try {
         const coordinates = await screen.find(name);
         result.coordinates = coordinates;
-        console.log('coord', coordinates)
         break;
       } catch (err) {
         result.errors.push(err);
