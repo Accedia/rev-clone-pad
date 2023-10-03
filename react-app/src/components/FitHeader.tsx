@@ -18,7 +18,7 @@ const FitHeader: React.FC<FitHeaderProps> = () => {
     <Message icon>
       <img className="fit-settings-logo" src={process.env.PUBLIC_URL + '/icon.ico'} alt="logo" />
       <Message.Content>
-        <Message.Header>Force Import Technology</Message.Header>
+        <Message.Header>REV Import Technology Manual</Message.Header>
         <div className="version-text">
           <span className="version-label">Version:</span> {getVersion()}
         </div>

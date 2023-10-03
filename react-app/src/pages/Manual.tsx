@@ -1,34 +1,20 @@
-import axios from 'axios';
 import Markdown from 'markdown-to-jsx';
-import React, { useEffect, useState } from 'react';
-import { Icon, Loader, Message, Segment } from 'semantic-ui-react';
+import React from 'react';
+import { Icon, Message, Segment } from 'semantic-ui-react';
+import {help_text} from "../constants/help_text";
 
 interface ManualProps {}
 
 const Manual: React.FC<ManualProps> = () => {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [value, setValue] = useState<string>();
-
-  useEffect(() => {
-    const fetch = async () => {
-      const result = await axios.get<{ text: string }>(
-        'http://dev.fit-portal.com/api/force-import-technology-manual'
-      );
-      setValue(result.data.text);
-      setIsLoading(false);
-    };
-
-    fetch();
-  }, []);
 
   return (
     <div className="markdown-container">
       <Message info attached="top">
         <Icon name="question" />
-        Force Import Technology Manual
+        REV Import Technology Manual
       </Message>
       <Segment raised attached className="markdown-preview">
-        {isLoading ? <Loader active inline="centered" /> : <Markdown>{value || ''}</Markdown>}
+         <Markdown>{help_text || ''}</Markdown>
       </Segment>
       <Message warning attached="bottom">
         <Icon name="info" />
