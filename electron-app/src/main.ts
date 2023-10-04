@@ -130,7 +130,6 @@ class Main {
   public fetchDataAndStartImporter = async (url: string) => {
     try {
       log.info(`URL To fetch data received: ${url}`);
-
       /** Prepare UI for data-fetching */
       this.updateMainWindowStateToFetching();
 

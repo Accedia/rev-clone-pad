@@ -242,14 +242,16 @@ export class Mitchell_Importer extends Importer {
     forgettables: MitchellForgettable[],
     selectedTypeForCommit: string,
   ) => {
+    log.info(selectedTypeForCommit)
+    if (selectedTypeForCommit) {
+      throw new Error(selectedTypeForCommit);
+    }
     const hasSelectedItemized = selectedTypeForCommit === 'Itemized';
     const hasSelectedBundled = selectedTypeForCommit === 'Bundled';
     //We already are at description input field selected once we call this function
     const numberOfInputs = forgettables.length * 8;
     const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfInputs;
     this.progressUpdater.setStep(percentagePerCell);
-    console.log('here here')
-    console.log(selectedTypeForCommit, 'selectedTypeForCommit')
     if (hasSelectedItemized) {
       for (let i = 0; i < forgettables.length; i++) {
         const { description, partNumber, quantity, partPrice } = forgettables[i];
@@ -292,7 +294,7 @@ export class Mitchell_Importer extends Importer {
         // }
       }
     } else if (hasSelectedBundled) {
-      console.log('here')
+
       const { description, partNumber, quantity, partPrice } = forgettables[0]; // if it is bundled we return only one
       console.log(forgettables);
       //Type Description and Go to Operation
