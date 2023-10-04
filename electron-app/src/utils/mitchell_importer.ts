@@ -53,26 +53,26 @@ export class Mitchell_Importer extends Importer {
   };
 
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow): Promise<void> => {
-    const { forgettables, automationId, automationIdToFinishRPA } = data;
+    const { forgettables, automationId, automationIdToFinishRPA, selectedTypeForCommit } = data;
+    console.log(selectedTypeForCommit);
     this.startSession(automationId);
     this.start();
     const inputSpeed = getInputSpeed();
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
     this.setMitchellConfig(inputSpeedSeconds, false);
 
+
     try {
       /** Sends a message to stop the loader for fetching data */
       electronWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
 
       if (this.isRunning) {
-        /** Start the CCC Waiting loader */
-        //TODO - update message to MITCHELL
+        /** Start the Mitchell Waiting loader */
         electronWindow.webContents.send(MESSAGE.WAITING_MITCHELL_UPDATE, true);
         await FirebaseService.useCurrentSession.setStatus(SessionStatus.SEARCHING_CCC);
 
         /** Continuously check for "Manual Line" button */
         const manualLineCoordinates = await this.getButtonCoordinates(electronWindow, MitchellButtons.manualLineButton);
-
         if (manualLineCoordinates) {
           const shouldPopulate = await this.getShouldPopulateData(
             manualLineCoordinates,
@@ -80,8 +80,7 @@ export class Mitchell_Importer extends Importer {
             electronWindow
           );
 
-          //   /** Stop the CCC Waiting loader */
-          //TODO - update message to MITCHELL
+          //   /** Stop the Mitchell Waiting loader */
           electronWindow.webContents.send(MESSAGE.WAITING_MITCHELL_UPDATE, false);
 
           if (shouldPopulate) {
@@ -90,17 +89,17 @@ export class Mitchell_Importer extends Importer {
             this.progressUpdater.setPercentage(0);
             mainWindowManager.overlayWindow.show();
             await snooze(1000);
-            await this.populateMitchellTableData(forgettables);
+            await this.populateMitchellTableData(forgettables, selectedTypeForCommit);
             this.setMitchellConfig(inputSpeedSeconds, true);
             await snooze(5000);
             const commitButtonCoordinates = await this.getButtonCoordinates(electronWindow, MitchellButtons.commitButton);
 
-            if(commitButtonCoordinates){
+            if (commitButtonCoordinates) {
               await this.commitMitchellData(commitButtonCoordinates);
             } else {
               log.error("Can't find the Commit Button.")
             }
-            
+
             await FirebaseService.useCurrentSession.setStatus(SessionStatus.VALIDATING);
             // await this.verifyPopulation(forgettables);
           } else {
@@ -109,7 +108,7 @@ export class Mitchell_Importer extends Importer {
 
           await FirebaseService.useCurrentSession.setStatus(SessionStatus.COMPLETED);
           this.complete(automationIdToFinishRPA);
-        } 
+        }
       }
 
       mainWindowManager.overlayWindow.hide();
@@ -146,7 +145,7 @@ export class Mitchell_Importer extends Importer {
   };
 
   private checkForButtonCoordinates = async (typeButton: MitchellButtons): Promise<Point> => {
-    const images = typeButton === MitchellButtons.manualLineButton ? fs.readdirSync(this.getMitchellPathForAssets()) : fs.readdirSync(this.getMitchellPathForCommitButton()) ;
+    const images = typeButton === MitchellButtons.manualLineButton ? fs.readdirSync(this.getMitchellPathForAssets()) : fs.readdirSync(this.getMitchellPathForCommitButton());
     const result: ImageSearchResult = {
       coordinates: null,
       errors: [],
@@ -154,7 +153,7 @@ export class Mitchell_Importer extends Importer {
     let isFound = false;
     let index = 0;
     let foundImage = false;
-    
+
     do {
       const name = images[index];
       try {
@@ -165,7 +164,7 @@ export class Mitchell_Importer extends Importer {
       } catch (err) {
         result.errors.push(err);
       }
-    
+
       if (!foundImage && index === images.length - 1) {
         // Reset the index if no image was found in the current iteration
         index = 0;
@@ -183,7 +182,7 @@ export class Mitchell_Importer extends Importer {
     if (result.coordinates) {
       return await centerOf(result.coordinates);
     } else {
-      result.errors.forEach((error) => typeButton === MitchellButtons.manualLineButton ? log.warn('Error finding the Manual Line button', error) : log.warn('Error finding the Commit button', error)) ;
+      result.errors.forEach((error) => typeButton === MitchellButtons.manualLineButton ? log.warn('Error finding the Manual Line button', error) : log.warn('Error finding the Commit button', error));
     }
   };
 
@@ -241,50 +240,65 @@ export class Mitchell_Importer extends Importer {
 
   private populateMitchellTableData = async (
     forgettables: MitchellForgettable[],
+    selectedTypeForCommit: string,
   ) => {
+    const hasSelectedItemized = selectedTypeForCommit === 'Itemized';
+    const hasSelectedBundled = selectedTypeForCommit === 'Bundled';
     //We already are at description input field selected once we call this function
     const numberOfInputs = forgettables.length * 8;
     const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfInputs;
     this.progressUpdater.setStep(percentagePerCell);
-    for (let i = 0; i < forgettables.length; i++) {
-      const { description, partNumber, quantity, partPrice } = forgettables[i];
+    console.log('here here')
+    console.log(selectedTypeForCommit, 'selectedTypeForCommit')
+    if (hasSelectedItemized) {
+      for (let i = 0; i < forgettables.length; i++) {
+        const { description, partNumber, quantity, partPrice } = forgettables[i];
+        //Type Description and Go to Operation
+        await this.typeMitchellValue(description);
+        this.progressUpdater.update();
+
+        await this.pressTabButton(4); // skip Operation stay default, skip Type - stay default Body, skip Total Units - stay default (0)
+        await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
+        await keyboard.pressKey(Key.Enter); // Select it
+        await this.pressTabButton(7); // focus again on the Part number
+        await this.typeMitchellValue(partNumber); // Type Part Number
+        this.progressUpdater.update();
+
+        await this.pressTabButton(1); // Go to Quantity
+        await keyboard.type(quantity.toString()); // Type Quantity
+        this.progressUpdater.update();
+
+        await this.pressTabButton(1); // Go to price
+
+        await this.typeMitchellValue(partPrice); // type totalPrice;
+        this.progressUpdater.update();
+
+        await this.pressTabButton(1); // go to checkbox Tax
+        await keyboard.pressKey(Key.Space); // Uncheck Tax
+        await keyboard.releaseKey(Key.Space); // Uncheck Tax
+        this.progressUpdater.update();
+
+        await this.pressTabButton(3); // go to 'Add line' button
+        await keyboard.pressKey(Key.Enter); // press Add Line with Enter
+        await keyboard.releaseKey(Key.Enter);
+
+        this.progressUpdater.update();
+
+        await snooze(2000); // wait until modal is closed
+
+        if (i < forgettables.length - 1) {
+          await mouse.leftClick(); // open the modal again for the next line
+        }
+        // }
+      }
+    } else if (hasSelectedBundled) {
+      console.log('here')
+      const { description, partNumber, quantity, partPrice } = forgettables[0]; // if it is bundled we return only one
+      console.log(forgettables);
       //Type Description and Go to Operation
       await this.typeMitchellValue(description);
       this.progressUpdater.update();
-
-      await this.pressTabButton(4); // skip Operation stay default, skip Type - stay default Body, skip Total Units - stay default (0)
-      await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
-      await keyboard.pressKey(Key.Enter); // Select it
-      await this.pressTabButton(7); // focus again on the Part number
-      await this.typeMitchellValue(partNumber); // Type Part Number
-      this.progressUpdater.update();
-
-      await this.pressTabButton(1); // Go to Quantity
-      await keyboard.type(quantity.toString()); // Type Quantity
-      this.progressUpdater.update();
-
-      await this.pressTabButton(1); // Go to price
-
-      await this.typeMitchellValue(partPrice); // type totalPrice;
-      this.progressUpdater.update();
-
-      await this.pressTabButton(1); // go to checkbox Tax
-      await keyboard.pressKey(Key.Space); // Uncheck Tax
-      await keyboard.releaseKey(Key.Space); // Uncheck Tax
-      this.progressUpdater.update();
-
-      await this.pressTabButton(3); // go to 'Add line' button
-      await keyboard.pressKey(Key.Enter); // press Add Line with Enter
-      await keyboard.releaseKey(Key.Enter);
-
-      this.progressUpdater.update();
-
-      await snooze(2000); // wait until modal is closed
-
-      if (i < forgettables.length - 1) {
-        await mouse.leftClick(); // open the modal again for the next line
-      }
-      // }
+      await this.pressTabButton(3); // skip Operation stay default, skip Type - stay default Body, go to Total Units
     }
   };
 

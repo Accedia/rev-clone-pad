@@ -7,4 +7,5 @@ export interface ResponseData {
   automationId: string;
   automationIdToFinishRPA?: string;
   dataSource?: string;
+  selectedTypeForCommit?: string;
 }
