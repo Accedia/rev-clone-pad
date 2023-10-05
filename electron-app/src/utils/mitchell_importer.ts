@@ -54,7 +54,6 @@ export class Mitchell_Importer extends Importer {
 
   public startPopulation = async (data: ResponseData, electronWindow: BrowserWindow): Promise<void> => {
     const { forgettables, automationId, automationIdToFinishRPA, selectedTypeForCommit } = data;
-    console.log(selectedTypeForCommit);
     this.startSession(automationId);
     this.start();
     const inputSpeed = getInputSpeed();
@@ -79,7 +78,7 @@ export class Mitchell_Importer extends Importer {
             data,
             electronWindow
           );
-
+          log.info(shouldPopulate, 'should populate')
           //   /** Stop the Mitchell Waiting loader */
           electronWindow.webContents.send(MESSAGE.WAITING_MITCHELL_UPDATE, false);
 
@@ -243,9 +242,7 @@ export class Mitchell_Importer extends Importer {
     selectedTypeForCommit: string,
   ) => {
     log.info(selectedTypeForCommit)
-    if (selectedTypeForCommit) {
-      throw new Error(selectedTypeForCommit);
-    }
+
     const hasSelectedItemized = selectedTypeForCommit === 'Itemized';
     const hasSelectedBundled = selectedTypeForCommit === 'Bundled';
     //We already are at description input field selected once we call this function
@@ -296,7 +293,6 @@ export class Mitchell_Importer extends Importer {
     } else if (hasSelectedBundled) {
 
       const { description, partNumber, quantity, partPrice } = forgettables[0]; // if it is bundled we return only one
-      console.log(forgettables);
       //Type Description and Go to Operation
       await this.typeMitchellValue(description);
       this.progressUpdater.update();
