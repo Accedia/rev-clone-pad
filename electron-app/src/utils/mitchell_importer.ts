@@ -28,8 +28,12 @@ enum MitchellButtons {
   manualLineButton = "Manual Line"
 }
 export class Mitchell_Importer extends Importer {
+  private BUNDLED_QUANTITY: string;
+  private BUNDLED_TOTAL_UNITS: string;
   constructor() {
     super();
+    this.BUNDLED_QUANTITY = "1";
+    this.BUNDLED_TOTAL_UNITS = "1";
   }
 
   public setMitchellConfig = (inputSpeed: number, isLookingForCommitButton?: boolean): void => {
@@ -60,7 +64,6 @@ export class Mitchell_Importer extends Importer {
     const inputSpeedSeconds = getInputSpeedInSeconds(inputSpeed);
     this.setMitchellConfig(inputSpeedSeconds, false);
 
-
     try {
       /** Sends a message to stop the loader for fetching data */
       electronWindow.webContents.send(MESSAGE.LOADING_UPDATE, false);
@@ -78,7 +81,6 @@ export class Mitchell_Importer extends Importer {
             data,
             electronWindow
           );
-          log.info(shouldPopulate, 'should populate')
           //   /** Stop the Mitchell Waiting loader */
           electronWindow.webContents.send(MESSAGE.WAITING_MITCHELL_UPDATE, false);
 
@@ -241,62 +243,16 @@ export class Mitchell_Importer extends Importer {
     forgettables: MitchellForgettable[],
     selectedTypeForCommit: string,
   ) => {
-    log.info(selectedTypeForCommit)
-
     const hasSelectedItemized = selectedTypeForCommit === 'Itemized';
     const hasSelectedBundled = selectedTypeForCommit === 'Bundled';
-    //We already are at description input field selected once we call this function
     const numberOfInputs = forgettables.length * 8;
     const percentagePerCell = VERIFICATION_PROGRESS_BREAKPOINT / numberOfInputs;
     this.progressUpdater.setStep(percentagePerCell);
+
     if (hasSelectedItemized) {
-      for (let i = 0; i < forgettables.length; i++) {
-        const { description, partNumber, quantity, partPrice } = forgettables[i];
-        //Type Description and Go to Operation
-        await this.typeMitchellValue(description);
-        this.progressUpdater.update();
-
-        await this.pressTabButton(4); // skip Operation stay default, skip Type - stay default Body, skip Total Units - stay default (0)
-        await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
-        await keyboard.pressKey(Key.Enter); // Select it
-        await this.pressTabButton(7); // focus again on the Part number
-        await this.typeMitchellValue(partNumber); // Type Part Number
-        this.progressUpdater.update();
-
-        await this.pressTabButton(1); // Go to Quantity
-        await keyboard.type(quantity.toString()); // Type Quantity
-        this.progressUpdater.update();
-
-        await this.pressTabButton(1); // Go to price
-
-        await this.typeMitchellValue(partPrice); // type totalPrice;
-        this.progressUpdater.update();
-
-        await this.pressTabButton(1); // go to checkbox Tax
-        await keyboard.pressKey(Key.Space); // Uncheck Tax
-        await keyboard.releaseKey(Key.Space); // Uncheck Tax
-        this.progressUpdater.update();
-
-        await this.pressTabButton(3); // go to 'Add line' button
-        await keyboard.pressKey(Key.Enter); // press Add Line with Enter
-        await keyboard.releaseKey(Key.Enter);
-
-        this.progressUpdater.update();
-
-        await snooze(2000); // wait until modal is closed
-
-        if (i < forgettables.length - 1) {
-          await mouse.leftClick(); // open the modal again for the next line
-        }
-        // }
-      }
+      await this.populateItemized(forgettables)
     } else if (hasSelectedBundled) {
-
-      const { description, partNumber, quantity, partPrice } = forgettables[0]; // if it is bundled we return only one
-      //Type Description and Go to Operation
-      await this.typeMitchellValue(description);
-      this.progressUpdater.update();
-      await this.pressTabButton(3); // skip Operation stay default, skip Type - stay default Body, go to Total Units
+      await this.populateBundled(forgettables);
     }
   };
 
@@ -308,6 +264,78 @@ export class Mitchell_Importer extends Importer {
 
   private pressTabButton = async (count: number) => {
     await times(count).pressKey(Key.Tab);
+  }
+
+  private populateItemized = async (forgettables: MitchellForgettable[],) => {
+    for (let i = 0; i < forgettables.length; i++) {
+      const { description, partNumber, quantity, partPrice } = forgettables[i];
+      //Type Description and Go to Operation
+      await this.typeMitchellValue(description);
+      this.progressUpdater.update();
+
+      await this.pressTabButton(4); // skip Operation stay default, skip Type - stay default Body, skip Total Units - stay default (0)
+      await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
+      await keyboard.pressKey(Key.Enter); // Select it
+      await this.pressTabButton(7); // focus again on the Part number
+      await this.typeMitchellValue(partNumber); // Type Part Number
+      this.progressUpdater.update();
+
+      await this.pressTabButton(1); // Go to Quantity
+      await keyboard.type(quantity.toString()); // Type Quantity
+      this.progressUpdater.update();
+
+      await this.pressTabButton(1); // Go to price
+
+      await this.typeMitchellValue(partPrice); // type totalPrice;
+      this.progressUpdater.update();
+
+      await this.pressTabButton(1); // go to checkbox Tax
+      await keyboard.pressKey(Key.Space); // Uncheck Tax
+      await keyboard.releaseKey(Key.Space); // Uncheck Tax
+      this.progressUpdater.update();
+
+      await this.pressTabButton(3); // go to 'Add line' button
+      await keyboard.pressKey(Key.Enter); // press Add Line with Enter
+      await keyboard.releaseKey(Key.Enter);
+
+      this.progressUpdater.update();
+
+      await snooze(2000); // wait until modal is closed
+
+      if (i < forgettables.length - 1) {
+        await mouse.leftClick(); // open the modal again for the next line
+      }
+    }
+  }
+
+  private populateBundled = async (forgettables: MitchellForgettable[]) => {
+    const { description, partNumber, partPrice } = forgettables[0]; // if it is bundled we return only one
+    await this.typeMitchellValue(description); // type description
+    this.progressUpdater.update();
+
+    await this.pressTabButton(3); // skip Operation stay default, skip Type - stay default Body, go to Total Units
+    await this.typeMitchellValue(this.BUNDLED_TOTAL_UNITS) // fill Total Units with 1
+    this.progressUpdater.update();
+
+    await this.pressTabButton(1); // go to part type
+    await times(2).pressKey(Key.Down); // Selecting Part Type to be Aftermarket New
+    await keyboard.pressKey(Key.Enter); // Select it
+    this.progressUpdater.update();
+
+    await this.pressTabButton(7); // focus again on the Part number
+    await this.typeMitchellValue(partNumber); // Type Part Number
+    this.progressUpdater.update();
+    await this.pressTabButton(1); // Go to Quantity
+    await this.typeMitchellValue(this.BUNDLED_QUANTITY); // Type Quantity
+    this.progressUpdater.update();
+    await this.pressTabButton(1); // Go to Total Price
+    await this.typeMitchellValue(partPrice); // Type Total Price calculated in our back-end
+
+    await this.pressTabButton(4); // go to add line
+    await keyboard.pressKey(Key.Enter); // press Add Line with Enter
+    await keyboard.releaseKey(Key.Enter);
+    this.progressUpdater.update();
+    await snooze(2000); // wait until modal is closed
   }
 
   private commitMitchellData = async (commitButtonCoordinates: Point) => {
