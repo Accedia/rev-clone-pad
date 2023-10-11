@@ -30,10 +30,12 @@ enum MitchellButtons {
 export class Mitchell_Importer extends Importer {
   private BUNDLED_QUANTITY: string;
   private BUNDLED_TOTAL_UNITS: string;
+  private DEFAULT_QUANTITY: string;
   constructor() {
     super();
     this.BUNDLED_QUANTITY = "1";
     this.BUNDLED_TOTAL_UNITS = "1";
+    this.DEFAULT_QUANTITY = "1";
   }
 
   public setMitchellConfig = (inputSpeed: number, isLookingForCommitButton?: boolean): void => {
@@ -281,7 +283,12 @@ export class Mitchell_Importer extends Importer {
       this.progressUpdater.update();
 
       await this.pressTabButton(1); // Go to Quantity
-      await keyboard.type(quantity.toString()); // Type Quantity
+      // quantity is sometimes null if its a 0% and no update and it crashesh so we put default 1?
+      if (!quantity) {
+        await keyboard.type(this.DEFAULT_QUANTITY)
+      } else {
+        await keyboard.type(quantity.toString());
+      }
       this.progressUpdater.update();
 
       await this.pressTabButton(1); // Go to price
@@ -335,14 +342,14 @@ export class Mitchell_Importer extends Importer {
     await keyboard.pressKey(Key.Enter); // press Add Line with Enter
     await keyboard.releaseKey(Key.Enter);
     this.progressUpdater.update();
-    await snooze(2000); // wait until modal is closed
+    await snooze(4000); // wait until modal is closed
   }
 
   private commitMitchellData = async (commitButtonCoordinates: Point) => {
     await mouse.setPosition(commitButtonCoordinates);
     await mouse.leftClick();
     this.progressUpdater.update();
-    await snooze(4000);
+    await snooze(6000);
     await this.pressTabButton(3);
     this.progressUpdater.update();
     await this.pressTabButton(3);
