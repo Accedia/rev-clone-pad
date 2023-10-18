@@ -51,7 +51,7 @@ export class Mitchell_Importer extends Importer {
     // ! Left only for debug purposes
     // ? Uncomment if needed, do not deploy to prod
     if (isLookingForCommitButton) {
-      screen.config.confidence = 0.85;
+      screen.config.confidence = 0.95;
     }
     // screen.config.autoHighlight = true;
     // screen.config.highlightDurationMs = 3000;
@@ -94,7 +94,7 @@ export class Mitchell_Importer extends Importer {
             await snooze(1000);
             await this.populateMitchellTableData(forgettables, selectedTypeForCommit);
             this.setMitchellConfig(inputSpeedSeconds, true);
-            await snooze(5000);
+            await snooze(6000);
             const commitButtonCoordinates = await this.getButtonCoordinates(electronWindow, MitchellButtons.commitButton);
 
             if (commitButtonCoordinates) {
@@ -164,6 +164,7 @@ export class Mitchell_Importer extends Importer {
         result.coordinates = coordinates;
         isFound = true;
         foundImage = true;
+        result.errors = [];
       } catch (err) {
         result.errors.push(err);
       }
@@ -182,7 +183,8 @@ export class Mitchell_Importer extends Importer {
       }
     } while (!isFound);
 
-    if (result.coordinates) {
+
+    if (result.coordinates && result.errors.length === 0) {
       return await centerOf(result.coordinates);
     } else {
       result.errors.forEach((error) => typeButton === MitchellButtons.manualLineButton ? log.warn('Error finding the Manual Line button', error) : log.warn('Error finding the Commit button', error));
