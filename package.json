@@ -2,7 +2,7 @@
   "name": "rev-clone-pad",
   "appname": "REV Clone Pad",
   "productName": "REV Clone Pad",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "An utility tool by REV to help cloning forgettable data into CCC One",
   "main": ".webpack/main",
   "scripts": {
