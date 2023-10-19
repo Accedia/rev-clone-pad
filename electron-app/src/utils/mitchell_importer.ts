@@ -188,6 +188,7 @@ export class Mitchell_Importer extends Importer {
       result.errors.forEach((error) => typeButton === MitchellButtons.manualLineButton ? log.warn('Error finding the Manual Line button', error) : log.warn('Error finding the Commit button', error));
     }
   };
+  
 
   // private checkForCommitButtonCoordinates = async (): Promise<Point> => {
   //   const images = fs.readdirSync(path.resolve(__dirname, '../../assets/commit-button'));
